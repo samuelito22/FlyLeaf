@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "941382516632",
+    "project_id": "flyleaf-app",
+    "storage_bucket": "flyleaf-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:941382516632:android:d644b6adbe439e500d35ed",
+        "android_client_info": {
+          "package_name": "com.frontend"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "941382516632-rafe2ccjk3ar4fdm2tp9jr9i12r0fi6s.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDrPmkrbNgfY7Bv62p3V5wqHRqtyiqSsIU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "941382516632-30p9mqn7cog9sdbjjni53d9svirqrkt1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

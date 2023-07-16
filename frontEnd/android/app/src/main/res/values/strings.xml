@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">frontEnd</string>
+    <string name = "facebook_app_id" > 163312826651992 </string><string name = "facebook_client_token" > 2f5c71e09c81b750e83e222dd8d6f96c </string> 
+</resources>

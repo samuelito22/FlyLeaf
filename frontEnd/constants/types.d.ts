@@ -1,0 +1,317 @@
+import {FirebaseAuthTypes} from '@react-native-firebase/auth';
+import {ImageSourcePropType} from 'react-native';
+
+/**
+ * Button Related Props
+ */
+export interface ButtonProps {
+  style?: ViewStyle;
+  onPress?: () => void;
+}
+
+export interface PrimaryButtonProps extends ButtonProps {
+  children?: ReactNode;
+}
+
+export interface InterestsButtonPress extends PrimaryButtonProps {
+  children?: ReactNode;
+  borderColor: string;
+}
+
+export interface ButtonImageProps extends ButtonProps {
+  imgUrl: Image;
+  tintColor?: string;
+}
+
+export interface ClickableIndicatorPrimaryButton extends ButtonProps {
+  children?: ReactNode;
+  isActive: boolean;
+}
+
+/**
+ * Alert Prop
+ */
+export interface AlertProps {
+  title: string;
+  message: string;
+  visible: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}
+
+/**
+ * UploadSelectionAlert Prop
+ */
+
+export interface UploadSelectionAlertProps {
+  visible: boolean;
+  onClose: () => void;
+  onGalleryPress: () => void;
+  onTakePhotoPress: () => void;
+}
+
+/**
+ * Dropdown Related Props
+ */
+export interface Country {
+  name: string;
+  code: string;
+  mask: string;
+  iso: string;
+}
+
+export interface DropdownItemProps {
+  item: Country;
+  handleOptionPress: (item: Country) => void;
+}
+
+export type RenderItemProps = DropdownItemProps;
+
+export interface DropdownProps {
+  borderColor: string;
+  defaultValue?: string;
+  setMask: (mask: string) => void;
+  setDialingCode: (code: string) => void;
+}
+
+/**
+ * TextInput Props
+ */
+export interface TextFieldProps extends TextInputProps {
+  placeholder: string;
+  text: string;
+  setText: (text: string) => void;
+  style?: ViewStyle;
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  keyboardType?:
+    | 'default'
+    | 'number-pad'
+    | 'decimal-pad'
+    | 'numeric'
+    | 'email-address'
+    | 'phone-pad';
+  secureTextEntry?: boolean;
+}
+
+export interface OTPFieldProps {
+  OTPLength: number;
+  OTP: string;
+  setOTP: React.Dispatch<React.SetStateAction<string>>;
+  style?: ViewStyle;
+}
+
+export interface DateFieldProps {
+  setDate: (date: string) => void;
+  style?: ViewStyle;
+}
+
+/**
+ * Container Props
+ */
+export interface ContainerProps {
+  children: ReactNode;
+  style?: StyleProp<ViewStyle>;
+}
+
+export type KeyboardAvoidingViewWrapperProps = ContainerProps;
+
+export type SafeContainerProps = ContainerProps;
+
+export type SeparatorProps = ContainerProps;
+
+/**
+ * User Profile Card
+ */
+
+export interface UserProfileCardProps {
+  about?: string;
+  firstName: string;
+  age: string;
+  city: string;
+  profileImage: ImageSourcePropType;
+  statusText: string;
+  statusIcon: ImageSourcePropType;
+  interests?: string[];
+}
+
+/**
+ * Progress Related Props
+ */
+export interface ProgressBarProps {
+  height?: number;
+  color: string;
+  transparency?: number;
+  progress?: number;
+  style?: object;
+}
+
+export interface ProgressContextType {
+  setProgress: React.Dispatch<React.SetStateAction<number>>;
+}
+
+/**
+ * Redux Actions
+ */
+
+interface SetPhoneNumberAction {
+  type: 'SET_PHONE_NUMBER';
+  payload: string;
+}
+
+interface SetDateOfBirthAction {
+  type: 'SET_DATE_OF_BIRTH';
+  payload: Date;
+}
+
+interface SetFirstNameAction {
+  type: 'SET_FIRST_NAME';
+  payload: string;
+}
+
+interface SetGenderPreferencesAction {
+  type: 'SET_GENDER_PREFERENCES';
+  payload: string[];
+}
+
+interface SetGenderAction {
+  type: 'SET_GENDER';
+  payload: string;
+}
+
+interface SetPicturesAction {
+  type: 'SET_PICTURES';
+  payload: string[];
+}
+
+interface SetEmailAction {
+  type: 'SET_EMAIL';
+  payload: string;
+}
+
+interface SetRelationshipGoalAction {
+  type: 'SET_RELATIONSHIP_GOAL';
+  payload: string;
+}
+
+interface SetShowLocationScreen {
+  type: 'SET_SHOW_LOCATION_SCREEN';
+  payload: boolean;
+}
+
+interface SetIsRegisterCompleted {
+  type: 'SET_IS_REGISTER_COMPLETED';
+  payload: {status: boolean, currentScreen: keyof TYPES.RootStackParamList | null};
+}
+
+
+interface SetProgressBarValue {
+  type: 'SET_PROGRESS_BAR_VALUE';
+  payload: number;
+}
+
+interface SetQuestionAndAnswer {
+  type: 'SET_QUESTION_AND_ANSWER';
+  payload: {question: string, answer: string}[]
+}
+
+interface SetInterests {
+  type: 'SET_INTERESTS';
+  payload: string[];
+}
+
+interface resetRegister {
+  type: 'RESET_REGISTER'
+}
+
+export type AppAction =
+  | SetPhoneNumberAction
+  | SetDateOfBirthAction
+  | SetFirstNameAction
+  | SetGenderPreferencesAction
+  | SetGenderAction
+  | SetPicturesAction
+  | SetEmailAction
+  | SetRelationshipGoalAction
+  | SetShowLocationScreen
+  | SetIsRegisterCompleted
+  | SetProgressBarValue
+  | SetQuestionAndAnswer
+  | SetInterests
+  | resetRegister
+
+export interface InitialStateRegisterType {
+  dateOfBirth: Date | null;
+  firstName: string | null;
+  genderPreferences: string[] | null;
+  gender: string | null;
+  pictures: string[] | null;
+  email: string | null;
+  relationshipGoal: string | null;
+  phoneNumber: string | null;
+  progressBarValue: number;
+  questionAndAnswer: {question: string, answer: string}[] | null;
+  interests: string[];
+  isRegisterCompleted: {status: boolean, currentScreen: keyof RootStackParamList | null};
+}
+
+export interface InitialStateAppStatusType {
+  showLocationScreen: boolean;
+}
+
+/**
+ * Redux stor - App State
+ */
+
+export type AppState = ReturnType<typeof rootReducer>;
+
+/**
+ * RootStackParamList for navigator
+ */
+export type RootStackParamList = {
+  // AUTH
+  // Register
+  REGISTER_NAVIGATOR: undefined;
+  REGISTER_FIRST_NAME_SCREEN: undefined;
+  REGISTER_DATE_OF_BIRTH_SCREEN: undefined;
+  REGISTER_GENDER_PREFERENCE_SCREEN: undefined;
+  REGISTER_GENDER_SELECTION_SCREEN: undefined;
+  REGISTER_PICTURE_UPLOAD_SCREEN: undefined;
+  REGISTER_RECOVERY_EMAIL_SCREEN: undefined;
+  REGISTER_RELATIONSHIP_GOAL_SCREEN: undefined;
+  REGISTER_MULTIPLE_QUESTIONS_SCREEN: undefined;
+  REGISTER_TERMS_AND_CONDITIONS_SCREEN: undefined;
+
+  // Login
+  LOGIN_NAVIGATOR: undefined;
+  LOGIN_START_SCREEN: undefined;
+  LOGIN_OTP_SCREEN: {phoneNumber: string};
+
+  EMAIL_VERIFICATION_SCREEN: {
+    actionType: 'register' | 'login';
+    email: string;
+  };
+
+  LOCATION_SCREEN: undefined;
+
+  // Bottom tab navigator
+  BOTTOM_TAB_NAVIGATOR: undefined;
+};
+
+/**
+ * Services
+ */
+
+export interface UserRegisterParams {
+  [key: string]: string | string[] | Date;
+  uid: string;
+  phoneNumber?: string;
+  firstName: string;
+  email?: string;
+  dateOfBirth: Date;
+  gender: string;
+  genderPreferences: string;
+  relationshipGoal: string;
+  pictures?: string[];
+  questionAndAnswer: {question: string, answer: string}[], 
+  interests: string[]
+}

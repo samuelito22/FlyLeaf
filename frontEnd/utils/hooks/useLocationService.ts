@@ -1,0 +1,125 @@
+import Geolocation from '@react-native-community/geolocation';
+import {useEffect} from 'react';
+import {useSelector} from 'react-redux';
+import {TYPES} from '../../constants';
+import {setShowLocationScreen} from '../../redux';
+import useDispatch from './useDispatch';
+import auth, {firebase} from '@react-native-firebase/auth';
+import {API_KEY_GEO} from '@env';
+import {UserService} from '../../services';
+
+type LocationData = {
+  city: string;
+  coordinates: [number, number];
+};
+
+const useLocationService = () => {
+  const dispatch = useDispatch();
+  const uid = firebase.auth().currentUser?.uid;
+
+  const isRegisterCompleted = useSelector(
+    (state: TYPES.AppState) => state.registerReducer.isRegisterCompleted,
+  );
+
+  const getPosition = async (position: any, newLocationData: LocationData) => {
+    function getCityName(result: any) {
+      for (let component of result.address_components) {
+        if (component.types.includes('postal_town')) {
+          return component.short_name;
+        }
+      }
+
+      // City name was not found in the response
+      return null;
+    }
+    if (
+      !newLocationData ||
+      !position ||
+      !position.coords ||
+      Math.abs(newLocationData.coordinates[0] - position.coords.latitude) >
+        0.01 ||
+      Math.abs(newLocationData.coordinates[1] - position.coords.longitude) >
+        0.01
+    ) {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${position.coords.latitude},${position.coords.longitude}&key=${API_KEY_GEO}`,
+      );
+
+      const data = await response.json();
+      if (data.status === 'OK') {
+        const result = data.results[0];
+        const cityName = getCityName(result);
+        const newLocationData: LocationData = {
+          coordinates: [position.coords.latitude, position.coords.longitude],
+          city: cityName,
+        };
+        console.log(
+          'Geographical position found. Proceeding to update database...',
+        );
+
+        updateUserLocation(newLocationData)
+      } else {
+        // Log the error message
+        console.error(
+          `Geocoding API request failed with status: ${data.status}`,
+        );
+
+        // TODO: Inform the user that location information couldn't be retrieved
+        // You might use a state variable or some UI element to do this
+      }
+    }else{
+      console.log("The difference between the last position and the current position is not great, hence there has been no update in the database")
+    }
+  };
+
+  const checkLocationEnabled = () => {
+    Geolocation.getCurrentPosition(
+      async position => {
+        dispatch(setShowLocationScreen(false));
+        if (uid) {
+          UserService.getLocation(uid)
+            .then(result => {
+              const newLocationData: LocationData = {
+                coordinates: result.location.coordinates,
+                city:result.location.city,
+              };
+              getPosition(position, newLocationData)
+              
+            })
+            .catch(e => console.log(e))
+        }
+      },
+      error => {
+        console.log(error.code, error.message);
+        dispatch(setShowLocationScreen(true));
+      },
+      {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+    );
+  };
+
+  const updateUserLocation = async (locationData: LocationData | null) => {
+    if (uid && locationData) {
+      await UserService.updateLocation(uid, locationData)
+        .then(result => {
+          if (result.type === 'success') {
+            console.log('Database successfully updated');
+          } else {
+            console.log(result.message);
+          }
+        })
+        .catch(e => console.error(e));
+    } else {
+      // Handle the scenario where uid is not defined.
+      console.error('User is not authenticated.');
+    }
+  };
+  
+
+  useEffect(() => {
+    if (isRegisterCompleted.status && auth().currentUser?.uid)
+      checkLocationEnabled();
+  }, [isRegisterCompleted]);
+
+};
+
+export default useLocationService;
