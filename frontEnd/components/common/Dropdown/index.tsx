@@ -1,6 +1,6 @@
 import {Pressable, Text, View, Modal, FlatList, TextInput} from 'react-native';
 import React, {useState} from 'react';
-import {COLORS, TYPES} from '../../../constants';
+import {THEME_COLORS, TYPES} from '../../../constants';
 import {ButtonImage} from '../Button';
 import {icons} from '../../../assets';
 import countriesData from 'countries-phone-masks';
@@ -71,7 +71,7 @@ const Dropdown: React.FC<TYPES.DropdownProps> = ({
           <ButtonImage
             imgUrl={icons.arrowLeft}
             style={styles.dropdown__arrowLeft}
-            tintColor={COLORS.dark}
+            tintColor={THEME_COLORS.dark}
             onPress={toggleDropdown}
           />
           <TextInput

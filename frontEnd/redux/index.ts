@@ -13,7 +13,8 @@ import {
   setProgressBarValue,
   setQuestionAndAnswer,
   setInterests,
-  resetRegister
+  resetRegister,
+  setUserProfile,
 } from './actions';
 
 import {Store, Persistor} from './store';
@@ -35,5 +36,6 @@ export {
   setProgressBarValue,
   setQuestionAndAnswer,
   setInterests,
-  resetRegister
+  resetRegister,
+  setUserProfile,
 };

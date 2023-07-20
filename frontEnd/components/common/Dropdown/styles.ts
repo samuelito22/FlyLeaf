@@ -1,5 +1,10 @@
 import {StyleSheet} from 'react-native';
-import {BORDER_RADIUS, COLORS, FONTS, themeText} from '../../../constants';
+import {
+  BORDER_RADIUS,
+  THEME_COLORS,
+  FONTS,
+  themeText,
+} from '../../../constants';
 
 export const styles = StyleSheet.create({
   dropdown: {
@@ -15,26 +20,26 @@ export const styles = StyleSheet.create({
   dropdown__toggle__value: {
     fontFamily: FONTS.rubikLight,
     fontSize: 20,
-    color: COLORS.dark,
+    color: THEME_COLORS.dark,
   },
   dropdown__item: {
     justifyContent: 'space-between',
     paddingHorizontal: 15,
     paddingVertical: 15,
     borderBottomWidth: 0.2,
-    borderColor: COLORS.gray,
+    borderColor: THEME_COLORS.tertiary,
     flexDirection: 'row',
   },
   dropdown__item__name: {
     fontFamily: FONTS.rubikLight,
     fontSize: 20,
-    color: COLORS.dark,
+    color: THEME_COLORS.dark,
     maxWidth: 300,
   },
   dropdown__item__code: {
     fontFamily: FONTS.rubikLight,
     fontSize: 20,
-    color: COLORS.dark,
+    color: THEME_COLORS.dark,
     minWidth: 50,
     marginLeft: 10,
   },
@@ -46,7 +51,7 @@ export const styles = StyleSheet.create({
   },
   dropdown__search: {
     borderBottomWidth: 1,
-    borderColor: COLORS.dark,
+    borderColor: THEME_COLORS.dark,
     flexDirection: 'row',
     width: '100%',
     backgroundColor: 'white',
@@ -66,7 +71,7 @@ export const styles = StyleSheet.create({
   dropdown__textField: {
     marginLeft: 20,
     borderColor: 'transparent',
-    color: COLORS.dark,
+    color: THEME_COLORS.dark,
     flex: 1,
     height: 40,
     ...themeText.bodyRegularFour,

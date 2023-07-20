@@ -1,5 +1,10 @@
 import {StyleSheet} from 'react-native';
-import {BORDER_RADIUS, COLORS, themeText} from '../../../constants';
+import {
+  BORDER_RADIUS,
+  COMPONENT_COLORS,
+  THEME_COLORS,
+  themeText,
+} from '../../../constants';
 
 export const styles = StyleSheet.create({
   OTPField: {
@@ -12,12 +17,12 @@ export const styles = StyleSheet.create({
     height: 55,
     width: 44.23,
     marginHorizontal: 5,
-    backgroundColor: COLORS.OTPBox,
+    backgroundColor: COMPONENT_COLORS.otpBox,
     borderRadius: BORDER_RADIUS.medium,
   },
   OTPField__box__input: {
     ...themeText.headingOne,
-    color: COLORS.dark,
+    color: THEME_COLORS.dark,
     textAlign: 'center',
     marginTop: 5,
     height: '100%',

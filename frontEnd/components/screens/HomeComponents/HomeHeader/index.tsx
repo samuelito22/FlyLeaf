@@ -3,25 +3,32 @@ import React from 'react';
 import {styles} from './styles';
 import {ButtonImage} from '../../../common/Button';
 import {icons, images} from '../../../../assets';
-import {COLORS} from '../../../../constants';
+import {THEME_COLORS, ROUTES, TYPES} from '../../../../constants';
+import {useNavigation, NavigationProp} from '@react-navigation/native';
 
 const HomeHeader = () => {
+  const navigation = useNavigation<NavigationProp<TYPES.RootStackParamList>>();
+  const handleProfilePress = async () => {
+    navigation.navigate(ROUTES.PROFILE_NAVIGATOR, {
+      screen: ROUTES.USER_PROFILE_SCREEN,
+    });
+  };
+
   return (
     <View style={styles.container}>
-      <View style={styles.profileContainer}>
         <ButtonImage
-          imgUrl={icons.profileDark}
-          style={styles.profile}
-          tintColor={COLORS.secondary}
+          imgUrl={icons.sidebar}
+          style={styles.sidebar}
+          tintColor={THEME_COLORS.dark}
+          onPress={handleProfilePress}
         />
-      </View>
       <View style={styles.logoContainer}>
         <Image style={styles.logo} source={images.logo} />
       </View>
       <ButtonImage
-        imgUrl={icons.magicWand}
+        imgUrl={icons.magic}
         style={styles.category}
-        tintColor={COLORS.primary}
+        tintColor={THEME_COLORS.dark}
       />
     </View>
   );

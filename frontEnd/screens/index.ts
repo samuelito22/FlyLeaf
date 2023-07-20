@@ -23,6 +23,10 @@ import HomeScreen from './bottomTabNavigator/HomeScreen';
 import LikesScreen from './bottomTabNavigator/LikesScreen';
 import NotificationScreen from './bottomTabNavigator/NotificationScreen';
 
+// Profile
+import UserProfileScreen from './profile/UserProfileScreen';
+import PublicProfileScreen from './profile/PublicProfileScreen';
+
 export {
   EmailVerificationScreen,
   DateOfBirthScreen,
@@ -40,5 +44,7 @@ export {
   HomeScreen,
   LikesScreen,
   NotificationScreen,
-  MultipleQuestionsScreen
+  MultipleQuestionsScreen,
+  UserProfileScreen,
+  PublicProfileScreen,
 };

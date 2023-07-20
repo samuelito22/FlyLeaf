@@ -1,12 +1,17 @@
 import {StyleSheet} from 'react-native';
-import {BORDER_RADIUS, COLORS, HEIGHT} from '../../../../constants';
+import {
+  BORDER_RADIUS,
+  THEME_COLORS,
+  HEIGHT,
+  COMPONENT_COLORS,
+} from '../../../../constants';
 
 export const styles = StyleSheet.create({
   container: {
     height: HEIGHT.homeHeader,
     width: '100%',
     borderBottomWidth: 0.5,
-    borderBottomColor: COLORS.HeaderBorder,
+    borderBottomColor: COMPONENT_COLORS.headerBorder,
     justifyContent: 'space-between',
     alignItems: 'center',
     flexDirection: 'row',
@@ -15,25 +20,13 @@ export const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   category: {
-    width: 24,
-    height: 24,
-    tintColor: COLORS.dark,
-  },
-  profileContainer: {
-    borderRadius: BORDER_RADIUS.circle,
-    overflow: 'hidden',
-    borderColor: '#f3f5f7',
-    borderWidth: 0.7,
     width: 30,
     height: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: COLORS.primary,
+    tintColor: THEME_COLORS.dark,
   },
-  profile: {
-    width: 20,
-    height: 20,
-    tintColor: COLORS.dark,
+  sidebar: {
+    width: 30,
+    height: 30,
     backgroundColor: 'transparent',
   },
   logoContainer: {
@@ -46,6 +39,6 @@ export const styles = StyleSheet.create({
   logo: {
     width: 24,
     height: 24,
-    tintColor: COLORS.primary,
+    tintColor: THEME_COLORS.primary,
   },
 });

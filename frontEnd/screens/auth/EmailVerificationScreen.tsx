@@ -1,14 +1,16 @@
 import React, {useEffect} from 'react';
 import {StyleSheet, Text, View} from 'react-native';
-import {BackButton, Button, SafeContainer} from '../../components';
-import {COLORS, ROUTES, TYPES, themeText} from '../../constants';
+import {BackButton, SafeContainer} from '../../components';
+import {ROUTES, THEME_COLORS, TYPES, themeText} from '../../constants';
 import {NavigationProp, RouteProp} from '@react-navigation/native';
-import {icons} from '../../assets';
 import {AuthService} from '../../services';
 
 interface EmailVerificationProps {
   navigation?: NavigationProp<TYPES.RootStackParamList>;
-  route?: RouteProp<TYPES.RootStackParamList, 'EMAIL_VERIFICATION_SCREEN'>;
+  route?: RouteProp<
+    TYPES.RootStackParamList,
+    typeof ROUTES.EMAIL_VERIFICATION_SCREEN
+  >;
 }
 
 const EmailVerificationScreen: React.FC<EmailVerificationProps> = ({
@@ -59,13 +61,15 @@ const EmailVerificationScreen: React.FC<EmailVerificationProps> = ({
 
   return (
     <SafeContainer>
-   <BackButton onPress={() => {
+      <BackButton
+        onPress={() => {
           if (actionType === 'register') {
             navigation?.navigate(ROUTES.REGISTER_RECOVERY_EMAIL_SCREEN);
           } else {
             navigation?.navigate(ROUTES.LOGIN_START_SCREEN);
           }
-        }}/>
+        }}
+      />
 
       <View style={styles.container}>
         <View style={styles.textContainer}>
@@ -87,17 +91,17 @@ const styles = StyleSheet.create({
   },
   header: {
     ...themeText.headingOne,
-    color: COLORS.dark,
+    color: THEME_COLORS.dark,
     textAlign: 'center',
   },
   paragraph: {
     ...themeText.bodyRegularFour,
-    color: COLORS.gray,
+    color: THEME_COLORS.tertiary,
     textAlign: 'center',
   },
   paragraph__span: {
     ...themeText.bodyBoldFour,
-    color: COLORS.gray,
+    color: THEME_COLORS.tertiary,
     textAlign: 'center',
   },
   textContainer: {

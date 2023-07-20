@@ -9,7 +9,7 @@ import {
   USER_NOT_FOUND_ERR,
   DATABASE_UPDATED
 } from "../errors.js";
-import { User } from "../models/user.js";
+import User  from "../models/user.js";
 import Joi from 'joi';
 
 // @route POST auth/users/register
@@ -17,74 +17,49 @@ import Joi from 'joi';
 // @access Public
 export async function registerUser(req, res) {
   try {
-    const {
-      uid,
-      phoneNumber,
-      firstName,
-      email,
-      dateOfBirth,
-      gender,
-      relationshipGoal,
-    } = req.body;
-
-    let { questionAndAnswer, interests, genderPreferences, pictures } = req.body;
-
-    // parse questionAndAnswer and interests if they are string
-    try {
-      questionAndAnswer = typeof questionAndAnswer === 'string' ? JSON.parse(questionAndAnswer) : questionAndAnswer;
-      interests = typeof interests === 'string' ? JSON.parse(interests) : interests;
-      genderPreferences = typeof genderPreferences === 'string' ? JSON.parse(genderPreferences) : genderPreferences;
-      pictures = typeof pictures === "string" ? JSON.parse(pictures) : pictures;
-    } catch (e) {
-      return res.status(400).json({
-        type: "error",
-        message: "Invalid JSON format for questionAndAnswer or interests",
-      });
-    }
-
-    const { errors, isValid } = Validation.validateRegisterInput({
-      uid,
-      phoneNumber,
-      firstName,
-      email,
-      dateOfBirth,
-      gender,
-      genderPreferences,
-      relationshipGoal,
-      pictures,
-      questionAndAnswer,
-      interests
+    // Define the schema
+    const schema = Joi.object({
+      uid: Joi.string().required(),
+      phoneNumber: Joi.string().required(),
+      firstName: Joi.string().required(),
+      email: Joi.string().email(),
+      dateOfBirth: Joi.date().required(),
+      gender: Joi.object({
+        general: Joi.string().valid('Male', 'Female', 'Non-Binary').required(),
+        specific: Joi.string().optional()
+      }).required(),
+      genderPreferences: Joi.array().items(Joi.string()).required(),
+      relationshipGoal: Joi.string().valid('Friendship', 'Relationship', 'Exploring').required(),
+      pictures: Joi.array().items(Joi.string()),
+      questionAndAnswer: Joi.array().items(Joi.object({
+        question: Joi.string().required(),
+        answer: Joi.string().required()
+      })).required(),
+      interests: Joi.array().items(Joi.string()).required()
     });
 
-    if (!isValid) {
+    // Validate the inputs
+    const { error, value } = schema.validate(req.body);
+
+    // If validation error, throw an error
+    if (error) {
       return res.status(400).json({
         type: "error",
-        message: errors,
+        message: error.details[0].message,
       });
     }
 
     // Check if user with this UID already exists
-    const userExist = await User.findOne({ uid });
+    const userExist = await User.findOne({ uid: value.uid });
 
     if (userExist) {
-      return res
-        .status(400)
-        .json({ type: "error", message: USER_ALREADY_EXIST });
+      return res.status(400).json({ 
+        type: "error", 
+        message: USER_ALREADY_EXIST 
+      });
     }
     
-    const newUser = new User({
-      uid,
-      phoneNumber,
-      firstName,
-      email,
-      dateOfBirth,
-      gender,
-      genderPreferences,
-      relationshipGoal,
-      pictures,
-      questionAndAnswer,
-      interests
-    });
+    const newUser = new User(value);
 
     await newUser.save();
 
@@ -216,7 +191,8 @@ export async function updateUserLocation(req, res) {
       uid: Joi.string().required(),
       locationData: Joi.object({
         coordinates: Joi.array().items(Joi.number()).length(2).required(),
-        city: Joi.string().required()
+        city: Joi.string().required(),
+        country: Joi.string().required()
       }).required()
     });
   
@@ -240,7 +216,8 @@ export async function updateUserLocation(req, res) {
             lastLocation: {
               type: 'Point',
               coordinates: locationData.coordinates,
-              city: locationData.city
+              city: locationData.city,
+              country: locationData.country
             }
           }
         },
@@ -306,6 +283,52 @@ export async function updateUserLocation(req, res) {
       return res.status(500).json({
         type: "error",
         message: 'Error getting user location'
+      });
+    }
+  }
+  
+
+  export async function getUserProfile(req, res) {
+    const { uid } = req.params; // Assuming uid is passed as a URL parameter
+    // Define the schema
+    const schema = Joi.object({
+      uid: Joi.string().required(),
+    });
+  
+    // Validate the inputs
+    const { error } = schema.validate({ uid });
+    
+    // If validation error, throw an error
+    if (error) {
+      return res.status(400).json({
+        type: "error",
+        message: error.details[0].message,
+      });
+    }
+  
+    try {
+      // If validation passes, proceed with fetching user location
+      const user = await User.findOne({ uid });
+  
+      // If user not found, throw an error
+      if (!user) {
+        return res.status(404).json({ 
+          type: "error", 
+          message: USER_NOT_FOUND_ERR
+        });
+      }
+  
+      // Return the user's last location
+      return res.status(200).json({
+        type: "success",
+        profile: user
+      });
+  
+    } catch (error) {
+      console.error('Error getting user profile', error);
+      return res.status(500).json({
+        type: "error",
+        message: 'Error getting user profile'
       });
     }
   }

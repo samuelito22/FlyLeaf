@@ -1,8 +1,10 @@
-import React from 'react';
-import {TouchableHighlight, Text, Image, View} from 'react-native';
+import React, {useState} from 'react';
+import {Text, Image, View, Pressable} from 'react-native';
 import {styles} from './styles';
-import {COLORS, TYPES, themeText} from '../../../constants';
+import {PALETTE, TYPES} from '../../../constants';
 import {images} from '../../../assets';
+import {TouchableRipple} from 'react-native-paper';
+import MaskedView from '@react-native-masked-view/masked-view';
 
 export const PrimaryButton = ({
   onPress,
@@ -10,12 +12,14 @@ export const PrimaryButton = ({
   children,
 }: TYPES.PrimaryButtonProps) => {
   return (
-    <TouchableHighlight
-      style={[styles.primaryButton, {...style}]}
-      onPress={onPress}
-      underlayColor="none">
-      <Text style={styles.primaryButtonTextLight}>{children}</Text>
-    </TouchableHighlight>
+    <View style={[styles.primaryButton, style]}>
+      <TouchableRipple
+        onPress={onPress}
+        style={styles.fullCenterContainer}
+        rippleColor={PALETTE.GRAY400}>
+        <Text style={styles.primaryButtonTextLight}>{children}</Text>
+      </TouchableRipple>
+    </View>
   );
 };
 
@@ -26,16 +30,29 @@ export const ButtonImage = ({
   style,
 }: TYPES.ButtonImageProps) => {
   return (
-    <TouchableHighlight
-      underlayColor="none"
-      style={{...styles.imageButtonContainer, ...style}}
-      onPress={onPress}>
+    <View style={[styles.imageButtonContainer, style]}>
       <Image
         source={imgUrl}
         resizeMode="contain"
-        style={{...styles.imageButton, tintColor: tintColor}}
+        style={[styles.imageButton, {tintColor}]}
       />
-    </TouchableHighlight>
+      <MaskedView
+        style={styles.fullCenterContainer}
+        maskElement={
+          <Image
+            source={imgUrl}
+            resizeMode="contain"
+            style={[styles.imageButton, {tintColor}]}
+          />
+        }>
+        <TouchableRipple
+          onPress={onPress}
+          style={styles.fullCenterContainer}
+          rippleColor={PALETTE.GRAY400}>
+          <></>
+        </TouchableRipple>
+      </MaskedView>
+    </View>
   );
 };
 
@@ -46,19 +63,16 @@ export const ClickableIndicatorPrimaryButton = ({
   isActive,
 }: TYPES.ClickableIndicatorPrimaryButton) => {
   return (
-    <TouchableHighlight underlayColor="none" onPress={onPress}>
-      <View style={{...styles.clickableButtonContainer, ...style}}>
+    <Pressable onPress={onPress}>
+      <View style={[styles.clickableButtonContainer, style]}>
         <View style={styles.textContainer}>
-          <Text style={styles.clickableButtonText}>
-            {children}
-          </Text>
+          <Text style={styles.clickableButtonText}>{children}</Text>
         </View>
         <View
-          style={{
-            ...styles.clickableButtonIndicator,
-            borderColor: isActive ? 'none' : COLORS.primaryIndicatorBorder,
-            borderWidth: isActive ? 0 : 1,
-          }}>
+          style={[
+            styles.clickableButtonIndicator,
+            isActive ? styles.indicatorActive : styles.indicatorInactive,
+          ]}>
           {isActive && (
             <Image
               source={images.successIllustration}
@@ -68,7 +82,7 @@ export const ClickableIndicatorPrimaryButton = ({
           )}
         </View>
       </View>
-    </TouchableHighlight>
+    </Pressable>
   );
 };
 
@@ -76,15 +90,34 @@ export const interestsButton = ({
   onPress,
   style,
   children,
-  borderColor
 }: TYPES.InterestsButtonPress) => {
+  const [active, setActive] = useState(false);
 
   return (
-    <TouchableHighlight
-      style={[styles.interestButton, {...style, borderColor: borderColor}]}
-      onPress={onPress}
-      underlayColor="none">
-      <Text style={[styles.interestButtonText, {...themeText.bodyMediumSix}]}>{children}</Text>
-    </TouchableHighlight>
+    <View
+      style={[
+        styles.interestButton,
+        style,
+        active ? styles.activeInterestButton : styles.inactiveInterestButton,
+      ]}>
+      <TouchableRipple
+        onPress={() => {
+          setActive(!active);
+          if (onPress) onPress();
+        }}
+        style={styles.fullCenterContainer}
+        rippleColor={PALETTE.GRAY400}>
+        <></>
+      </TouchableRipple>
+      <Text
+        style={[
+          styles.interestButtonText,
+          active
+            ? styles.activeInterestButtonText
+            : styles.inactiveInterestButtonText,
+        ]}>
+        {children}
+      </Text>
+    </View>
   );
 };

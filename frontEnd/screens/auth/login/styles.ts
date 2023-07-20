@@ -1,6 +1,6 @@
 import {StyleSheet} from 'react-native';
 import {verticalScale} from 'react-native-size-matters';
-import {COLORS, themeText} from '../../../constants';
+import {PALETTE, THEME_COLORS, themeText} from '../../../constants';
 
 export const styles = StyleSheet.create({
   container: {
@@ -17,12 +17,12 @@ export const styles = StyleSheet.create({
   },
   title: {
     ...themeText.headingOne,
-    color: COLORS.dark,
+    color: THEME_COLORS.dark,
     marginBottom: verticalScale(12),
   },
   paragraph: {
     ...themeText.bodyRegularFour,
-    color: COLORS.dark,
+    color: THEME_COLORS.dark,
   },
   paragraph_marginBottom_login: {
     marginBottom: verticalScale(17),
@@ -33,7 +33,7 @@ export const styles = StyleSheet.create({
   resendInfo: {
     marginTop: verticalScale(12),
     ...themeText.bodyRegularSix,
-    color: COLORS.gray,
+    color: THEME_COLORS.tertiary,
   },
   toggleContainer: {
     flexDirection: 'column',
@@ -68,7 +68,7 @@ export const styles = StyleSheet.create({
     marginBottom: 18,
   },
   error: {
-    color: COLORS.error,
+    color: PALETTE.RED500,
     ...themeText.bodyRegularSix,
     marginTop: 12,
     marginBottom: 12,

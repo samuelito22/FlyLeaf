@@ -1,7 +1,7 @@
 import {View, Text, Image, Dimensions} from 'react-native';
-import React from 'react';
+import React, { useState } from 'react';
 import {styles} from './styles';
-import {COLORS, HEIGHT, TYPES} from '../../../../constants';
+import {HEIGHT, TYPES} from '../../../../constants';
 import {
   PanGestureHandler,
   PanGestureHandlerGestureEvent,
@@ -19,11 +19,10 @@ const UserProfileCard = ({
   about,
   firstName,
   age,
-  city,
-  profileImage,
   statusText,
-  statusIcon,
   interests,
+  movementActive = true,
+  questionAndAnswer
 }: TYPES.UserProfileCardProps) => {
   const defaultAbout =
     "This user hasn't added a bio yet, but feel free to explore their profile to get to know them better!";
@@ -32,30 +31,34 @@ const UserProfileCard = ({
   const SWIPE_DURATION = 200;
   const THRESHOLD_LEFT = -SCREEN_WIDTH * 0.2;
   const THRESHOLD_RIGHT = SCREEN_WIDTH * 0.2;
+  const [isCardVisible, setIsCardVisible] = useState(true);
 
   const translateX = useSharedValue(0);
-  const cardHeight = useSharedValue(
-    (SCREEN_HEIGHT - HEIGHT.bottomTabBar - HEIGHT.homeHeader) / 3,
-  );
-  const opacity = useSharedValue(1);
+  const isSwipingOut = useSharedValue(false);
+  const cardHeight = SCREEN_HEIGHT
 
   const panGesture = useAnimatedGestureHandler<PanGestureHandlerGestureEvent>({
     onActive: event => {
-      translateX.value = event.translationX;
+      if (movementActive && isCardVisible) {
+        translateX.value = event.translationX;
+      }
     },
     onEnd: () => {
+      if (!movementActive && isCardVisible) {
+        return;
+      }
+
       const shouldBeDismissed_left = translateX.value < THRESHOLD_LEFT;
       const shouldBeDismissed_right = translateX.value > THRESHOLD_RIGHT;
       if (shouldBeDismissed_left) {
         translateX.value = withTiming(-SCREEN_WIDTH);
-        opacity.value = withTiming(0);
-        cardHeight.value = withTiming(0);
+        isSwipingOut.value = true;
       } else if (shouldBeDismissed_right) {
         translateX.value = withTiming(SCREEN_WIDTH);
-        opacity.value = withTiming(0);
-        cardHeight.value = withTiming(0);
+        isSwipingOut.value = true;
       } else {
         translateX.value = withSpring(0);
+        isSwipingOut.value = false;
       }
     },
   });
@@ -66,11 +69,6 @@ const UserProfileCard = ({
         translateX: translateX.value,
       },
     ],
-  }));
-
-  const animatedCompleteContainerStyle = useAnimatedStyle(() => ({
-    height: cardHeight.value,
-    opacity: opacity.value,
   }));
 
   const animatedRightIconStyle = useAnimatedStyle(() => {
@@ -89,23 +87,37 @@ const UserProfileCard = ({
     return {opacity};
   });
 
+  const animatedHeightToZero = useAnimatedStyle(() => {
+    const maxHeight = withTiming(
+      translateX.value === -SCREEN_WIDTH || translateX.value === SCREEN_WIDTH
+        ? 0
+        : cardHeight, {duration: 600}
+    );
+    const opacity = isSwipingOut.value ? withTiming(0) : 1;
+
+    return {maxHeight, opacity};
+  });
+
+  const handleLayout = (event:any) => {
+    const layout = event.nativeEvent.layout;
+    const isVisible = ((layout.y + layout.height) <= (SCREEN_HEIGHT - HEIGHT.bottomTabBar));
+    setIsCardVisible(isVisible);
+  }
+  
+
+
   return (
-    <Animated.View style={animatedCompleteContainerStyle}>
+    <View  onLayout={handleLayout}>
+    <Animated.View style={animatedHeightToZero}>
       <PanGestureHandler onGestureEvent={panGesture}>
         <Animated.View style={[animatedContainerStyle, styles.container]}>
-          {/*
-        <View style={styles.profileHeaderContainer}>
-        <Image source={profileImage} style={styles.profileImage} resizeMode='contain'/>
-        <View style={styles.statusContainer}>
-            <Text style={styles.statusContainer_text}>{statusText}</Text>
-            <Image source={statusIcon} style={styles.statusContainer_icon} resizeMode='contain'/>
-        </View>
-        </View>
-  */}
           <View style={styles.profileInfoContainer}>
-            <Text style={styles.profileInfoContainer_header}>
-              {firstName}, {age}, {city}
+            <View style={{flexDirection:'row', justifyContent:'space-between'}}>
+            <Text style={styles.headerText}>
+              {firstName}, {age}
             </Text>
+            <Text style={styles.statusContainer_text}>{statusText}</Text>
+            </View>
             <View style={styles.interestList}>
               {interests?.map((interest: string, index) => (
                 <View style={styles.interestCard} key={index}>
@@ -114,35 +126,28 @@ const UserProfileCard = ({
               ))}
             </View>
           </View>
-          <View style={styles.aboutContainer}>
-            <Text style={styles.aboutContainer_header}>About</Text>
+            <Text style={styles.headerText}>About</Text>
             <Text
-              style={styles.aboutContainer_paragraph}
-              numberOfLines={3}
-              ellipsizeMode="tail">
+              style={styles.paragraphText}>
               {about ? about : defaultAbout}
             </Text>
-          </View>
-          <View style={styles.profileHeaderContainer}>
-            <View style={styles.statusContainer}>
-              <Text style={styles.statusContainer_text}>{statusText}</Text>
-            </View>
+          <View style={styles.additionInfoContainer}>
+            <Text style={styles.headerText}>Thoughts of the day?</Text>
+            <Text
+              style={styles.paragraphText}>
+              {about ? about : defaultAbout}
+            </Text>
           </View>
         </Animated.View>
       </PanGestureHandler>
       <Animated.View style={[styles.icon, animatedRightIconStyle, {right: 0}]}>
-        <Image
-          source={icons.closeSquare}
-          style={[styles.icon_image, {tintColor: COLORS.errorLight}]}
-        />
+        <Image source={icons.closeSquare} style={[styles.icon_image]} />
       </Animated.View>
       <Animated.View style={[styles.icon, animatedLeftIconStyle, {left: 0}]}>
-        <Image
-          source={icons.tickSquare}
-          style={[styles.icon_image, {tintColor: COLORS.successLight}]}
-        />
+        <Image source={icons.tickSquare} style={[styles.icon_image]} />
       </Animated.View>
     </Animated.View>
+    </View>
   );
 };
 

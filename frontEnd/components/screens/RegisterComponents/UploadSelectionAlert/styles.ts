@@ -1,5 +1,5 @@
 import {StyleSheet} from 'react-native';
-import {BORDER_RADIUS, COLORS, themeText} from '../../../../constants';
+import {BORDER_RADIUS, THEME_COLORS, themeText} from '../../../../constants';
 
 export const styles = StyleSheet.create({
   bottomView: {
@@ -18,13 +18,13 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     width: '100%',
     borderBottomWidth: 0.2,
-    borderBottomColor: COLORS.gray,
+    borderBottomColor: THEME_COLORS.tertiary,
     paddingVertical: 25,
     paddingHorizontal: 20,
     alignItems: 'center',
   },
   bottomView__modalView__textStyle: {
-    color: COLORS.dark,
+    color: THEME_COLORS.dark,
     ...themeText.bodyRegularFive,
     marginLeft: 15,
   },

@@ -12,7 +12,7 @@ import {
   TextField,
 } from '../../../components';
 
-import {COLORS, ROUTES, themeText, TYPES} from '../../../constants';
+import {ROUTES, THEME_COLORS, themeText, TYPES} from '../../../constants';
 import {useFormValidation} from '../../../utils/hooks';
 import {images} from '../../../assets';
 import {NavigationProp} from '@react-navigation/native';
@@ -42,7 +42,6 @@ const LoginStartScreen = ({
       scopes: ['email'],
     });
   }, []);
-
 
   useEffect(() => {
     setEmailIsValid(validateEmail(email));
@@ -86,13 +85,14 @@ const LoginStartScreen = ({
           <View style={styles.toggleContainer}>
             <Text
               style={{
-                color: COLORS.gray,
+                color: THEME_COLORS.tertiary,
                 ...themeText.bodyBoldSix,
                 marginBottom: 5,
               }}>
               {showEmail ? 'Log In with phone number' : 'Log In with email'}
             </Text>
-            <Text style={{color: COLORS.dark, ...themeText.bodyBoldThree}}>
+            <Text
+              style={{color: THEME_COLORS.dark, ...themeText.bodyBoldThree}}>
               {showEmail ? 'Log In with email' : 'Log In with phone number'}
             </Text>
             <Button.ButtonImage
@@ -111,14 +111,16 @@ const LoginStartScreen = ({
                 autoCapitalize="none"
                 style={{
                   borderBottomColor: emailIsValid
-                    ? COLORS.primary
-                    : COLORS.gray,
+                    ? THEME_COLORS.primary
+                    : THEME_COLORS.tertiary,
                 }}
               />
             ) : (
               <>
                 <Dropdown
-                  borderColor={phoneIsValid ? COLORS.primary : COLORS.gray}
+                  borderColor={
+                    phoneIsValid ? THEME_COLORS.primary : THEME_COLORS.tertiary
+                  }
                   setDialingCode={setDialingCode}
                   setMask={setMask}
                 />
@@ -130,8 +132,8 @@ const LoginStartScreen = ({
                   autoCapitalize="none"
                   style={{
                     borderBottomColor: phoneIsValid
-                      ? COLORS.primary
-                      : COLORS.gray,
+                      ? THEME_COLORS.primary
+                      : THEME_COLORS.tertiary,
                   }}
                 />
               </>
@@ -143,11 +145,11 @@ const LoginStartScreen = ({
               ...styles.signInButton,
               backgroundColor: showEmail
                 ? emailIsValid
-                  ? COLORS.primary
-                  : COLORS.gray
+                  ? THEME_COLORS.primary
+                  : THEME_COLORS.tertiary
                 : phoneIsValid
-                ? COLORS.primary
-                : COLORS.gray,
+                ? THEME_COLORS.primary
+                : THEME_COLORS.tertiary,
             }}>
             Sign In
           </Button.PrimaryButton>

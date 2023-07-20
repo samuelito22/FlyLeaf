@@ -1,5 +1,6 @@
 import {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import {ImageSourcePropType} from 'react-native';
+import {NavigationProp} from '@react-navigation/native';
 
 /**
  * Button Related Props
@@ -13,10 +14,7 @@ export interface PrimaryButtonProps extends ButtonProps {
   children?: ReactNode;
 }
 
-export interface InterestsButtonPress extends PrimaryButtonProps {
-  children?: ReactNode;
-  borderColor: string;
-}
+export type InterestsButtonPress = PrimaryButtonProps;
 
 export interface ButtonImageProps extends ButtonProps {
   imgUrl: Image;
@@ -124,14 +122,14 @@ export type SeparatorProps = ContainerProps;
  */
 
 export interface UserProfileCardProps {
-  about?: string;
+  about: string;
   firstName: string;
   age: string;
   city: string;
-  profileImage: ImageSourcePropType;
   statusText: string;
-  statusIcon: ImageSourcePropType;
-  interests?: string[];
+  interests: string[];
+  movementActive?: boolean;
+  questionAndAnswer?: [{question:string, answer:string}]
 }
 
 /**
@@ -175,7 +173,7 @@ interface SetGenderPreferencesAction {
 
 interface SetGenderAction {
   type: 'SET_GENDER';
-  payload: string;
+  payload: {general: string; specific: string | null};
 }
 
 interface SetPicturesAction {
@@ -193,34 +191,41 @@ interface SetRelationshipGoalAction {
   payload: string;
 }
 
-interface SetShowLocationScreen {
+interface SetShowLocationScreenAction {
   type: 'SET_SHOW_LOCATION_SCREEN';
   payload: boolean;
 }
 
-interface SetIsRegisterCompleted {
+interface SetIsRegisterCompletedAction {
   type: 'SET_IS_REGISTER_COMPLETED';
-  payload: {status: boolean, currentScreen: keyof TYPES.RootStackParamList | null};
+  payload: {
+    status: boolean;
+    currentScreen: keyof TYPES.RootStackParamList | null;
+  };
 }
 
-
-interface SetProgressBarValue {
+interface SetProgressBarValueAction {
   type: 'SET_PROGRESS_BAR_VALUE';
   payload: number;
 }
 
-interface SetQuestionAndAnswer {
+interface SetQuestionAndAnswerAction {
   type: 'SET_QUESTION_AND_ANSWER';
-  payload: {question: string, answer: string}[]
+  payload: {question: string; answer: string}[];
 }
 
-interface SetInterests {
+interface SetInterestsAction {
   type: 'SET_INTERESTS';
   payload: string[];
 }
 
-interface resetRegister {
-  type: 'RESET_REGISTER'
+interface resetRegisterAction {
+  type: 'RESET_REGISTER';
+}
+
+interface setUserProfileAction {
+  type: 'SET_USER_PROFILE';
+  payload: any;
 }
 
 export type AppAction =
@@ -232,30 +237,38 @@ export type AppAction =
   | SetPicturesAction
   | SetEmailAction
   | SetRelationshipGoalAction
-  | SetShowLocationScreen
-  | SetIsRegisterCompleted
-  | SetProgressBarValue
-  | SetQuestionAndAnswer
-  | SetInterests
-  | resetRegister
+  | SetShowLocationScreenAction
+  | SetIsRegisterCompletedAction
+  | SetProgressBarValueAction
+  | SetQuestionAndAnswerAction
+  | SetInterestsActionAction
+  | resetRegisterAction
+  | setUserProfileAction;
 
 export interface InitialStateRegisterType {
   dateOfBirth: Date | null;
   firstName: string | null;
   genderPreferences: string[] | null;
-  gender: string | null;
+  gender: {general: string; specific: string | null} | null;
   pictures: string[] | null;
   email: string | null;
   relationshipGoal: string | null;
   phoneNumber: string | null;
   progressBarValue: number;
-  questionAndAnswer: {question: string, answer: string}[] | null;
+  questionAndAnswer: {question: string; answer: string}[] | null;
   interests: string[];
-  isRegisterCompleted: {status: boolean, currentScreen: keyof RootStackParamList | null};
+  isRegisterCompleted: {
+    status: boolean;
+    currentScreen: keyof RootStackParamList | null;
+  };
 }
 
 export interface InitialStateAppStatusType {
   showLocationScreen: boolean;
+}
+
+export interface InitialStateUserType {
+  userProfile: any;
 }
 
 /**
@@ -295,6 +308,13 @@ export type RootStackParamList = {
 
   // Bottom tab navigator
   BOTTOM_TAB_NAVIGATOR: undefined;
+
+  // Profile
+  PROFILE_NAVIGATOR: {
+    screen: USER_PROFILE_SCREEN | PUBLIC_PROFILE_SCREEN;
+  };
+  USER_PROFILE_SCREEN: undefined;
+  PUBLIC_PROFILE_SCREEN: undefined;
 };
 
 /**
@@ -308,10 +328,10 @@ export interface UserRegisterParams {
   firstName: string;
   email?: string;
   dateOfBirth: Date;
-  gender: string;
+  gender: {general: string; specific: string};
   genderPreferences: string;
   relationshipGoal: string;
   pictures?: string[];
-  questionAndAnswer: {question: string, answer: string}[], 
-  interests: string[]
+  questionAndAnswer: {question: string; answer: string}[];
+  interests: string[];
 }

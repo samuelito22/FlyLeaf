@@ -8,7 +8,7 @@ import {
 } from '../screens';
 import {Image, ImageSourcePropType, View} from 'react-native';
 import {icons} from '../assets';
-import {COLORS, HEIGHT} from '../constants';
+import {THEME_COLORS, HEIGHT, COMPONENT_COLORS} from '../constants';
 import {TouchableRipple} from 'react-native-paper';
 
 const Tab = createBottomTabNavigator();
@@ -23,7 +23,7 @@ const TabIcon: React.FC<TabIconProps> = ({focused, source}) => {
     <Image
       source={source}
       style={{
-        tintColor: focused ? COLORS.dark : COLORS.gray,
+        tintColor: focused ? THEME_COLORS.dark : THEME_COLORS.tertiary,
         width: 24,
         height: 24,
       }}
@@ -43,7 +43,7 @@ const BottomTabNavigator = () => {
           height: HEIGHT.bottomTabBar,
           shadowColor: 'transparent',
           elevation: 0,
-          borderColor: COLORS.bottomTabsBorder,
+          borderColor: COMPONENT_COLORS.bottomTabsBorder,
         },
       }}
       initialRouteName="Home"
@@ -67,7 +67,7 @@ const BottomTabNavigator = () => {
               }}>
               <TouchableRipple
                 {...props}
-                rippleColor={COLORS.TabBarIcon}
+                rippleColor={COMPONENT_COLORS.tabBarIcon}
                 onPress={props.onPress}
               />
             </View>
@@ -93,7 +93,7 @@ const BottomTabNavigator = () => {
               }}>
               <TouchableRipple
                 {...props}
-                rippleColor={COLORS.TabBarIcon}
+                rippleColor={COMPONENT_COLORS.tabBarIcon}
                 onPress={props.onPress}
               />
             </View>
@@ -121,7 +121,7 @@ const BottomTabNavigator = () => {
               }}>
               <TouchableRipple
                 {...props}
-                rippleColor={COLORS.TabBarIcon}
+                rippleColor={COMPONENT_COLORS.tabBarIcon}
                 onPress={props.onPress}
               />
             </View>
@@ -147,7 +147,7 @@ const BottomTabNavigator = () => {
               }}>
               <TouchableRipple
                 {...props}
-                rippleColor={COLORS.TabBarIcon}
+                rippleColor={COMPONENT_COLORS.tabBarIcon}
                 onPress={props.onPress}
               />
             </View>

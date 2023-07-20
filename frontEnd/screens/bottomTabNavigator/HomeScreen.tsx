@@ -20,13 +20,11 @@ const HomeScreen = ({
       <HomeHeader />
       <View style={homeScreenStyles.container}>
         <UserProfileCard
-          about="Adventure seeker and film enthusiast with a passion for cooking. I love exploring new places, whether it's hiking in the mountains or discovering..."
+          about="Adventure seeker and film enthusiast with a passion for cooking. I love exploring new places, whether it's hiking in the mountains or discovering"
           firstName="Samuel"
           age="20"
           city="Newcastle"
-          profileImage={images.manAvatar}
           statusText="relationship"
-          statusIcon={icons.heartBold}
           interests={['anime', 'react', 'react native']}
         />
         <UserProfileCard
@@ -34,9 +32,31 @@ const HomeScreen = ({
           firstName="Samuel"
           age="20"
           city="Newcastle"
-          profileImage={images.manAvatar}
           statusText="relationship"
-          statusIcon={icons.heartBold}
+          interests={['anime', 'react', 'react native']}
+        />
+        <UserProfileCard
+          about="Adventure seeker and film enthusiast with a passion for cooking. I love exploring new places, whether it's hiking in the mountains or discovering..."
+          firstName="Samuel"
+          age="20"
+          city="Newcastle"
+          statusText="relationship"
+          interests={['anime', 'react', 'react native']}
+        />
+        <UserProfileCard
+          about="Adventure seeker and film enthusiast with a passion for cooking. I love exploring new places, whether it's hiking in the mountains or discovering..."
+          firstName="Samuel"
+          age="20"
+          city="Newcastle"
+          statusText="relationship"
+          interests={['anime', 'react', 'react native']}
+        />
+        <UserProfileCard
+          about="Adventure seeker and film enthusiast with a passion for cooking. I love exploring new places, whether it's hiking in the mountains or discovering"
+          firstName="Samuel"
+          age="20"
+          city="Newcastle"
+          statusText="relationship"
           interests={['anime', 'react', 'react native']}
         />
       </View>
@@ -48,7 +68,7 @@ export default HomeScreen;
 
 const homeScreenStyles = StyleSheet.create({
   container: {
-    maxWidth: 352,
+    maxWidth: 400,
     height: '100%',
   },
 });

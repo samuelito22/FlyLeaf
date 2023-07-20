@@ -1,6 +1,12 @@
 import {StyleSheet, Dimensions} from 'react-native';
 import {verticalScale} from 'react-native-size-matters';
-import {BORDER_RADIUS, COLORS, themeText} from '../../../constants';
+import {
+  BORDER_RADIUS,
+  THEME_COLORS,
+  COMPONENT_COLORS,
+  themeText,
+  PALETTE,
+} from '../../../constants';
 
 const screenWidth = Dimensions.get('window').width;
 const buttonWidth = ((screenWidth - 2 * 15 - 2 * 23) / 2) * 0.9;
@@ -47,7 +53,7 @@ export const styles = StyleSheet.create({
   },
   clickableIndicatorPrimaryButton: {
     marginBottom: 28,
-    backgroundColor: COLORS.primaryIndicatorBackground,
+    backgroundColor: COMPONENT_COLORS.primaryIndicatorBackground,
     borderRadius: BORDER_RADIUS.medium,
   },
   galleryButtonContainer: {
@@ -56,7 +62,7 @@ export const styles = StyleSheet.create({
     height: buttonWidth,
     position: 'relative',
     borderWidth: 1,
-    borderColor: COLORS.lightGray,
+    borderColor: PALETTE.LIGHT400,
     overflow: 'hidden',
   },
   galleryButtonImage: {
@@ -75,44 +81,44 @@ export const styles = StyleSheet.create({
 
   // Text Styles
   requirement: {
-    ...themeText.bodyBoldSix,
-    color: COLORS.gray,
+    ...themeText.bodyMediumSix,
+    color: PALETTE.GRAY300,
   },
   title: {
     ...themeText.headingOne,
-    color: COLORS.dark,
+    color: THEME_COLORS.dark,
     marginBottom: verticalScale(12),
   },
   paragraph: {
-    ...themeText.bodyRegularFour,
-    color: COLORS.dark,
+    ...themeText.bodyRegularFive,
+    color: THEME_COLORS.dark,
     marginBottom: verticalScale(17),
   },
   extraInformation: {
     ...themeText.bodyRegularSeven,
-    color: COLORS.gray,
+    color: THEME_COLORS.tertiary,
     textAlign: 'center',
     marginBottom: 15,
   },
   clickableIndicatorPrimaryButton__extraContainer_text: {
     ...themeText.bodyRegularSix,
-    color: COLORS.duskBlue,
+    color: PALETTE.INDIGO300,
   },
   skipContainerText: {
     ...themeText.bodyBoldFive,
-    color: COLORS.dark,
+    color: THEME_COLORS.dark,
   },
   extraGenderModal_button__text: {
     ...themeText.bodyRegularFour,
-    color: COLORS.dark,
+    color: THEME_COLORS.dark,
   },
   extraGenderModal_header: {
     ...themeText.bodyBoldTwo,
-    color: COLORS.dark,
+    color: THEME_COLORS.dark,
   },
   categoryTitle: {
     ...themeText.bodyMediumFive,
-    color:COLORS.dark
+    color: THEME_COLORS.dark,
   },
 
   // Other Styles
@@ -125,7 +131,7 @@ export const styles = StyleSheet.create({
   clickableIndicatorPrimaryButton__extraContainer_image: {
     width: 20,
     height: 20,
-    tintColor: COLORS.duskBlue,
+    tintColor: PALETTE.INDIGO300,
   },
   galleryButtonsContainer: {
     flexDirection: 'row',

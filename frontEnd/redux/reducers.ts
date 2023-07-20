@@ -12,7 +12,8 @@ import {
   SET_PROGRESS_BAR_VALUE,
   SET_QUESTION_AND_ANSWER,
   SET_INTERESTS,
-  RESET_REGISTER
+  RESET_REGISTER,
+  SET_USER_PROFILE,
 } from './actions';
 import {TYPES} from '../constants';
 
@@ -20,7 +21,7 @@ const initialStateRegister: TYPES.InitialStateRegisterType = {
   dateOfBirth: null,
   firstName: '',
   genderPreferences: [],
-  gender: '',
+  gender: null,
   pictures: [],
   email: '',
   relationshipGoal: '',
@@ -28,8 +29,7 @@ const initialStateRegister: TYPES.InitialStateRegisterType = {
   progressBarValue: 0,
   questionAndAnswer: null,
   interests: [],
-  isRegisterCompleted: {status: true, currentScreen: null}
-
+  isRegisterCompleted: {status: true, currentScreen: null},
 };
 
 const registerReducer = (
@@ -44,7 +44,10 @@ const registerReducer = (
     case SET_GENDER_PREFERENCES:
       return {...state, genderPreferences: action.payload as string[]};
     case SET_GENDER:
-      return {...state, gender: action.payload as string};
+      return {
+        ...state,
+        gender: action.payload as {general: string; specific: string | null},
+      };
     case SET_PICTURES:
       return {...state, pictures: action.payload as string[]};
     case SET_EMAIL:
@@ -56,21 +59,31 @@ const registerReducer = (
     case SET_PROGRESS_BAR_VALUE:
       return {...state, progressBarValue: action.payload as number};
     case SET_QUESTION_AND_ANSWER:
-      return {...state, questionAndAnswer: action.payload as [{question: string, answer: string}]};
-      case SET_INTERESTS:
+      return {
+        ...state,
+        questionAndAnswer: action.payload as [
+          {question: string; answer: string},
+        ],
+      };
+    case SET_INTERESTS:
       return {...state, interests: action.payload as string[]};
-      case SET_IS_REGISTER_COMPLETED:
-        return {...state, isRegisterCompleted: action.payload as {status: boolean, currentScreen: keyof TYPES.RootStackParamList | null}};
-      case RESET_REGISTER:
-        console.log("Resetting register...");
-        let resetState = initialStateRegister;
-        console.log("Reset State:", resetState);
-        return resetState;      
+    case SET_IS_REGISTER_COMPLETED:
+      return {
+        ...state,
+        isRegisterCompleted: action.payload as {
+          status: boolean;
+          currentScreen: keyof TYPES.RootStackParamList | null;
+        },
+      };
+    case RESET_REGISTER:
+      console.log('Resetting register...');
+      let resetState = initialStateRegister;
+      console.log('Reset State:', resetState);
+      return resetState;
     default:
       return state;
   }
 };
-
 
 const initialStateAppStatus: TYPES.InitialStateAppStatusType = {
   showLocationScreen: false,
@@ -88,4 +101,20 @@ const appStatusReducer = (
   }
 };
 
-export {registerReducer, appStatusReducer};
+const initialStateUser: TYPES.InitialStateUserType = {
+  userProfile: null,
+};
+
+const userReducer = (
+  state = initialStateUser,
+  action: TYPES.AppAction,
+): TYPES.InitialStateUserType => {
+  switch (action.type) {
+    case SET_USER_PROFILE:
+      return {...state, userProfile: action.payload as any};
+    default:
+      return state;
+  }
+};
+
+export {registerReducer, appStatusReducer, userReducer};

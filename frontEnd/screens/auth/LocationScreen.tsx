@@ -1,14 +1,14 @@
 import React from 'react';
 import {StyleSheet, Text, View, Image} from 'react-native';
 import {Button, SafeContainer} from '../../components';
-import {COLORS, TYPES, themeText} from '../../constants';
+import {THEME_COLORS, themeText} from '../../constants';
 import {icons} from '../../assets';
 import LocationEnabler from 'react-native-android-location-enabler';
 import {setShowLocationScreen} from '../../redux';
-import { useDispatch } from '../../utils/hooks';
+import {useDispatch} from '../../utils/hooks';
 
 const LocationScreen = () => {
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
 
   const getLocation = () =>
     LocationEnabler.promptForEnableLocationIfNeeded({
@@ -53,17 +53,17 @@ const styles = StyleSheet.create({
   },
   header: {
     ...themeText.headingOne,
-    color: COLORS.dark,
+    color: THEME_COLORS.dark,
     textAlign: 'center',
   },
   paragraph: {
     ...themeText.bodyRegularFour,
-    color: COLORS.gray,
+    color: THEME_COLORS.tertiary,
     textAlign: 'center',
   },
   paragraph__span: {
     ...themeText.bodyBoldFour,
-    color: COLORS.gray,
+    color: THEME_COLORS.tertiary,
     textAlign: 'center',
   },
   textContainer: {
@@ -79,6 +79,6 @@ const styles = StyleSheet.create({
     height: 100,
     width: 100,
     marginBottom: 40,
-    tintColor: COLORS.primary,
+    tintColor: THEME_COLORS.primary,
   },
 });

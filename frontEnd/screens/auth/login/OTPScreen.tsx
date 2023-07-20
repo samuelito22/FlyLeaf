@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {View, Text} from 'react-native';
 import {FirebaseAuthTypes} from '@react-native-firebase/auth';
 
-import {ROUTES, TYPES, COLORS} from '../../../constants';
+import {ROUTES, THEME_COLORS, TYPES} from '../../../constants';
 import {AuthService} from '../../../services';
 import {NavigationProp, RouteProp} from '@react-navigation/native';
 
@@ -31,7 +31,7 @@ const RESEND_COUNTDOWN_INTERVAL = 1000; // in milliseconds
 
 const LoginOTPScreen = ({navigation, route}: LoginOTPScreenProps) => {
   const {phoneNumber} = route?.params || {};
-  
+
   // states
   const [OTP, setOTP] = useState('');
   const [confirmation, setConfirmation] =
@@ -58,9 +58,11 @@ const LoginOTPScreen = ({navigation, route}: LoginOTPScreenProps) => {
     const sendOTP = async () => {
       if (!phoneNumber || !isMounted) return;
       setIsLoading(true);
-      
+
       try {
-        const confirmation = await AuthService.sendVerificationCode(phoneNumber);
+        const confirmation = await AuthService.sendVerificationCode(
+          phoneNumber,
+        );
         if (isMounted) {
           setConfirmation(confirmation);
           setShowResendInfo(true);
@@ -70,10 +72,9 @@ const LoginOTPScreen = ({navigation, route}: LoginOTPScreenProps) => {
         setShowError(true);
         setConfirmation(null); // set confirmation to null in case of an error
       }
-      
+
       setIsLoading(false);
     };
-    
 
     sendOTP();
 
@@ -142,7 +143,9 @@ const LoginOTPScreen = ({navigation, route}: LoginOTPScreenProps) => {
     <KeyboardAvoidingViewWrapper>
       <SafeContainer>
         {isLoading && <LoadingSpinner />}
-        <BackButton onPress={() => navigation?.navigate(ROUTES.LOGIN_START_SCREEN)}/>
+        <BackButton
+          onPress={() => navigation?.navigate(ROUTES.LOGIN_START_SCREEN)}
+        />
         <View style={[styles.container, styles.maxWidth_otp]}>
           <Text style={styles.title}>Verification</Text>
           <Text style={[styles.paragraph, styles.paragraph_marginBottom_otp]}>
@@ -158,8 +161,8 @@ const LoginOTPScreen = ({navigation, route}: LoginOTPScreenProps) => {
             onPress={sendOTP}
             style={{
               backgroundColor: resendButtonActive
-                ? COLORS.primary
-                : COLORS.gray,
+                ? THEME_COLORS.primary
+                : THEME_COLORS.tertiary,
             }}>
             Resend
           </Button.PrimaryButton>

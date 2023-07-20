@@ -21,7 +21,7 @@ export {default as Dropdown} from './common/Dropdown';
 export {default as OTPField} from './common/OTPField';
 export {default as Alert} from './common/Alert';
 export {default as LoadingSpinner} from './common/LoadingSpinner';
-export {default as BackButton} from "./common/BackButton"
+export {default as BackButton} from './common/BackButton';
 
 // Data
 export {questionsList, interestsList} from './common/questionsData';

@@ -2,7 +2,7 @@ import {Text, View, ScrollView} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {SafeContainer, Button, LoadingSpinner} from '../../../components';
 import {styles} from './styles';
-import {COLORS, ROUTES, TYPES} from '../../../constants';
+import {THEME_COLORS, ROUTES, TYPES} from '../../../constants';
 import {
   setIsRegisterCompleted,
   setProgressBarValue,
@@ -28,12 +28,9 @@ const RelationshipGoalsScreen = ({
   const dispatch = useDispatch();
 
   const relationshipGoalList = [
-    {id: 1, name: 'Committed Relationship'},
-    {id: 2, name: 'Marriage'},
-    {id: 3, name: 'Open Relationship'},
-    {id: 4, name: 'Casual Dating'},
-    {id: 5, name: 'Friendship'},
-    {id: 6, name: 'Exploring Options'},
+    {id: 1, name: 'Relationship'},
+    {id: 2, name: 'Friendship'},
+    {id: 3, name: 'Exploring'},
   ];
 
   const handlePress = () => {
@@ -70,7 +67,13 @@ const RelationshipGoalsScreen = ({
   }, [relationshipGoalTemp]);
 
   useEffect(
-    () => dispatch(setIsRegisterCompleted({status: false, currentScreen: ROUTES.REGISTER_RELATIONSHIP_GOAL_SCREEN})),
+    () =>
+      dispatch(
+        setIsRegisterCompleted({
+          status: false,
+          currentScreen: ROUTES.REGISTER_RELATIONSHIP_GOAL_SCREEN,
+        }),
+      ),
     [],
   );
 
@@ -103,7 +106,9 @@ const RelationshipGoalsScreen = ({
             onPress={handlePress}
             style={{
               ...styles.nextButtonContainer,
-              backgroundColor: valid ? COLORS.primary : COLORS.gray,
+              backgroundColor: valid
+                ? THEME_COLORS.primary
+                : THEME_COLORS.tertiary,
             }}>
             CONTINUE
           </Button.PrimaryButton>

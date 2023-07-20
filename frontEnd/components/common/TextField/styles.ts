@@ -1,5 +1,5 @@
 import {StyleSheet} from 'react-native';
-import {COLORS, FONTS} from '../../../constants';
+import {FONTS, THEME_COLORS} from '../../../constants';
 
 export const styles = StyleSheet.create({
   inputBox: {
@@ -9,7 +9,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     fontFamily: FONTS.rubikLight,
     fontSize: 20,
-    color: COLORS.dark,
+    color: THEME_COLORS.dark,
     paddingVertical: 6,
   },
 });

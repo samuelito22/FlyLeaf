@@ -1,6 +1,6 @@
 import React from 'react';
 import {View, ActivityIndicator, StyleSheet, Modal, Text} from 'react-native';
-import {BORDER_RADIUS, COLORS, themeText} from '../../../constants';
+import {BORDER_RADIUS, themeText} from '../../../constants';
 
 const LoadingSpinner = () => {
   return (

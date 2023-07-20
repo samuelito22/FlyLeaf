@@ -22,7 +22,7 @@ import {
   setPictures,
   setProgressBarValue,
 } from '../../../redux';
-import {TYPES, COLORS, ROUTES} from '../../../constants';
+import {TYPES, THEME_COLORS, ROUTES} from '../../../constants';
 import {icons} from '../../../assets';
 import {styles} from './styles';
 import {NavigationProp} from '@react-navigation/native';
@@ -97,7 +97,13 @@ const PictureUploadScreen = ({
   }, [imageOne, imageTwo]);
 
   useEffect(
-    () => dispatch(setIsRegisterCompleted({status: false, currentScreen: ROUTES.REGISTER_PICTURE_UPLOAD_SCREEN})),
+    () =>
+      dispatch(
+        setIsRegisterCompleted({
+          status: false,
+          currentScreen: ROUTES.REGISTER_PICTURE_UPLOAD_SCREEN,
+        }),
+      ),
     [],
   );
 
@@ -160,7 +166,9 @@ const PictureUploadScreen = ({
             onPress={handlePress}
             style={{
               ...styles.nextButtonContainer,
-              backgroundColor: valid ? COLORS.primary : COLORS.gray,
+              backgroundColor: valid
+                ? THEME_COLORS.primary
+                : THEME_COLORS.tertiary,
             }}>
             CONTINUE
           </Button.PrimaryButton>

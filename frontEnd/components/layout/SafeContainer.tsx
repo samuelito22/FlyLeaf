@@ -1,6 +1,6 @@
 import React from 'react';
 import {StyleSheet, SafeAreaView} from 'react-native';
-import {COLORS, TYPES} from '../../constants';
+import {THEME_COLORS, TYPES} from '../../constants';
 
 const SafeContainer: React.FC<TYPES.SafeContainerProps> = ({
   children,
@@ -14,7 +14,7 @@ const SafeContainer: React.FC<TYPES.SafeContainerProps> = ({
 const styles = StyleSheet.create({
   SafeAreaView: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: THEME_COLORS.background,
     alignItems: 'center',
   },
 });

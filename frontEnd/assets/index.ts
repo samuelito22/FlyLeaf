@@ -21,7 +21,7 @@ import profileDark from './icons/Bold/profile.png';
 import filterLight from './icons/Light/filter.png';
 import filterBold from './icons/Bold/filter.png';
 
-import magicWand from './icons/magic-wand.png';
+import magic from './icons/magic.png';
 import gallery from './icons/gallery.png';
 import camera from './icons/camera.png';
 
@@ -33,7 +33,10 @@ import tickSquare from './icons/Bold/tickSquare.png';
 
 import gpsBold from './icons/Bold/gps.png';
 import extra from './icons/extra.png';
-import writing from "./icons/writing.png"
+import writing from './icons/writing.png';
+import birthday from './icons/birthday.png';
+import pin from './icons/pin.png';
+import sidebar from "./icons/sidebar.png"
 
 import swap from './images/swap.png';
 import logo from './images/logo.png';
@@ -45,6 +48,7 @@ import manAvatar from './images/manAvatar.png';
 import successIllustration from './images/successillustration.png';
 
 export const icons = {
+  sidebar,
   arrowDown,
   arrowLeft,
   uploadPicture,
@@ -59,7 +63,7 @@ export const icons = {
   messageLight,
   filterBold,
   filterLight,
-  magicWand,
+  magic,
   activeTickSquare,
   inactiveTickSquare,
   gallery,
@@ -69,7 +73,9 @@ export const icons = {
   tickSquare,
   gpsBold,
   extra,
-  writing
+  writing,
+  birthday,
+  pin,
 };
 
 export const images = {

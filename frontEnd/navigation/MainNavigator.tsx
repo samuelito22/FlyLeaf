@@ -6,12 +6,12 @@ import RegisterNavigator from './auth/Register';
 import BottomTabNavigator from './BottomTabNavigator';
 import {cardSlideAnimation} from '../utils/navigatorSlideAnimation';
 import {useSelector} from 'react-redux';
-import { firebase } from '@react-native-firebase/auth';
+import {firebase} from '@react-native-firebase/auth';
+import ProfileNavigator from './ProfileNavigator';
 
 const Stack = createStackNavigator();
 
 const MainNavigator = () => {
-
   const isRegisterCompleted = useSelector(
     (state: TYPES.AppState) => state.registerReducer.isRegisterCompleted,
   );
@@ -37,7 +37,7 @@ const MainNavigator = () => {
 
           cardStyleInterpolator: cardSlideAnimation,
         }}
-        initialRouteName={ROUTES.BOTTOM_TAB_NAVIGATOR}>
+        initialRouteName={initialRouteNameDecider()}>
         <Stack.Screen
           name={ROUTES.LOGIN_NAVIGATOR}
           component={LoginNavigator}
@@ -45,6 +45,10 @@ const MainNavigator = () => {
         <Stack.Screen
           name={ROUTES.REGISTER_NAVIGATOR}
           component={RegisterNavigator}
+        />
+        <Stack.Screen
+          name={ROUTES.PROFILE_NAVIGATOR}
+          component={ProfileNavigator}
         />
         <Stack.Screen
           name={ROUTES.BOTTOM_TAB_NAVIGATOR}

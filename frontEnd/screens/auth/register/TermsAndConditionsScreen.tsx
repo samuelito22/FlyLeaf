@@ -1,7 +1,7 @@
 import {View, Text, StyleSheet, ScrollView} from 'react-native';
 import React, {useState, useEffect} from 'react';
 import {Button, SafeContainer} from '../../../components';
-import {COLORS, ROUTES, TYPES, themeText} from '../../../constants';
+import {THEME_COLORS, ROUTES, TYPES, themeText} from '../../../constants';
 import {icons} from '../../../assets';
 import {usePreventBackHandler, useDispatch} from '../../../utils/hooks';
 import {useSelector} from 'react-redux';
@@ -17,7 +17,7 @@ const TermsAndConditionsScreen = ({
 }) => {
   const [checkBoxClicked, setCheckBoxClicked] = useState(false);
 
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
 
   const {
     email,
@@ -28,8 +28,8 @@ const TermsAndConditionsScreen = ({
     pictures,
     relationshipGoal,
     phoneNumber,
-    questionAndAnswer, 
-    interests
+    questionAndAnswer,
+    interests,
   } = useSelector((state: TYPES.AppState) => state.registerReducer);
 
   usePreventBackHandler();
@@ -46,8 +46,8 @@ const TermsAndConditionsScreen = ({
           genderPreferences,
           gender,
           relationshipGoal,
-          questionAndAnswer, 
-          interests
+          questionAndAnswer,
+          interests,
         };
 
         if (email) {
@@ -63,19 +63,16 @@ const TermsAndConditionsScreen = ({
         }
 
         try {
-          await AuthService.userRegister(userRegisterParams).then((result) => {
-            if(result.type === "error"){
-              console.log(result.message)
-            }else{
-              dispatch(resetRegister())
-          navigation.navigate(ROUTES.BOTTOM_TAB_NAVIGATOR)
+          await AuthService.userRegister(userRegisterParams).then(result => {
+            if (result.type === 'error') {
+              console.log(result.message);
+            } else {
+              dispatch(resetRegister());
+              navigation.navigate(ROUTES.BOTTOM_TAB_NAVIGATOR);
             }
-          }
-            
-            );
-          
-          // CLEAR ALL THE REGISTER REDUCER REDUX
+          });
 
+          // CLEAR ALL THE REGISTER REDUCER REDUX
 
           // TODO: Check response for success/failure and provide feedback to the user
         } catch (error) {
@@ -87,7 +84,13 @@ const TermsAndConditionsScreen = ({
   };
 
   useEffect(
-    () => dispatch(setIsRegisterCompleted({status: false, currentScreen: ROUTES.REGISTER_TERMS_AND_CONDITIONS_SCREEN})),
+    () =>
+      dispatch(
+        setIsRegisterCompleted({
+          status: false,
+          currentScreen: ROUTES.REGISTER_TERMS_AND_CONDITIONS_SCREEN,
+        }),
+      ),
     [],
   );
 
@@ -152,7 +155,9 @@ const TermsAndConditionsScreen = ({
                 : icons.inactiveTickSquare
             }
             style={styles.checkBox_image}
-            tintColor={checkBoxClicked ? COLORS.primary : COLORS.gray}
+            tintColor={
+              checkBoxClicked ? THEME_COLORS.primary : THEME_COLORS.tertiary
+            }
             onPress={() => setCheckBoxClicked(!checkBoxClicked)}
           />
           <Text style={styles.checkBox_text}>
@@ -161,7 +166,9 @@ const TermsAndConditionsScreen = ({
         </View>
         <Button.PrimaryButton
           style={{
-            backgroundColor: checkBoxClicked ? COLORS.primary : COLORS.gray,
+            backgroundColor: checkBoxClicked
+              ? THEME_COLORS.primary
+              : THEME_COLORS.tertiary,
           }}
           onPress={onPress}>
           CONTINUE
@@ -177,15 +184,15 @@ const styles = StyleSheet.create({
   headerContainer: {
     padding: 30,
     borderBottomWidth: 0.5,
-    borderBottomColor: COLORS.gray,
+    borderBottomColor: THEME_COLORS.tertiary,
     width: '100%',
   },
   headerContainer_title: {
-    color: COLORS.dark,
+    color: THEME_COLORS.dark,
     ...themeText.headingTwo,
   },
   headerContainer_subTitle: {
-    color: COLORS.gray,
+    color: THEME_COLORS.tertiary,
     ...themeText.bodyRegularSix,
     marginTop: 5,
   },
@@ -194,12 +201,12 @@ const styles = StyleSheet.create({
     padding: 30,
   },
   bodyContainer_title: {
-    color: COLORS.dark,
+    color: THEME_COLORS.dark,
     ...themeText.bodyBoldFive,
     marginBottom: 10,
   },
   bodyContainer_paragraph: {
-    color: COLORS.gray,
+    color: THEME_COLORS.tertiary,
     ...themeText.bodyRegularSix,
   },
   section: {
@@ -219,7 +226,7 @@ const styles = StyleSheet.create({
     ],
   },
   checkBox_text: {
-    color: COLORS.dark,
+    color: THEME_COLORS.dark,
     ...themeText.bodyRegularSix,
     paddingLeft: 20,
   },

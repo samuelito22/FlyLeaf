@@ -1,7 +1,7 @@
 import {TextInput} from 'react-native';
 import React from 'react';
 import {styles} from './styles';
-import {COLORS, TYPES} from '../../../constants';
+import {THEME_COLORS, TYPES} from '../../../constants';
 
 const TextField: React.FC<TYPES.TextFieldProps> = ({
   placeholder,
@@ -18,7 +18,7 @@ const TextField: React.FC<TYPES.TextFieldProps> = ({
       onChangeText={setText}
       value={text}
       placeholder={placeholder}
-      placeholderTextColor={COLORS.gray}
+      placeholderTextColor={THEME_COLORS.tertiary}
       autoCapitalize={autoCapitalize}
       keyboardType={keyboardType}
       secureTextEntry={secureTextEntry}

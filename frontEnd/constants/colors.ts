@@ -1,4 +1,69 @@
-export const COLORS = {
+export const PALETTE = {
+  // Basic PALETTE
+  WHITE: '#FFFFFF',
+  DARK: '#0F172A',
+
+  // Gray shades
+  GRAY300: '#bec2c4',
+  GRAY400: '#A3A3A3',
+  GRAY500: '#a3a5b5',
+
+  // Indigo shades
+  INDIGO200: '#7b8590',
+  INDIGO300: '#666473',
+  INDIGO500: '#55567e',
+  INDIGO600: '#55567e',
+
+  // Light shades
+  LIGHT400: '#ededed',
+  LIGHT100: '#f5f7fb',
+  LIGHT600: '#eaebef',
+
+  // Platinum shades
+  PLATINUM: '#ebebeb',
+  PLATINUM2: '#eaeaea',
+
+  // GhostWhite shades
+  GHOSTWHITE: '#f5f6f8',
+  GHOSTWHITE2: '#f7f7f7',
+
+  // Red shades
+  RED500: '#F75555',
+  REDLIGHT100: '#FEEEEE',
+
+  // Green shades
+  GREEN300: '#22C55E',
+  GREENLIGHT100: '#E9F9EF',
+
+  // IceBlue shades
+  ICEBLUE: '#f6fafd',
+};
+
+export const THEME_COLORS = {
+  primary: PALETTE.INDIGO500,
+  secondary: PALETTE.LIGHT100,
+  tertiary: PALETTE.GRAY300,
+  background: PALETTE.WHITE,
+  dark: PALETTE.DARK,
+};
+
+export const COMPONENT_COLORS = {
+  otpBox: PALETTE.ICEBLUE,
+  tabBarIcon: PALETTE.GHOSTWHITE,
+  headerBorder: PALETTE.PLATINUM,
+  bottomTabsBorder: PALETTE.PLATINUM2,
+  profileCardBackground: PALETTE.LIGHT100,
+  profileCardHeader: PALETTE.INDIGO500,
+  profileCardParagraph: PALETTE.GRAY500,
+  profileCardIcon: PALETTE.INDIGO600,
+  profileCardBorder: PALETTE.LIGHT400,
+  primaryIndicatorBackground: PALETTE.GHOSTWHITE2,
+  primaryIndicatorBorder: PALETTE.LIGHT100,
+  interestCard: PALETTE.INDIGO600,
+};
+
+/**
+ * export const COLORS = {
   // Primary colors
   primary: '#55567e',
   secondary: '#f5f7fb',
@@ -34,3 +99,5 @@ export const COLORS = {
   primaryIndicatorBackground: '#f7f7f7',
   profileCardIcons: '#f5f7fb',
 };
+
+ */

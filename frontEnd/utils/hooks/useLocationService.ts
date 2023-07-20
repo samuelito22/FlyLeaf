@@ -11,6 +11,7 @@ import {UserService} from '../../services';
 type LocationData = {
   city: string;
   coordinates: [number, number];
+  country: string;
 };
 
 const useLocationService = () => {
@@ -21,17 +22,32 @@ const useLocationService = () => {
     (state: TYPES.AppState) => state.registerReducer.isRegisterCompleted,
   );
 
-  const getPosition = async (position: any, newLocationData: LocationData) => {
+  const getPosition = async (
+    position: any,
+    newLocationData: LocationData | null,
+  ) => {
     function getCityName(result: any) {
       for (let component of result.address_components) {
         if (component.types.includes('postal_town')) {
-          return component.short_name;
+          return component.long_name;
         }
       }
 
       // City name was not found in the response
       return null;
     }
+
+    function getCountryName(result: any) {
+      for (let component of result.address_components) {
+        if (component.types.includes('country')) {
+          return component.long_name;
+        }
+      }
+
+      // City name was not found in the response
+      return null;
+    }
+
     if (
       !newLocationData ||
       !position ||
@@ -49,15 +65,17 @@ const useLocationService = () => {
       if (data.status === 'OK') {
         const result = data.results[0];
         const cityName = getCityName(result);
+        const countryName = getCountryName(result);
         const newLocationData: LocationData = {
           coordinates: [position.coords.latitude, position.coords.longitude],
           city: cityName,
+          country: countryName,
         };
         console.log(
           'Geographical position found. Proceeding to update database...',
         );
 
-        updateUserLocation(newLocationData)
+        updateUserLocation(newLocationData);
       } else {
         // Log the error message
         console.error(
@@ -67,8 +85,10 @@ const useLocationService = () => {
         // TODO: Inform the user that location information couldn't be retrieved
         // You might use a state variable or some UI element to do this
       }
-    }else{
-      console.log("The difference between the last position and the current position is not great, hence there has been no update in the database")
+    } else {
+      console.log(
+        'The difference between the last position and the current position is not great, hence there has been no update in the database',
+      );
     }
   };
 
@@ -79,14 +99,18 @@ const useLocationService = () => {
         if (uid) {
           UserService.getLocation(uid)
             .then(result => {
-              const newLocationData: LocationData = {
-                coordinates: result.location.coordinates,
-                city:result.location.city,
-              };
-              getPosition(position, newLocationData)
-              
+              let newLocationData = null;
+              if (result?.location) {
+                newLocationData = {
+                  coordinates: result.location.coordinates,
+                  city: result.location.city,
+                  country: result.location.country,
+                };
+              }
+
+              getPosition(position, newLocationData);
             })
-            .catch(e => console.log(e))
+            .catch(e => console.log(e));
         }
       },
       error => {
@@ -113,13 +137,11 @@ const useLocationService = () => {
       console.error('User is not authenticated.');
     }
   };
-  
 
   useEffect(() => {
     if (isRegisterCompleted.status && auth().currentUser?.uid)
       checkLocationEnabled();
   }, [isRegisterCompleted]);
-
 };
 
 export default useLocationService;

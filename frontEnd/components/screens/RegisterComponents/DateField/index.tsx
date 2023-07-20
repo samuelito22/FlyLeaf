@@ -1,7 +1,7 @@
 import React, {useState, useRef} from 'react';
 import {Text, View, TextInput} from 'react-native';
 import {styles} from './styles';
-import {COLORS, TYPES} from '../../../../constants';
+import {THEME_COLORS, TYPES} from '../../../../constants';
 
 const DateField: React.FC<TYPES.DateFieldProps> = ({setDate, style}) => {
   const [text, setText] = useState('');
@@ -21,7 +21,7 @@ const DateField: React.FC<TYPES.DateFieldProps> = ({setDate, style}) => {
         <Text
           style={[
             styles.dateField__input,
-            {color: text[0] ? COLORS.dark : COLORS.gray},
+            {color: text[0] ? THEME_COLORS.dark : THEME_COLORS.tertiary},
           ]}>
           {text[0] ? text[0] : 'D'}
         </Text>
@@ -29,14 +29,14 @@ const DateField: React.FC<TYPES.DateFieldProps> = ({setDate, style}) => {
         <Text
           style={[
             styles.dateField__input,
-            {color: text[1] ? COLORS.dark : COLORS.gray},
+            {color: text[1] ? THEME_COLORS.dark : THEME_COLORS.tertiary},
           ]}>
           {text[1] ? text[1] : 'D'}
         </Text>
         <Text
           style={[
             styles.dateField__input,
-            {color: text[2] ? COLORS.dark : COLORS.gray},
+            {color: text[2] ? THEME_COLORS.dark : THEME_COLORS.tertiary},
           ]}>
           {' '}
           /{' '}
@@ -44,7 +44,7 @@ const DateField: React.FC<TYPES.DateFieldProps> = ({setDate, style}) => {
         <Text
           style={[
             styles.dateField__input,
-            {color: text[2] ? COLORS.dark : COLORS.gray},
+            {color: text[2] ? THEME_COLORS.dark : THEME_COLORS.tertiary},
           ]}>
           {text[2] ? text[2] : 'M'}
         </Text>
@@ -52,14 +52,14 @@ const DateField: React.FC<TYPES.DateFieldProps> = ({setDate, style}) => {
         <Text
           style={[
             styles.dateField__input,
-            {color: text[3] ? COLORS.dark : COLORS.gray},
+            {color: text[3] ? THEME_COLORS.dark : THEME_COLORS.tertiary},
           ]}>
           {text[3] ? text[3] : 'M'}
         </Text>
         <Text
           style={[
             styles.dateField__input,
-            {color: text[4] ? COLORS.dark : COLORS.gray},
+            {color: text[4] ? THEME_COLORS.dark : THEME_COLORS.tertiary},
           ]}>
           {' '}
           /{' '}
@@ -67,7 +67,7 @@ const DateField: React.FC<TYPES.DateFieldProps> = ({setDate, style}) => {
         <Text
           style={[
             styles.dateField__input,
-            {color: text[4] ? COLORS.dark : COLORS.gray},
+            {color: text[4] ? THEME_COLORS.dark : THEME_COLORS.tertiary},
           ]}>
           {text[4] ? text[4] : 'Y'}
         </Text>
@@ -75,7 +75,7 @@ const DateField: React.FC<TYPES.DateFieldProps> = ({setDate, style}) => {
         <Text
           style={[
             styles.dateField__input,
-            {color: text[5] ? COLORS.dark : COLORS.gray},
+            {color: text[5] ? THEME_COLORS.dark : THEME_COLORS.tertiary},
           ]}>
           {text[5] ? text[5] : 'Y'}
         </Text>
@@ -83,7 +83,7 @@ const DateField: React.FC<TYPES.DateFieldProps> = ({setDate, style}) => {
         <Text
           style={[
             styles.dateField__input,
-            {color: text[6] ? COLORS.dark : COLORS.gray},
+            {color: text[6] ? THEME_COLORS.dark : THEME_COLORS.tertiary},
           ]}>
           {text[6] ? text[6] : 'Y'}
         </Text>
@@ -91,7 +91,7 @@ const DateField: React.FC<TYPES.DateFieldProps> = ({setDate, style}) => {
         <Text
           style={[
             styles.dateField__input,
-            {color: text[7] ? COLORS.dark : COLORS.gray},
+            {color: text[7] ? THEME_COLORS.dark : THEME_COLORS.tertiary},
           ]}>
           {text[7] ? text[7] : 'Y'}
         </Text>

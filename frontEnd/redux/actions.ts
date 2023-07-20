@@ -10,9 +10,10 @@ export const SET_RELATIONSHIP_GOAL = 'SET_RELATIONSHIP_GOAL';
 export const SET_SHOW_LOCATION_SCREEN = 'SET_SHOW_LOCATION_SCREEN';
 export const SET_IS_REGISTER_COMPLETED = 'SET_IS_REGISTER_COMPLETED';
 export const SET_PROGRESS_BAR_VALUE = 'SET_PROGRESS_BAR_VALUE';
-export const SET_QUESTION_AND_ANSWER = 'SET_QUESTION_AND_ANSWER'
-export const SET_INTERESTS = 'SET_INTERESTS'
-export const RESET_REGISTER = 'RESET_REGISTER'
+export const SET_QUESTION_AND_ANSWER = 'SET_QUESTION_AND_ANSWER';
+export const SET_INTERESTS = 'SET_INTERESTS';
+export const RESET_REGISTER = 'RESET_REGISTER';
+export const SET_USER_PROFILE = 'SET_USER_PROFILE';
 
 import {TYPES} from '../constants';
 
@@ -51,7 +52,8 @@ export const setGenderPreferences =
   };
 
 export const setGender =
-  (gender: string) => (dispatch: (action: TYPES.AppAction) => void) => {
+  (gender: {general: string; specific: string | null}) =>
+  (dispatch: (action: TYPES.AppAction) => void) => {
     dispatch({
       type: SET_GENDER,
       payload: gender,
@@ -93,13 +95,17 @@ export const setShowLocationScreen =
   };
 
 export const setIsRegisterCompleted =
-  (isRegisterCompleted: {status: boolean, currentScreen: keyof TYPES.RootStackParamList | null}) => (dispatch: (action: TYPES.AppAction) => void) => {
+  (isRegisterCompleted: {
+    status: boolean;
+    currentScreen: keyof TYPES.RootStackParamList | null;
+  }) =>
+  (dispatch: (action: TYPES.AppAction) => void) => {
     dispatch({
       type: SET_IS_REGISTER_COMPLETED,
       payload: isRegisterCompleted,
     });
   };
-  
+
 export const setProgressBarValue =
   (progressBarValue: number) =>
   (dispatch: (action: TYPES.AppAction) => void) => {
@@ -110,15 +116,15 @@ export const setProgressBarValue =
   };
 
 export const setQuestionAndAnswer =
-  (questionAndAnswer: {question: string, answer: string}[]) => 
+  (questionAndAnswer: {question: string; answer: string}[]) =>
   (dispatch: (action: TYPES.AppAction) => void) => {
     dispatch({
       type: SET_QUESTION_AND_ANSWER,
-      payload: questionAndAnswer
-    })
-  }
+      payload: questionAndAnswer,
+    });
+  };
 
-  export const setInterests =
+export const setInterests =
   (interests: string[]) => (dispatch: (action: TYPES.AppAction) => void) => {
     dispatch({
       type: SET_INTERESTS,
@@ -126,7 +132,14 @@ export const setQuestionAndAnswer =
     });
   };
 
-  export const resetRegister = (): TYPES.AppAction => ({
-    type: RESET_REGISTER,
-  });
-  
+export const resetRegister = (): TYPES.AppAction => ({
+  type: RESET_REGISTER,
+});
+
+export const setUserProfile =
+  (userProfile: any) => (dispatch: (action: TYPES.AppAction) => void) => {
+    dispatch({
+      type: SET_USER_PROFILE,
+      payload: userProfile,
+    });
+  };

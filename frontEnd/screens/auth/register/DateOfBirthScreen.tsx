@@ -12,7 +12,7 @@ import {
   LoadingSpinner,
 } from '../../../components';
 
-import {ROUTES, COLORS, TYPES} from '../../../constants';
+import {ROUTES, THEME_COLORS, TYPES} from '../../../constants';
 
 import {styles} from './styles';
 import {usePreventBackHandler, useDispatch} from '../../../utils/hooks';
@@ -65,7 +65,13 @@ const DateOfBirthScreen = ({
   }, [dateOfBirthTemp]);
 
   useEffect(
-    () => dispatch(setIsRegisterCompleted({status: false, currentScreen: ROUTES.REGISTER_DATE_OF_BIRTH_SCREEN})),
+    () =>
+      dispatch(
+        setIsRegisterCompleted({
+          status: false,
+          currentScreen: ROUTES.REGISTER_DATE_OF_BIRTH_SCREEN,
+        }),
+      ),
     [],
   );
 
@@ -113,7 +119,9 @@ const DateOfBirthScreen = ({
               onPress={handlePress}
               style={{
                 ...styles.nextButtonContainer,
-                backgroundColor: valid ? COLORS.primary : COLORS.gray,
+                backgroundColor: valid
+                  ? THEME_COLORS.primary
+                  : THEME_COLORS.tertiary,
               }}>
               CONTINUE
             </Button.PrimaryButton>

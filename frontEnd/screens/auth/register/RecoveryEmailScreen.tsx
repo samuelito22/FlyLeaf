@@ -9,14 +9,14 @@ import {
   SafeContainer,
   TextField,
 } from '../../../components';
-import {ROUTES, COLORS, TYPES} from '../../../constants';
+import {ROUTES, THEME_COLORS, TYPES} from '../../../constants';
 import {styles} from './styles';
 import {
   useDispatch,
   useFormValidation,
   usePreventBackHandler,
 } from '../../../utils/hooks';
-import { setIsRegisterCompleted, setProgressBarValue} from '../../../redux';
+import {setIsRegisterCompleted, setProgressBarValue} from '../../../redux';
 
 const RecoveryEmailScreen = ({
   navigation,
@@ -36,7 +36,13 @@ const RecoveryEmailScreen = ({
   useEffect(() => setValid(validateEmail(emailTemp)), [emailTemp]);
 
   useEffect(
-    () => dispatch(setIsRegisterCompleted({status: false, currentScreen: ROUTES.REGISTER_RECOVERY_EMAIL_SCREEN})),
+    () =>
+      dispatch(
+        setIsRegisterCompleted({
+          status: false,
+          currentScreen: ROUTES.REGISTER_RECOVERY_EMAIL_SCREEN,
+        }),
+      ),
     [],
   );
 
@@ -82,14 +88,20 @@ const RecoveryEmailScreen = ({
             setText={text => setEmailTemp(text)}
             keyboardType="email-address"
             autoCapitalize="none"
-            style={{borderBottomColor: valid ? COLORS.primary : COLORS.gray}}
+            style={{
+              borderBottomColor: valid
+                ? THEME_COLORS.primary
+                : THEME_COLORS.tertiary,
+            }}
           />
           <View style={styles.alignNextButtonContainer}>
             <Button.PrimaryButton
               onPress={handleProceedPress}
               style={{
                 ...styles.nextButtonContainer,
-                backgroundColor: valid ? COLORS.primary : COLORS.gray,
+                backgroundColor: valid
+                  ? THEME_COLORS.primary
+                  : THEME_COLORS.tertiary,
               }}>
               CONTINUE
             </Button.PrimaryButton>

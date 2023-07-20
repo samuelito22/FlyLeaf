@@ -1,68 +1,46 @@
 import {StyleSheet} from 'react-native';
-import {BORDER_RADIUS, COLORS, themeText} from '../../../../constants';
+import {
+  BORDER_RADIUS,
+  PALETTE,
+  THEME_COLORS,
+  themeText,
+} from '../../../../constants';
 
 export const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#f5f7fb',
+    backgroundColor: 'white',
     width: '100%',
-    flex: 1,
     flexDirection: 'column',
     paddingHorizontal: 30,
-    paddingVertical: 10,
-    marginVertical: 8,
-    borderRadius: BORDER_RADIUS.medium,
+    borderBottomColor: PALETTE.GHOSTWHITE,
+    borderBottomWidth: 1,
+    paddingVertical: 25,
   },
   profileInfoContainer: {
     marginBottom: 13,
   },
-  profileInfoContainer_header: {
+  headerText: {
     ...themeText.bodyBoldSix,
-    color: COLORS.profileCardHeader,
+    color: THEME_COLORS.dark,
   },
-  aboutContainer: {},
-  aboutContainer_header: {
-    ...themeText.bodyBoldSix,
-    color: COLORS.profileCardHeader,
-  },
-  aboutContainer_paragraph: {
+  paragraphText: {
     ...themeText.bodyRegularSeven,
-    color: COLORS.profileCardParagraph,
+    color: THEME_COLORS.dark,
   },
   profileImage: {
     width: 37,
     height: 51,
     marginBottom: 6,
   },
-  /*
-  profileHeaderContainer: {
-    flexDirection: 'row',
-    justifyContent: "space-between"
-  },
-  statusContainer: {
-    flexDirection: "row"
-  },
-  */
-  profileHeaderContainer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    position: 'absolute',
-    bottom: 10,
-    right: 20,
-  },
   statusContainer: {
     flexDirection: 'row',
   },
   statusContainer_text: {
     ...themeText.bodyRegularSeven,
-    color: COLORS.profileCardParagraph,
-  },
-  statusContainer_icon: {
-    width: 24,
-    height: 24,
-    marginLeft: 8,
+    color: THEME_COLORS.tertiary,
   },
   interestCard: {
-    backgroundColor: COLORS.interestCard,
+    backgroundColor: PALETTE.LIGHT100,
     borderRadius: BORDER_RADIUS.small,
     marginRight: 12,
     paddingVertical: 5,
@@ -70,7 +48,7 @@ export const styles = StyleSheet.create({
   },
   interestCard_text: {
     ...themeText.bodyRegularSeven,
-    color: 'white',
+    color: THEME_COLORS.dark,
   },
   interestList: {
     flexDirection: 'row',
@@ -84,6 +62,7 @@ export const styles = StyleSheet.create({
   icon_image: {
     width: 50,
     height: 50,
-    tintColor: COLORS.profileCardIcons,
+    tintColor: PALETTE.LIGHT100,
   },
+  additionInfoContainer: {marginTop: 10},
 });

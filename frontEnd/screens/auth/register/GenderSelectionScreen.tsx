@@ -2,7 +2,7 @@ import {Text, View, ScrollView, Pressable, Image, Modal} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {SafeContainer, Button, LoadingSpinner} from '../../../components';
 import {styles} from './styles';
-import {COLORS, ROUTES, TYPES} from '../../../constants';
+import {THEME_COLORS, ROUTES, TYPES, PALETTE} from '../../../constants';
 import {
   setGender,
   setIsRegisterCompleted,
@@ -26,6 +26,8 @@ const GenderSelectionScreen = ({
   const [activeId, setActiveId] = useState<number | null>(null);
 
   const [genderTemp, setGenderTemp] = useState('');
+  const [extraGenderTemp, setExtraGenderTemp] = useState<null | string>(null);
+
   const [moreSpecificPress, setMoreSpecificPress] = useState(false);
 
   const dispatch = useDispatch();
@@ -81,7 +83,7 @@ const GenderSelectionScreen = ({
       setIsLoading(true);
       try {
         navigation.navigate(ROUTES.REGISTER_GENDER_PREFERENCE_SCREEN);
-        dispatch(setGender(genderTemp));
+        dispatch(setGender({general: genderTemp, specific: extraGenderTemp}));
         dispatch(setProgressBarValue(42));
       } catch (error) {
         console.error(error);
@@ -103,6 +105,7 @@ const GenderSelectionScreen = ({
       setActiveId(id); // set the clicked id as the activeId
       setGenderTemp(text);
     }
+    setExtraGenderTemp(null);
   };
 
   useEffect(() => {
@@ -110,7 +113,13 @@ const GenderSelectionScreen = ({
   }, [genderTemp]);
 
   useEffect(
-    () => dispatch(setIsRegisterCompleted({status: false, currentScreen: ROUTES.REGISTER_GENDER_SELECTION_SCREEN})),
+    () =>
+      dispatch(
+        setIsRegisterCompleted({
+          status: false,
+          currentScreen: ROUTES.REGISTER_GENDER_SELECTION_SCREEN,
+        }),
+      ),
     [],
   );
 
@@ -149,7 +158,9 @@ const GenderSelectionScreen = ({
                     style={
                       styles.clickableIndicatorPrimaryButton__extraContainer_text
                     }>
-                    {genderTemp === gender.name ? 'More specific?' : genderTemp}
+                    {extraGenderTemp === null
+                      ? 'More specific?'
+                      : extraGenderTemp}
                   </Text>
                   <Image
                     source={icons.arrowDown}
@@ -167,7 +178,9 @@ const GenderSelectionScreen = ({
             onPress={handlePress}
             style={{
               ...styles.nextButtonContainer,
-              backgroundColor: valid ? COLORS.primary : COLORS.gray,
+              backgroundColor: valid
+                ? THEME_COLORS.primary
+                : THEME_COLORS.tertiary,
             }}>
             CONTINUE
           </Button.PrimaryButton>
@@ -206,7 +219,9 @@ const GenderSelectionScreen = ({
                         style={styles.extraGenderModal_button}
                         key={extraGender.id}
                         onPress={() => {
-                          setGenderTemp(extraGender.name);
+                          if (extraGenderTemp === extraGender.name)
+                            setExtraGenderTemp(null);
+                          else setExtraGenderTemp(extraGender.name);
                           setMoreSpecificPress(false);
                         }}>
                         <View style={styles.extraGenderModal_content}>
@@ -215,9 +230,9 @@ const GenderSelectionScreen = ({
                               styles.extraGenderModal_button__icon,
                               {
                                 tintColor:
-                                  genderTemp === extraGender.name
-                                    ? COLORS.primary
-                                    : COLORS.lightGray,
+                                  extraGenderTemp === extraGender.name
+                                    ? THEME_COLORS.primary
+                                    : PALETTE.LIGHT400,
                               },
                             ]}
                             source={icons.activeTickSquare}

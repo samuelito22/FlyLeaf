@@ -2,7 +2,7 @@ import {Text, View, ScrollView} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {SafeContainer, Button, LoadingSpinner} from '../../../components';
 import {styles} from './styles';
-import {COLORS, ROUTES, TYPES} from '../../../constants';
+import {THEME_COLORS, ROUTES, TYPES} from '../../../constants';
 import {
   setGenderPreferences,
   setIsRegisterCompleted,
@@ -65,7 +65,13 @@ const GenderPreferenceScreen = ({
   }, [genderPreferencesTemp]);
 
   useEffect(
-    () => dispatch(setIsRegisterCompleted({status: false, currentScreen: ROUTES.REGISTER_GENDER_PREFERENCE_SCREEN})),
+    () =>
+      dispatch(
+        setIsRegisterCompleted({
+          status: false,
+          currentScreen: ROUTES.REGISTER_GENDER_PREFERENCE_SCREEN,
+        }),
+      ),
     [],
   );
 
@@ -102,7 +108,9 @@ const GenderPreferenceScreen = ({
             onPress={handlePress}
             style={{
               ...styles.nextButtonContainer,
-              backgroundColor: valid ? COLORS.primary : COLORS.gray,
+              backgroundColor: valid
+                ? THEME_COLORS.primary
+                : THEME_COLORS.tertiary,
             }}>
             CONTINUE
           </Button.PrimaryButton>

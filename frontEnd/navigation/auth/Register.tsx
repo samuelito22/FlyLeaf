@@ -13,7 +13,7 @@ import {
   TermsAndConditionsScreen,
 } from '../../screens';
 import {ProgressBar} from '../../components';
-import {COLORS, ROUTES, TYPES} from '../../constants';
+import {THEME_COLORS, ROUTES, TYPES} from '../../constants';
 import {cardSlideAnimation} from '../../utils/navigatorSlideAnimation';
 import {useSelector} from 'react-redux';
 
@@ -36,7 +36,7 @@ const RegisterNavigator = () => {
     <>
       {progressBarValue !== 100 ? (
         <ProgressBar
-          color={COLORS.primary}
+          color={THEME_COLORS.primary}
           height={8}
           progress={progressBarValue}
           transparency={0.1}
@@ -81,7 +81,7 @@ const RegisterNavigator = () => {
           name={ROUTES.EMAIL_VERIFICATION_SCREEN}
           component={EmailVerificationScreen}
         />
-         <Stack.Screen
+        <Stack.Screen
           name={ROUTES.REGISTER_MULTIPLE_QUESTIONS_SCREEN}
           component={MultipleQuestionsScreen}
         />

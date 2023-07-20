@@ -1,6 +1,6 @@
 import {View, Animated, SafeAreaView} from 'react-native';
 import React, {useEffect, useRef} from 'react';
-import {COLORS, TYPES} from '../../../../constants';
+import {THEME_COLORS, TYPES} from '../../../../constants';
 import {styles} from './styles';
 
 const ProgressBar: React.FC<TYPES.ProgressBarProps> = ({
@@ -11,7 +11,7 @@ const ProgressBar: React.FC<TYPES.ProgressBarProps> = ({
   ...props
 }) => {
   const overlappingColour = color;
-  let newColor = COLORS.gray;
+  let newColor = THEME_COLORS.tertiary;
 
   const hexToRGBA = (hex: string, alpha: number) => {
     const r = parseInt(hex.slice(1, 3), 16);

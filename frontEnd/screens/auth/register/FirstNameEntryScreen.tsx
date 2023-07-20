@@ -16,7 +16,7 @@ import {
   setIsRegisterCompleted,
   setProgressBarValue,
 } from '../../../redux';
-import {ROUTES, COLORS, TYPES} from '../../../constants';
+import {ROUTES, THEME_COLORS, TYPES} from '../../../constants';
 
 import {styles} from './styles';
 import {usePreventBackHandler, useDispatch} from '../../../utils/hooks';
@@ -58,7 +58,13 @@ const FirstNameEntryScreen = ({
   }, [text]);
 
   useEffect(
-    () => dispatch(setIsRegisterCompleted({status: false, currentScreen: ROUTES.REGISTER_FIRST_NAME_SCREEN})),
+    () =>
+      dispatch(
+        setIsRegisterCompleted({
+          status: false,
+          currentScreen: ROUTES.REGISTER_FIRST_NAME_SCREEN,
+        }),
+      ),
     [],
   );
 
@@ -108,7 +114,9 @@ const FirstNameEntryScreen = ({
             keyboardType="default"
             autoCapitalize="words"
             style={{
-              borderBottomColor: valid ? COLORS.primary : COLORS.gray,
+              borderBottomColor: valid
+                ? THEME_COLORS.primary
+                : THEME_COLORS.tertiary,
             }}
           />
           <View style={styles.alignNextButtonContainer}>
@@ -116,7 +124,9 @@ const FirstNameEntryScreen = ({
               onPress={handlePress}
               style={{
                 ...styles.nextButtonContainer,
-                backgroundColor: valid ? COLORS.primary : COLORS.gray,
+                backgroundColor: valid
+                  ? THEME_COLORS.primary
+                  : THEME_COLORS.tertiary,
               }}>
               CONTINUE
             </Button.PrimaryButton>

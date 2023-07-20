@@ -13,7 +13,13 @@ import {
   setIsRegisterCompleted,
   setQuestionAndAnswer,
 } from '../../../redux';
-import {COLORS, ROUTES, TYPES, themeText} from '../../../constants';
+import {
+  THEME_COLORS,
+  ROUTES,
+  TYPES,
+  themeText,
+  PALETTE,
+} from '../../../constants';
 import {NavigationProp} from '@react-navigation/native';
 import {usePreventBackHandler, useDispatch} from '../../../utils/hooks';
 import {useSelector} from 'react-redux';
@@ -22,7 +28,7 @@ import {icons} from '../../../assets';
 const styles = StyleSheet.create({
   interest_title: {
     ...themeText.bodyBoldFour,
-    color: COLORS.dark,
+    color: THEME_COLORS.dark,
     paddingVertical: 10,
   },
   interest_buttonsContainer: {
@@ -32,6 +38,12 @@ const styles = StyleSheet.create({
   interest_button: {
     marginVertical: 10,
     marginRight: 10,
+  },
+  interest_section: {
+    borderBottomColor: PALETTE.GHOSTWHITE,
+    borderBottomWidth: 1,
+    marginBottom: 10,
+    paddingBottom: 10,
   },
 });
 
@@ -55,7 +67,7 @@ const BuildYourProfileScreen = ({handlePress}: {handlePress: () => void}) => {
           onPress={handlePress}
           style={{
             ...generalStyles.nextButtonContainer,
-            backgroundColor: COLORS.primary,
+            backgroundColor: THEME_COLORS.primary,
           }}>
           CONTINUE
         </Button.PrimaryButton>
@@ -71,8 +83,9 @@ const MultipleQuestionsScreen = ({
 }) => {
   usePreventBackHandler();
   const dispatch = useDispatch();
-  const {questionAndAnswer, interests} = useSelector((state: TYPES.AppState) => state.registerReducer);
-  const [borderColors, setBorderColors] = useState<{ [key: number]: string }>({});
+  const {questionAndAnswer, interests} = useSelector(
+    (state: TYPES.AppState) => state.registerReducer,
+  );
 
   const [valid, setValid] = useState(false);
   const [activeId, setActiveId] = useState<number | null>(null);
@@ -110,7 +123,7 @@ const MultipleQuestionsScreen = ({
             ]),
           );
         }
-  
+
         currentQuestion < 9 ? setAnswer('') : setAnswer([]);
         setActiveId(null);
 
@@ -124,7 +137,6 @@ const MultipleQuestionsScreen = ({
       }
     }
   };
-  
 
   const ClickableIndicatorPrimaryButtonHandlePress = (
     id: number,
@@ -142,28 +154,31 @@ const MultipleQuestionsScreen = ({
 
   const handleInterestPress = (interest: string) => {
     setAnswer(prevState => {
-      if (Array.isArray(prevState) &&  prevState.includes(interest)) {
+      if (Array.isArray(prevState) && prevState.includes(interest)) {
         return (prevState as Array<string>).filter(item => item !== interest);
       } else {
-        if(prevState.length === 5) return prevState;
+        if (prevState.length === 5) return prevState;
         else return [...(prevState as Array<string>), interest];
       }
     });
   };
-  
-  
 
   useEffect(() => {
-    if(currentQuestion < 9){
+    if (currentQuestion < 9) {
       setValid(answer ? true : false);
-    }else {
-      setValid(answer.length === 5)
+    } else {
+      setValid(answer.length === 5);
     }
-  }, [answer]);  
-  
+  }, [answer]);
 
   useEffect(
-    () => dispatch(setIsRegisterCompleted({status: false, currentScreen: ROUTES.REGISTER_MULTIPLE_QUESTIONS_SCREEN})),
+    () =>
+      dispatch(
+        setIsRegisterCompleted({
+          status: false,
+          currentScreen: ROUTES.REGISTER_MULTIPLE_QUESTIONS_SCREEN,
+        }),
+      ),
     [],
   );
 
@@ -188,9 +203,11 @@ const MultipleQuestionsScreen = ({
               ? questionsList[currentQuestion].question
               : interestsList.question}
           </Text>
-          {currentQuestion === 9 
-            && <Text style = {generalStyles.paragraph}>Please select at least 5 interests</Text>
-          }
+          {currentQuestion === 9 && (
+            <Text style={generalStyles.paragraph}>
+              Please select at least 5 interests
+            </Text>
+          )}
 
           <ScrollView
             keyboardShouldPersistTaps="handled"
@@ -215,22 +232,21 @@ const MultipleQuestionsScreen = ({
                   </View>
                 ))
               : interestsList.answers.map((category, index) => (
-                  <View key={category.title + index}>
+                  <View
+                    key={category.title + index}
+                    style={styles.interest_section}>
                     <Text style={styles.interest_title}>{category.title}</Text>
                     <View style={styles.interest_buttonsContainer}>
                       {category.interests.map((interest, idx) => {
-                        return(
+                        return (
                           <Button.interestsButton
-                          key={interest + idx}
-                          style={styles.interest_button}
-                          borderColor={answer.includes(interest) ? COLORS.primary : COLORS.lightGray}
-                          onPress={() => handleInterestPress(interest)}
-                          >
-                          {interest}
-                        </Button.interestsButton>
-                        
-                        )
-                        })}
+                            key={interest + idx}
+                            style={styles.interest_button}
+                            onPress={() => handleInterestPress(interest)}>
+                            {interest}
+                          </Button.interestsButton>
+                        );
+                      })}
                     </View>
                   </View>
                 ))}
@@ -240,7 +256,9 @@ const MultipleQuestionsScreen = ({
               onPress={handlePress}
               style={{
                 ...generalStyles.nextButtonContainer,
-                backgroundColor: valid ? COLORS.primary : COLORS.gray,
+                backgroundColor: valid
+                  ? THEME_COLORS.primary
+                  : THEME_COLORS.tertiary,
               }}>
               CONTINUE
             </Button.PrimaryButton>

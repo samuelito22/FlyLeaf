@@ -1,5 +1,5 @@
 import {StyleSheet} from 'react-native';
-import {BORDER_RADIUS, COLORS, themeText} from '../../../constants';
+import {BORDER_RADIUS, THEME_COLORS, themeText} from '../../../constants';
 
 export const styles = StyleSheet.create({
   centeredView: {
@@ -27,14 +27,14 @@ export const styles = StyleSheet.create({
   centeredView__modalView__title: {
     marginBottom: 15,
     ...themeText.headingTwo,
-    color: COLORS.dark,
+    color: THEME_COLORS.dark,
   },
   centeredView__modalView__message: {
     ...themeText.bodyRegularFive,
-    color: COLORS.dark,
+    color: THEME_COLORS.dark,
   },
   centeredView__modalView__textStyle: {
-    color: COLORS.primary,
+    color: THEME_COLORS.primary,
     textAlign: 'center',
     ...themeText.bodyBoldFive,
   },

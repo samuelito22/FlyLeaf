@@ -4,7 +4,6 @@ import dynamicLinks from '@react-native-firebase/dynamic-links';
 import {LoginManager, AccessToken} from 'react-native-fbsdk-next';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import {API_ENDPOINTS, TYPES} from '../constants';
-import {BASE_URL} from '@env';
 
 interface ConfirmationResult {
   success: boolean;
@@ -240,30 +239,19 @@ const UserExistService = () => {
 };
 
 const userRegister = async (userData: TYPES.UserRegisterParams) => {
-  const formData = new URLSearchParams();
-
-  Object.keys(userData).forEach(key => {
-    let value = userData[key];
-    if (Array.isArray(value)) {
-      value = JSON.stringify(value);
-    } else if (value instanceof Date) {
-      value = value.toISOString();
-    }
-    formData.append(key, String(value));
-  });
-
   try {
     const response = await fetch(API_ENDPOINTS.REGISTER, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/json',
       },
-      body: formData.toString(),
+      body: JSON.stringify(userData),
     });
+
     const data = await response.json();
     return data;
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return null;
   }
 };

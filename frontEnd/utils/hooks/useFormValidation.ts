@@ -3,22 +3,22 @@ import {useCallback} from 'react';
 const useFormValidation = () => {
   const formatPhoneNumber = useCallback(
     (phoneNumber: string, dialingCode: string, mask: string | string[]) => {
-      if (phoneNumber.startsWith("0")) {
+      if (phoneNumber.startsWith('0')) {
         phoneNumber = phoneNumber.slice(1);
       }
-  
+
       const apply = (mask: string) => {
         const tempPhoneNumber = phoneNumber.replace(/\D/g, '');
         const numberOfNines = mask
           .split('')
           .filter(char => char === '#').length;
-  
+
         if (numberOfNines !== tempPhoneNumber.length) {
           return '';
         }
-  
+
         let formattedNumber = `${dialingCode}`;
-  
+
         let index = 0;
         for (let i = 0; i < mask.length; i++) {
           if (mask[i] === '#') {
@@ -28,7 +28,7 @@ const useFormValidation = () => {
         }
         return formattedNumber;
       };
-  
+
       let accept = false;
       let formattedNumber = '';
       if (Array.isArray(mask)) {
@@ -45,7 +45,7 @@ const useFormValidation = () => {
           accept = true;
         }
       }
-  
+
       if (accept) {
         return formattedNumber;
       }
@@ -53,7 +53,7 @@ const useFormValidation = () => {
     },
     [],
   );
-  
+
   const validateEmail = useCallback((email: string): boolean => {
     const regex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
     return regex.test(email);

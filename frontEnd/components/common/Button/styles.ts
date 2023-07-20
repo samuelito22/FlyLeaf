@@ -1,5 +1,11 @@
 import {StyleSheet} from 'react-native';
-import {COLORS, themeText, BORDER_RADIUS} from '../../../constants';
+import {
+  THEME_COLORS,
+  themeText,
+  BORDER_RADIUS,
+  PALETTE,
+  COMPONENT_COLORS,
+} from '../../../constants';
 
 export const styles = StyleSheet.create({
   primaryButton: {
@@ -7,26 +13,26 @@ export const styles = StyleSheet.create({
     height: 48,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.primary,
+    backgroundColor: THEME_COLORS.primary,
     borderRadius: BORDER_RADIUS.medium,
+    overflow: 'hidden',
   },
   interestButton: {
-    height: 48,
+    height: 30,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: "white",
+    backgroundColor: 'white',
     borderWidth: 1,
     borderRadius: BORDER_RADIUS.medium,
-    padding: 10,
-    borderColor: COLORS.lightGray
+    overflow: 'hidden',
   },
   primaryButtonTextLight: {
     color: 'white',
     ...themeText.bodyBoldFive,
   },
   interestButtonText: {
-    color: COLORS.dark,
-    ...themeText.bodyBoldFive,
+    ...themeText.bodyRegularSix,
+    paddingHorizontal: 10,
   },
   clickableButtonContainer: {
     width: '100%',
@@ -36,10 +42,11 @@ export const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.medium,
     backgroundColor: 'white',
     borderWidth: 1,
-    borderColor: COLORS.primaryIndicatorBorder,
+    borderColor: COMPONENT_COLORS.primaryIndicatorBorder,
+    overflow: 'hidden',
   },
   clickableButtonText: {
-    color: COLORS.dark,
+    color: THEME_COLORS.dark,
     ...themeText.bodyRegularFour,
   },
   clickableButtonIndicator: {
@@ -56,15 +63,34 @@ export const styles = StyleSheet.create({
     height: '100%',
   },
   textContainer: {
-    paddingRight: 30, 
-    paddingLeft: 30
+    paddingRight: 30,
+    paddingLeft: 30,
   },
   imageButtonContainer: {
     alignItems: 'center',
     backgroundColor: 'white',
+    overflow: 'hidden',
   },
   imageButton: {
     width: '100%',
     height: '100%',
   },
+  fullCenterContainer: {
+    position: 'absolute',
+    zIndex: 99,
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  activeInterestButton: {borderColor: THEME_COLORS.primary},
+  inactiveInterestButton: {borderColor: PALETTE.GRAY300},
+  activeInterestButtonText: {color: THEME_COLORS.dark},
+  inactiveInterestButtonText: {color: THEME_COLORS.tertiary},
+  indicatorActive: {borderColor: 'none', borderWidth: 0},
+  indicatorInactive: {
+    borderColor: COMPONENT_COLORS.primaryIndicatorBorder,
+    borderWidth: 1,
+  },
+  absoluteFill: {flex: 1},
 });

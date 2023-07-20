@@ -1,5 +1,5 @@
 import {StyleSheet} from 'react-native';
-import {COLORS, FONTS} from '../../../../constants';
+import {THEME_COLORS, FONTS} from '../../../../constants';
 
 export const styles = StyleSheet.create({
   dateField: {
@@ -12,7 +12,7 @@ export const styles = StyleSheet.create({
     fontFamily: FONTS.rubikLight,
     fontSize: 20,
     lineHeight: 30,
-    color: COLORS.gray,
+    color: THEME_COLORS.tertiary,
     textAlign: 'center',
     marginTop: 5,
     height: '100%',
