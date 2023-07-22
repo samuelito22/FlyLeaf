@@ -1,6 +1,6 @@
 import React from 'react';
 import {View, ActivityIndicator, StyleSheet, Modal, Text} from 'react-native';
-import {BORDER_RADIUS, themeText} from '../../../constants';
+import {BORDER_RADIUS, COMPONENT_COLORS, themeText} from '../../../constants';
 
 const LoadingSpinner = () => {
   return (
@@ -21,7 +21,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'column',
     justifyContent: 'space-around',
-    backgroundColor: '#00000020',
+    backgroundColor: COMPONENT_COLORS.modalBackground,
   },
   activityIndicatorWrapper: {
     height: 50,

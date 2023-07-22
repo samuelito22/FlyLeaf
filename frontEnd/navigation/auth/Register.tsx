@@ -14,7 +14,7 @@ import {
 } from '../../screens';
 import {ProgressBar} from '../../components';
 import {THEME_COLORS, ROUTES, TYPES} from '../../constants';
-import {cardSlideAnimation} from '../../utils/navigatorSlideAnimation';
+import {cardSlideLeftAnimation} from '../../utils/navigatorSlideAnimation';
 import {useSelector} from 'react-redux';
 
 const Stack = createStackNavigator();
@@ -47,7 +47,7 @@ const RegisterNavigator = () => {
         screenOptions={{
           headerShown: false,
 
-          cardStyleInterpolator: cardSlideAnimation,
+          cardStyleInterpolator: cardSlideLeftAnimation,
         }}>
         <Stack.Screen
           name={ROUTES.REGISTER_FIRST_NAME_SCREEN}

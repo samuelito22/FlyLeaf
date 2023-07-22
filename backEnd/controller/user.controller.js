@@ -12,6 +12,11 @@ import {
 import User  from "../models/user.js";
 import Joi from 'joi';
 
+const validateUid = (uid) => {
+  const schema = Joi.object({ uid: Joi.string().required() });
+  return schema.validate({ uid });
+};
+
 // @route POST auth/users/register
 // @desc Register user
 // @access Public
@@ -20,23 +25,33 @@ export async function registerUser(req, res) {
     // Define the schema
     const schema = Joi.object({
       uid: Joi.string().required(),
-      phoneNumber: Joi.string().required(),
-      firstName: Joi.string().required(),
-      email: Joi.string().email(),
-      dateOfBirth: Joi.date().required(),
-      gender: Joi.object({
-        general: Joi.string().valid('Male', 'Female', 'Non-Binary').required(),
-        specific: Joi.string().optional()
+      contact: Joi.object({
+        phoneNumber: Joi.string().required(),
+        email: Joi.string().email().optional(),
+      }),
+      profile: Joi.object({
+        firstName: Joi.string().required(),
+        dateOfBirth: Joi.date().required(),
+        gender: Joi.object({
+          general: Joi.string().valid('Male', 'Female', 'Non-Binary').required(),
+          specific: Joi.string().optional(),
+        }).required(),
+        pictures: Joi.array().items(Joi.string()),
       }).required(),
-      genderPreferences: Joi.array().items(Joi.string()).required(),
-      relationshipGoal: Joi.string().valid('Friendship', 'Relationship', 'Exploring').required(),
-      pictures: Joi.array().items(Joi.string()),
-      questionAndAnswer: Joi.array().items(Joi.object({
-        question: Joi.string().required(),
-        answer: Joi.string().required()
-      })).required(),
-      interests: Joi.array().items(Joi.string()).required()
+      preferences: Joi.object({
+        genderPreferences: Joi.array().items(Joi.string()).required(),
+        relationshipGoal: Joi.string().valid('Friendship', 'Relationship', 'Exploring').required(),
+      }).required(),
+      interests: Joi.object({
+        interests: Joi.array().items(Joi.string()).required(),
+        additionalInformation: Joi.array().items(Joi.object({
+          question: Joi.string().required(),
+          answer: Joi.string().required(),
+          icon: Joi.string().required(),
+        })).required(),
+      }).required(),
     });
+    
 
     // Validate the inputs
     const { error, value } = schema.validate(req.body);
@@ -85,10 +100,15 @@ export async function registerUser(req, res) {
 export const emailExist = async (req, res) => {
   try {
     const { email } = req.body;
-    const { errors, isValid } = Validation.validateEmailInput(email);
+    const schema = Joi.object({
+      email: Joi.string().required(),
+    });
+  
+    // Validate the inputs
+    const { error } = schema.validate({ email });
 
-    if (!isValid) {
-      return res.status(400).json({ type: "error", message: errors });
+    if (error) {
+      return res.status(400).json({ type: "error", message: error.details[0].message});
     }
     const emailExist = await User.findOne({ email });
     if (emailExist) {
@@ -116,12 +136,17 @@ export const emailExist = async (req, res) => {
 export async function phoneExist(req, res) {
   try {
     const { phoneNumber } = req.body;
-    const { errors, isValid } = Validation.validatePhoneInput(phoneNumber);
+    const schema = Joi.object({
+      phoneNumber: Joi.string().required(),
+    });
+  
+    // Validate the inputs
+    const { error } = schema.validate({ phoneNumber });
 
-    if (!isValid) {
+    if (error) {
       return res.status(400).json({
         type: "error",
-        message: errors,
+        message: error.details[0].message,
       });
     }
     const phoneNumberExist = await User.findOne({ phoneNumber });
@@ -151,11 +176,12 @@ export async function uidExist(req, res) {
     // Retrieve uid from request body
     const { uid } = req.body;
 
-    const { errors, isValid } = Validation.validateUidInput(uid);
-    if (!isValid) {
+    const { error } = validateUid(uid);
+
+    if (error) {
       return res.status(400).json({
         type: "error",
-        message: errors,
+        message: error.details[0].message,
       });
     }
 
@@ -213,7 +239,7 @@ export async function updateUserLocation(req, res) {
         { uid },
         {
           $set: {
-            lastLocation: {
+            'location.lastLocation': {
               type: 'Point',
               coordinates: locationData.coordinates,
               city: locationData.city,
@@ -245,12 +271,7 @@ export async function updateUserLocation(req, res) {
   export async function getUserLocation(req, res) {
     const { uid } = req.params; // Assuming uid is passed as a URL parameter
     // Define the schema
-    const schema = Joi.object({
-      uid: Joi.string().required(),
-    });
-  
-    // Validate the inputs
-    const { error } = schema.validate({ uid });
+    const { error } = validateUid(uid);
     
     // If validation error, throw an error
     if (error) {
@@ -275,7 +296,7 @@ export async function updateUserLocation(req, res) {
       // Return the user's last location
       return res.status(200).json({
         type: "success",
-        location: user.lastLocation
+        location: user.location.lastLocation
       });
   
     } catch (error) {
@@ -291,12 +312,7 @@ export async function updateUserLocation(req, res) {
   export async function getUserProfile(req, res) {
     const { uid } = req.params; // Assuming uid is passed as a URL parameter
     // Define the schema
-    const schema = Joi.object({
-      uid: Joi.string().required(),
-    });
-  
-    // Validate the inputs
-    const { error } = schema.validate({ uid });
+    const { error } = validateUid(uid);
     
     // If validation error, throw an error
     if (error) {

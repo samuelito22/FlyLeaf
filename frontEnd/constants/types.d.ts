@@ -14,7 +14,11 @@ export interface PrimaryButtonProps extends ButtonProps {
   children?: ReactNode;
 }
 
-export type InterestsButtonPress = PrimaryButtonProps;
+export interface InterestsButtonProps extends PrimaryButtonProps{
+  active: boolean
+}
+
+export type CustomizableButtonProps = PrimaryButtonProps;
 
 export interface ButtonImageProps extends ButtonProps {
   imgUrl: Image;
@@ -129,7 +133,7 @@ export interface UserProfileCardProps {
   statusText: string;
   interests: string[];
   movementActive?: boolean;
-  questionAndAnswer?: [{question:string, answer:string}]
+  dailyThoughts?: string;
 }
 
 /**
@@ -255,7 +259,7 @@ export interface InitialStateRegisterType {
   relationshipGoal: string | null;
   phoneNumber: string | null;
   progressBarValue: number;
-  questionAndAnswer: {question: string; answer: string}[] | null;
+  additionalInformation: {question: string; answer: string, icon: string}[] | null;
   interests: string[];
   isRegisterCompleted: {
     status: boolean;
@@ -315,6 +319,7 @@ export type RootStackParamList = {
   };
   USER_PROFILE_SCREEN: undefined;
   PUBLIC_PROFILE_SCREEN: undefined;
+  EDIT_PROFILE_SCREEN: undefined;
 };
 
 /**
@@ -322,16 +327,26 @@ export type RootStackParamList = {
  */
 
 export interface UserRegisterParams {
-  [key: string]: string | string[] | Date;
   uid: string;
-  phoneNumber?: string;
-  firstName: string;
-  email?: string;
-  dateOfBirth: Date;
-  gender: {general: string; specific: string};
-  genderPreferences: string;
-  relationshipGoal: string;
-  pictures?: string[];
-  questionAndAnswer: {question: string; answer: string}[];
-  interests: string[];
+  profile: {
+    firstName: string;
+    dateOfBirth: Date;
+    gender: { general: string; specific?: string };
+    pictures?: string[];
+  };
+  preferences: {
+    genderPreferences: string[];
+    relationshipGoal: string;
+  };
+  contact: {
+    email?: string;
+    phoneNumber?: string;
+  };
+  interests: {
+    interests: string[];
+    additionalInformation: { question: string; answer: string; icon: string }[];
+  };
 }
+
+
+

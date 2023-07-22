@@ -26,8 +26,10 @@ import NotificationScreen from './bottomTabNavigator/NotificationScreen';
 // Profile
 import UserProfileScreen from './profile/UserProfileScreen';
 import PublicProfileScreen from './profile/PublicProfileScreen';
+import EditProfileScreen from './profile/EditProfileScreen';
 
 export {
+  EditProfileScreen,
   EmailVerificationScreen,
   DateOfBirthScreen,
   FirstNameEntryScreen,

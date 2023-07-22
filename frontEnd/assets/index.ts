@@ -38,6 +38,24 @@ import birthday from './icons/birthday.png';
 import pin from './icons/pin.png';
 import sidebar from "./icons/sidebar.png"
 
+import coins from "./icons/coin.png"
+import coinsColoured from "./icons/coinColoured.png"
+
+import edit from "./icons/edit.png"
+import settings from "./icons/settings.png"
+import premium from "./icons/premium.png"
+import fashion from "./icons/clothes-hanger.png"
+import drink from "./icons/drink.png"
+import gym from "./icons/dumbbell.png"
+import party from "./icons/party.png"
+import season from "./icons/season.png"
+import sleep from "./icons/sleep.png"
+import smoking from "./icons/smoking.png"
+import zodiac from "./icons/zodiac.png"
+import education from "./icons/education.png"
+import normalTick from "./icons/normalTick.png"
+import normalCross from "./icons/normalCross.png"
+
 import swap from './images/swap.png';
 import logo from './images/logo.png';
 import googleBar from './images/googleBar.png';
@@ -47,7 +65,23 @@ import flyleaf from './images/FlyLeaf.png';
 import manAvatar from './images/manAvatar.png';
 import successIllustration from './images/successillustration.png';
 
-export const icons = {
+export const icons: { [key: string]: any } = {
+  normalCross,
+  normalTick,
+  fashion,
+  drink,
+  gym,
+  party,
+  season,
+  sleep,
+  smoking,
+  zodiac,
+  education,
+  coinsColoured,
+  premium,
+  edit,
+  settings,
+  coins,
   sidebar,
   arrowDown,
   arrowLeft,

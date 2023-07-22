@@ -17,6 +17,13 @@ export const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.medium,
     overflow: 'hidden',
   },
+  customizableButton:{
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: BORDER_RADIUS.medium,
+    overflow: 'hidden',
+  },
   interestButton: {
     height: 30,
     justifyContent: 'center',
@@ -37,22 +44,22 @@ export const styles = StyleSheet.create({
   clickableButtonContainer: {
     width: '100%',
     minHeight: 63,
-    paddingVertical: 10,
-    justifyContent: 'center',
     borderRadius: BORDER_RADIUS.medium,
     backgroundColor: 'white',
     borderWidth: 1,
     borderColor: COMPONENT_COLORS.primaryIndicatorBorder,
     overflow: 'hidden',
+    flexDirection:'row',
+    alignItems:'center',
+    justifyContent:'space-between',
+    padding: 5,
   },
+
   clickableButtonText: {
     color: THEME_COLORS.dark,
     ...themeText.bodyRegularFour,
   },
   clickableButtonIndicator: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
     width: 25,
     height: 25,
     borderRadius: BORDER_RADIUS.circle,
@@ -63,8 +70,9 @@ export const styles = StyleSheet.create({
     height: '100%',
   },
   textContainer: {
-    paddingRight: 30,
+    flex: 1,
     paddingLeft: 30,
+    justifyContent:'center'
   },
   imageButtonContainer: {
     alignItems: 'center',

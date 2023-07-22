@@ -28,9 +28,10 @@ const TermsAndConditionsScreen = ({
     pictures,
     relationshipGoal,
     phoneNumber,
-    questionAndAnswer,
+    additionalInformation,
     interests,
   } = useSelector((state: TYPES.AppState) => state.registerReducer);
+
 
   usePreventBackHandler();
 
@@ -41,25 +42,30 @@ const TermsAndConditionsScreen = ({
         const uid = currentUser.uid;
         let userRegisterParams: TYPES.UserRegisterParams = {
           uid,
-          firstName,
-          dateOfBirth,
-          genderPreferences,
-          gender,
-          relationshipGoal,
-          questionAndAnswer,
-          interests,
-        };
-
+          profile: {
+            firstName,
+            dateOfBirth,
+            gender,
+          },
+          preferences: {
+            genderPreferences,
+            relationshipGoal,
+          },
+          contact: {
+            phoneNumber,
+          },
+          interests: {
+            interests,
+            additionalInformation
+          },
+        };       
+        
         if (email) {
-          userRegisterParams.email = email;
-        }
-
-        if (phoneNumber) {
-          userRegisterParams.phoneNumber = phoneNumber;
+          userRegisterParams.contact.email = email;
         }
 
         if (pictures.length > 0) {
-          userRegisterParams.pictures = pictures;
+          userRegisterParams.profile.pictures = pictures;
         }
 
         try {

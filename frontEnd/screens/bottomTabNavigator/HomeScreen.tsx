@@ -26,6 +26,7 @@ const HomeScreen = ({
           city="Newcastle"
           statusText="relationship"
           interests={['anime', 'react', 'react native']}
+          dailyThoughts='I am so horny mannnn. I need a gyal to fill up. Joking I am happily married.'
         />
         <UserProfileCard
           about="Adventure seeker and film enthusiast with a passion for cooking. I love exploring new places, whether it's hiking in the mountains or discovering..."

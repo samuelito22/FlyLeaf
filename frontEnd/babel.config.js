@@ -11,8 +11,8 @@ module.exports = {
         path: '.env',
         safe: false,
         allowUndefined: true,
-        verbose: false,
-      },
-    ],
-  ],
-};
+        verbose: false
+      }
+    ]
+  ]
+}

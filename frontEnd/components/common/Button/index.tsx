@@ -23,6 +23,23 @@ export const PrimaryButton = ({
   );
 };
 
+export const CustomizableButton = ({
+  onPress,
+  style,
+  children,
+}: TYPES.CustomizableButtonProps) => {
+  return (
+    <View style={[styles.customizableButton, style]}>
+      <TouchableRipple
+        onPress={onPress}
+        style={styles.fullCenterContainer}
+        rippleColor={PALETTE.GRAY400}>
+        {children}
+      </TouchableRipple>
+    </View>
+  );
+};
+
 export const ButtonImage = ({
   imgUrl,
   onPress,
@@ -68,6 +85,7 @@ export const ClickableIndicatorPrimaryButton = ({
         <View style={styles.textContainer}>
           <Text style={styles.clickableButtonText}>{children}</Text>
         </View>
+        <View style={{height: "100%", justifyContent: 'flex-start', padding:5}}>
         <View
           style={[
             styles.clickableButtonIndicator,
@@ -76,10 +94,11 @@ export const ClickableIndicatorPrimaryButton = ({
           {isActive && (
             <Image
               source={images.successIllustration}
-              resizeMode="cover"
+              resizeMode="contain"
               style={styles.clickableButtonIndicatorImage}
             />
           )}
+        </View>
         </View>
       </View>
     </Pressable>
@@ -90,8 +109,8 @@ export const interestsButton = ({
   onPress,
   style,
   children,
-}: TYPES.InterestsButtonPress) => {
-  const [active, setActive] = useState(false);
+  active
+}: TYPES.InterestsButtonProps) => {
 
   return (
     <View
@@ -102,7 +121,6 @@ export const interestsButton = ({
       ]}>
       <TouchableRipple
         onPress={() => {
-          setActive(!active);
           if (onPress) onPress();
         }}
         style={styles.fullCenterContainer}

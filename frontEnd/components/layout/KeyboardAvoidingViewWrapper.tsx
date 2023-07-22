@@ -1,5 +1,4 @@
 import {
-  ScrollView,
   KeyboardAvoidingView,
   TouchableWithoutFeedback,
   Keyboard,
@@ -8,6 +7,7 @@ import {
 import React from 'react';
 import {StyleSheet} from 'react-native';
 import {TYPES} from '../../constants';
+import { ScrollView } from 'react-native-gesture-handler';
 
 const KeyboardAvoidingViewWrapper: React.FC<
   TYPES.KeyboardAvoidingViewWrapperProps
@@ -22,7 +22,7 @@ const KeyboardAvoidingViewWrapper: React.FC<
         contentContainerStyle={styles.ScrollView}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
-        overScrollMode={'never'}>
+      >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           {children}
         </TouchableWithoutFeedback>

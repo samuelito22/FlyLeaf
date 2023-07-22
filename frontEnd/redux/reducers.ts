@@ -10,10 +10,10 @@ import {
   SET_SHOW_LOCATION_SCREEN,
   SET_IS_REGISTER_COMPLETED,
   SET_PROGRESS_BAR_VALUE,
-  SET_QUESTION_AND_ANSWER,
   SET_INTERESTS,
   RESET_REGISTER,
   SET_USER_PROFILE,
+  SET_ADDITIONAL_INFORMATION,
 } from './actions';
 import {TYPES} from '../constants';
 
@@ -27,7 +27,7 @@ const initialStateRegister: TYPES.InitialStateRegisterType = {
   relationshipGoal: '',
   phoneNumber: '',
   progressBarValue: 0,
-  questionAndAnswer: null,
+  additionalInformation: null,
   interests: [],
   isRegisterCompleted: {status: true, currentScreen: null},
 };
@@ -58,11 +58,11 @@ const registerReducer = (
       return {...state, phoneNumber: action.payload as string};
     case SET_PROGRESS_BAR_VALUE:
       return {...state, progressBarValue: action.payload as number};
-    case SET_QUESTION_AND_ANSWER:
+    case SET_ADDITIONAL_INFORMATION:
       return {
         ...state,
-        questionAndAnswer: action.payload as [
-          {question: string; answer: string},
+        additionalInformation: action.payload as [
+          {question: string; answer: string, icon: string},
         ],
       };
     case SET_INTERESTS:

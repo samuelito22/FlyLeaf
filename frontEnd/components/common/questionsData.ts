@@ -1,14 +1,17 @@
+import { icons } from "../../assets";
+
 export const questionsList = [
   {
     id: 1,
-    question: 'What type of adventure excites you the most?',
+    question: 'What best describes your drinking habits?',
     answers: [
-      'A hiking trip',
-      'A city tour',
-      'Relaxing on a beach',
-      'A stay-at-home movie marathon',
+      'I don’t drink at all',
+      'I drink socially',
+      'I enjoy a drink now and then',
+      'I drink regularly',
     ],
-  },
+    icon: 'drink'
+  },  
   {
     id: 2,
     question: 'Are you more of an early bird or a night owl?',
@@ -18,6 +21,7 @@ export const questionsList = [
       'I can adapt to both',
       'Neither, I love my sleep',
     ],
+    icon: 'sleep'
   },
   {
     id: 3,
@@ -28,6 +32,7 @@ export const questionsList = [
       'The colors of Fall',
       'The chill of Winter',
     ],
+    icon: 'season'
   },
   {
     id: 4,
@@ -38,6 +43,7 @@ export const questionsList = [
       'Sampling all the food',
       'At home, I prefer quiet evenings',
     ],
+    icon: 'party'
   },
   {
     id: 5,
@@ -56,18 +62,20 @@ export const questionsList = [
       'Aquarius',
       'Pisces',
     ],
+    icon: 'zodiac'
   },
   {
     id: 6,
-    question: 'Which type of cuisine makes your heart sing?',
+    question: 'What best describes your smoking habits?',
     answers: [
-      'Italian',
-      'Mexican',
-      'Chinese',
-      'Indian',
-      'Local dishes all the way',
+      'I smoke regularly',
+      'I smoke socially',
+      'I am trying to quit',
+      'I am an occasional smoker',
+      'I do not smoke',
     ],
-  },
+    icon: 'smoking'
+  },  
   {
     id: 7,
     question: 'Tell us about your fashion sense',
@@ -77,6 +85,7 @@ export const questionsList = [
       'Classic and elegant',
       'Sporty and functional',
     ],
+    icon: 'fashion'
   },
   {
     id: 8,
@@ -87,19 +96,23 @@ export const questionsList = [
       'No, but I exercise in other ways',
       'No, I do not exercise',
     ],
+    icon: 'gym'
   },
   {
     id: 9,
-    question: "What's your height in feet?",
+    question: 'What is your highest level of education?',
     answers: [
-      'Less than 5 feet',
-      '5 - 5.5 feet',
-      '5.5 - 6 feet',
-      '6 - 6.5 feet',
-      '6.5 - 7 feet',
-      'More than 7 feet',
+      'Bachelor degree',
+      'At uni',
+      'High School',
+      'PhD',
+      'On a graduate programme',
+      'Master degree',
+      'Trade school'
     ],
-  },
+    icon: 'education'
+  }
+  
 ];
 
 export const interestsList = {

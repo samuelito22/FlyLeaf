@@ -6,7 +6,7 @@ import {
   OTPScreen,
   EmailVerificationScreen,
 } from '../../screens';
-import {cardSlideAnimation} from '../../utils/navigatorSlideAnimation';
+import {cardSlideLeftAnimation} from '../../utils/navigatorSlideAnimation';
 
 const Stack = createStackNavigator();
 
@@ -17,7 +17,7 @@ const LoginNavigator = () => {
       screenOptions={{
         headerShown: false,
 
-        cardStyleInterpolator: cardSlideAnimation,
+        cardStyleInterpolator: cardSlideLeftAnimation,
       }}>
       <Stack.Screen
         name={ROUTES.LOGIN_START_SCREEN}

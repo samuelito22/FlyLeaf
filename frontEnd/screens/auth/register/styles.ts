@@ -28,7 +28,7 @@ export const styles = StyleSheet.create({
   },
   extraGenderModal_flexEnd: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: COMPONENT_COLORS.modalBackground,
     justifyContent: 'flex-end',
     alignItems: 'center',
   },

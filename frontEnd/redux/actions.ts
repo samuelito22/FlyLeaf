@@ -10,7 +10,7 @@ export const SET_RELATIONSHIP_GOAL = 'SET_RELATIONSHIP_GOAL';
 export const SET_SHOW_LOCATION_SCREEN = 'SET_SHOW_LOCATION_SCREEN';
 export const SET_IS_REGISTER_COMPLETED = 'SET_IS_REGISTER_COMPLETED';
 export const SET_PROGRESS_BAR_VALUE = 'SET_PROGRESS_BAR_VALUE';
-export const SET_QUESTION_AND_ANSWER = 'SET_QUESTION_AND_ANSWER';
+export const SET_ADDITIONAL_INFORMATION = 'SET_ADDITIONAL_INFORMATION';
 export const SET_INTERESTS = 'SET_INTERESTS';
 export const RESET_REGISTER = 'RESET_REGISTER';
 export const SET_USER_PROFILE = 'SET_USER_PROFILE';
@@ -115,12 +115,12 @@ export const setProgressBarValue =
     });
   };
 
-export const setQuestionAndAnswer =
-  (questionAndAnswer: {question: string; answer: string}[]) =>
+export const setAdditionalInformation =
+  (additionalInformation: {question: string; answer: string, icon: string}[]) =>
   (dispatch: (action: TYPES.AppAction) => void) => {
     dispatch({
-      type: SET_QUESTION_AND_ANSWER,
-      payload: questionAndAnswer,
+      type: SET_ADDITIONAL_INFORMATION,
+      payload: additionalInformation,
     });
   };
 

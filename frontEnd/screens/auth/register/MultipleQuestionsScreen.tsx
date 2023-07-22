@@ -11,7 +11,7 @@ import {
 import {
   setInterests,
   setIsRegisterCompleted,
-  setQuestionAndAnswer,
+  setAdditionalInformation,
 } from '../../../redux';
 import {
   THEME_COLORS,
@@ -83,7 +83,7 @@ const MultipleQuestionsScreen = ({
 }) => {
   usePreventBackHandler();
   const dispatch = useDispatch();
-  const {questionAndAnswer, interests} = useSelector(
+  const {additionalInformation, interests} = useSelector(
     (state: TYPES.AppState) => state.registerReducer,
   );
 
@@ -97,14 +97,15 @@ const MultipleQuestionsScreen = ({
     if (valid) {
       setIsLoading(true);
       try {
-        if (questionAndAnswer) {
+        if (additionalInformation) {
           if (currentQuestion < 9) {
             dispatch(
-              setQuestionAndAnswer([
-                ...questionAndAnswer,
+              setAdditionalInformation([
+                ...additionalInformation,
                 {
                   question: questionsList[currentQuestion].question,
                   answer: answer,
+                  icon:  questionsList[currentQuestion].icon
                 },
               ]),
             );
@@ -115,10 +116,11 @@ const MultipleQuestionsScreen = ({
           }
         } else if (typeof answer === 'string') {
           dispatch(
-            setQuestionAndAnswer([
+            setAdditionalInformation([
               {
                 question: questionsList[currentQuestion].question,
                 answer: answer,
+                icon:  questionsList[currentQuestion].icon
               },
             ]),
           );
@@ -127,7 +129,7 @@ const MultipleQuestionsScreen = ({
         currentQuestion < 9 ? setAnswer('') : setAnswer([]);
         setActiveId(null);
 
-        if (questionAndAnswer && questionAndAnswer.length === 9 && interests) {
+        if (additionalInformation && additionalInformation.length === 9 && interests) {
           navigation.navigate(ROUTES.REGISTER_TERMS_AND_CONDITIONS_SCREEN);
         }
       } catch (err) {
@@ -183,13 +185,14 @@ const MultipleQuestionsScreen = ({
   );
 
   useEffect(() => {
-    if (questionAndAnswer) {
-      setCurrentQuestion(questionAndAnswer.length);
+    if (additionalInformation) {
+      setCurrentQuestion(additionalInformation.length);
     }
-  }, [questionAndAnswer]);
+  }, [additionalInformation]);
 
   return (
     <SafeContainer>
+      {isLoading && <LoadingSpinner/>}
       {currentQuestion === -1 ? (
         <BuildYourProfileScreen handlePress={() => setCurrentQuestion(0)} />
       ) : (
@@ -205,7 +208,7 @@ const MultipleQuestionsScreen = ({
           </Text>
           {currentQuestion === 9 && (
             <Text style={generalStyles.paragraph}>
-              Please select at least 5 interests
+              Please select at 5 interests
             </Text>
           )}
 
@@ -240,6 +243,7 @@ const MultipleQuestionsScreen = ({
                       {category.interests.map((interest, idx) => {
                         return (
                           <Button.interestsButton
+                          active = {answer.includes(interest)}
                             key={interest + idx}
                             style={styles.interest_button}
                             onPress={() => handleInterestPress(interest)}>
