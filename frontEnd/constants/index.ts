@@ -7,7 +7,7 @@ import {SHADOWS} from './Shadows';
 import * as ERRORS from './errors';
 import {BORDER_RADIUS} from './borderRadius';
 import {HEIGHT} from './height';
-import {API_ENDPOINTS} from './APIEndpoints';
+import {getApiEndpoints} from './APIEndpoints';
 
 export {
   THEME_COLORS,
@@ -20,6 +20,6 @@ export {
   ERRORS,
   BORDER_RADIUS,
   HEIGHT,
-  API_ENDPOINTS,
+  getApiEndpoints,
   PALETTE,
 };

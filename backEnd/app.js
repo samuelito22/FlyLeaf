@@ -13,6 +13,12 @@ import { API_ENDPOINT_NOT_FOUND_ERR } from "./errors.js";
 const app = express();
 
 
+app.use(cors({
+  allowedHeaders: "*",
+  allowMethods:"*",
+  origin: "*"
+}));
+
 // BodyParser middleware
 app.use(
   bodyParser.urlencoded({

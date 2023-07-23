@@ -1,4 +1,6 @@
-import {API_ENDPOINTS} from '../constants';
+import {getApiEndpoints} from '../constants';
+
+const API_ENDPOINTS = getApiEndpoints()
 
 const locationService = () => {
   const updateLocation = async (
@@ -15,9 +17,8 @@ const locationService = () => {
       });
       const data = await response.json();
       return data;
-    } catch (error) {
-      console.log(error);
-      return null;
+    } catch (error:any) {
+      console.log('Error message:', error.message);
     }
   };
 
@@ -31,9 +32,8 @@ const locationService = () => {
       });
       const data = await response.json();
       return data;
-    } catch (error) {
-      console.log(error);
-      return null;
+    } catch (error:any) {
+      console.log('Error message:', error.message);
     }
   };
 
@@ -47,13 +47,12 @@ const profileService = () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-        },
+        },      
       });
       const data = await response.json();
       return data;
-    } catch (error) {
-      console.log(error);
-      return null;
+    } catch (error:any) {
+      console.log('Error message:', error.message);
     }
   };
 

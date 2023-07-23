@@ -1,6 +1,6 @@
 import {BASE_URL} from '@env';
 
-export const API_ENDPOINTS = {
+export const getApiEndpoints = () => ({
   REGISTER: `${BASE_URL}/user/auth/register`,
   EMAIL_EXIST: `${BASE_URL}/user/auth/emailExist`,
   PHONE_NUMBER_EXIST: `${BASE_URL}/user/auth/phoneNumberExist`,
@@ -8,4 +8,4 @@ export const API_ENDPOINTS = {
   UPDATE_LOCATION: `${BASE_URL}/user/update/location`,
   GET_LOCATION: `${BASE_URL}/user/get/location`,
   GET_PROFILE: `${BASE_URL}/user/get/profile`,
-};
+});

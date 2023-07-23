@@ -3,7 +3,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import dynamicLinks from '@react-native-firebase/dynamic-links';
 import {LoginManager, AccessToken} from 'react-native-fbsdk-next';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
-import {API_ENDPOINTS, TYPES} from '../constants';
+import {getApiEndpoints, TYPES} from '../constants';
+
+const API_ENDPOINTS = getApiEndpoints()
 
 interface ConfirmationResult {
   success: boolean;
@@ -246,6 +248,7 @@ const userRegister = async (userData: TYPES.UserRegisterParams) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(userData),
+      
     });
 
     const data = await response.json();
@@ -263,3 +266,4 @@ export const AuthService = {
   ...UserExistService(),
   userRegister,
 };
+

@@ -3,6 +3,8 @@ module.exports = {
   plugins: [
     '@babel/plugin-transform-export-namespace-from',
     'react-native-reanimated/plugin',
+    'module:metro-react-native-babel-preset', 
+    'module:react-native-dotenv'
     [
       'module:react-native-dotenv',
       {
