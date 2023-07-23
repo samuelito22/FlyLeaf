@@ -1,28 +1,28 @@
 import {StyleSheet} from 'react-native';
 import {
-  BORDER_RADIUS,
-  THEME_COLORS,
   HEIGHT,
   COMPONENT_COLORS,
+  BORDER_RADIUS,
 } from '../../../../constants';
 
 export const styles = StyleSheet.create({
   container: {
-    height: HEIGHT.homeHeader,
+    maxHeight: HEIGHT.homeHeader,
+    height: "100%",
     width: '100%',
     borderBottomWidth: 0.5,
     borderBottomColor: COMPONENT_COLORS.headerBorder,
     justifyContent: 'space-between',
     alignItems: 'center',
     flexDirection: 'row',
-    padding: 20,
     position: 'relative',
     backgroundColor: 'white',
   },
-  icon: {
-    width: 30,
-    height: 30,
-    tintColor: THEME_COLORS.dark,
+  iconContainer: {
+    width:80,
+    height:"100%",
+    alignItems: "center",
+    justifyContent:'center',   
   },
 
 });

@@ -5,6 +5,7 @@ import { BORDER_RADIUS, COMPONENT_COLORS, PALETTE, THEME_COLORS, TYPES, themeTex
 import { useSelector } from 'react-redux'
 import { icons } from '../../assets'
 import { ScrollView } from 'react-native-gesture-handler'
+import { TouchableRipple } from 'react-native-paper'
 
 const styles = StyleSheet.create({
   section:{
@@ -171,13 +172,13 @@ const AdditionalInformation = ({state, dispatch}: SectionProps) => {
         <Text style={styles.section_header}>Additional information</Text>
         <Text style={styles.section_subHeader}>Make your adjustments here, and let others know more about youself</Text>
         {state.additionalInformation.map((field, index) => (
-          <Ripple key={index} style={styles.section_additionalInformation} onPress={() => onPress(field.question)}>
+          <TouchableRipple key={index} style={styles.section_additionalInformation} onPress={() => onPress(field.question)} rippleColor={PALETTE.GRAY400}>
             <View style={{flexDirection:'row', alignItems:'center'}}>
               <Image source={icons[field.icon]} style={styles.section_additionalInformation_icon} resizeMode='contain'/>
               <View><Text style={styles.section_additionalInformation_header}>{field.question}</Text><Text style={styles.section_additionalInformation_paragraph}>{field.answer}</Text></View>
             </View>
             
-          </Ripple>
+          </TouchableRipple>
         ))}
         {result && <ModalSelection state={state} dispatch={dispatch} data={result} />}
       </View>

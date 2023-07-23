@@ -13,9 +13,7 @@ export const styles = StyleSheet.create({
     height: 48,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: THEME_COLORS.primary,
     borderRadius: BORDER_RADIUS.medium,
-    overflow: 'hidden',
   },
   customizableButton:{
     height: 48,
@@ -33,8 +31,12 @@ export const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.medium,
     overflow: 'hidden',
   },
-  primaryButtonTextLight: {
-    color: 'white',
+  buttonTextLight: {
+    color: PALETTE.WHITE,
+    ...themeText.bodyBoldFive,
+  },
+  buttonTextDark: {
+    color: THEME_COLORS.dark,
     ...themeText.bodyBoldFive,
   },
   interestButtonText: {

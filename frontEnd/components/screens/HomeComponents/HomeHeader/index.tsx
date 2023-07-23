@@ -18,7 +18,10 @@ const HomeHeader = () => {
     <View style={styles.container}>
         <ButtonImage
           imgUrl={icons.sidebar}
-          style={styles.sidebar}
+          width={30}
+          height={30}
+          contentContainerStyle={styles.iconContainer}
+          iconHeaderLeft={true}
           tintColor={THEME_COLORS.dark}
           onPress={handleProfilePress}
         />
@@ -26,8 +29,11 @@ const HomeHeader = () => {
         <Image style={styles.logo} source={images.logo} />
       </View>
       <ButtonImage
+      width={30}
+      height={30}
+      contentContainerStyle={styles.iconContainer}
+      iconHeaderRight={true}
         imgUrl={icons.magic}
-        style={styles.category}
         tintColor={THEME_COLORS.dark}
       />
     </View>

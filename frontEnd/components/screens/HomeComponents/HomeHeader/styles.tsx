@@ -8,26 +8,16 @@ import {
 
 export const styles = StyleSheet.create({
   container: {
-    height: HEIGHT.homeHeader,
+    maxHeight: HEIGHT.homeHeader,
+    height: "100%",
     width: '100%',
     borderBottomWidth: 0.5,
     borderBottomColor: COMPONENT_COLORS.headerBorder,
     justifyContent: 'space-between',
     alignItems: 'center',
     flexDirection: 'row',
-    padding: 20,
     position: 'relative',
     backgroundColor: 'white',
-  },
-  category: {
-    width: 30,
-    height: 30,
-    tintColor: THEME_COLORS.dark,
-  },
-  sidebar: {
-    width: 30,
-    height: 30,
-    backgroundColor: 'transparent',
   },
   logoContainer: {
     position: 'absolute',
@@ -40,5 +30,11 @@ export const styles = StyleSheet.create({
     width: 24,
     height: 24,
     tintColor: THEME_COLORS.primary,
+  },
+  iconContainer: {
+    width:80,
+    height:"100%",
+    alignItems: "center",
+    justifyContent:'center',   
   },
 });

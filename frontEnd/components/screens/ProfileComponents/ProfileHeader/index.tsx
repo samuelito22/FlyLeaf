@@ -16,18 +16,22 @@ export const ProfilePrivateHeader = () => {
     <View style={styles.container}>
         <ButtonImage
           imgUrl={icons.arrowLeft}
-          style={styles.icon}
+          width={30}
+          height={30}
           tintColor={THEME_COLORS.dark}
           onPress={handleBackPress}
+          contentContainerStyle={styles.iconContainer}
+          iconHeaderLeft={true}
         />
-      <View>
 
       <ButtonImage
+       width={30}
+       height={30}
         imgUrl={icons.settings}
-        style={styles.icon}
         tintColor={THEME_COLORS.dark}
+        contentContainerStyle={styles.iconContainer}
+        iconHeaderRight={true}
       />
-      </View>
     </View>
   );
 };
@@ -42,9 +46,12 @@ export const EditProfileHeader = () => {
     <View style={styles.container}>
         <ButtonImage
           imgUrl={icons.arrowLeft}
-          style={styles.icon}
           tintColor={THEME_COLORS.dark}
           onPress={handleBackPress}
+          width={30}
+          height={30}
+          contentContainerStyle={styles.iconContainer}
+          iconHeaderLeft={true}
         />
     </View>
   );

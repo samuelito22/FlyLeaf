@@ -1,5 +1,5 @@
 import {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import {ImageSourcePropType} from 'react-native';
+import {ImageSourcePropType, ViewStyle} from 'react-native';
 import {NavigationProp} from '@react-navigation/native';
 
 /**
@@ -8,21 +8,22 @@ import {NavigationProp} from '@react-navigation/native';
 export interface ButtonProps {
   style?: ViewStyle;
   onPress?: () => void;
-}
-
-export interface PrimaryButtonProps extends ButtonProps {
   children?: ReactNode;
+  width?: number,
+  height?: number,
+  textStyle?: TextStyle
 }
 
-export interface InterestsButtonProps extends PrimaryButtonProps{
+export interface InterestsButtonProps extends ButtonProps{
   active: boolean
 }
-
-export type CustomizableButtonProps = PrimaryButtonProps;
 
 export interface ButtonImageProps extends ButtonProps {
   imgUrl: Image;
   tintColor?: string;
+  contentContainerStyle?: ViewStyle,
+  iconHeaderLeft?: boolean,
+  iconHeaderRight?: boolean
 }
 
 export interface ClickableIndicatorPrimaryButton extends ButtonProps {
