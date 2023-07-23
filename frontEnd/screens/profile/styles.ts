@@ -5,6 +5,7 @@ export const style = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'white',
+    alignItems:'center',
     maxWidth: 400,
     width: '100%',
     paddingHorizontal: 10,
@@ -23,11 +24,6 @@ export const style = StyleSheet.create({
     backgroundColor:'transparent'
   },
   button:{
-    height: 50,
-    justifyContent:"center",
-    alignItems:"center",
-    flexDirection:'row',
-    width: 150,
     marginHorizontal: 10,
     borderRadius: BORDER_RADIUS.extraLarge
   },

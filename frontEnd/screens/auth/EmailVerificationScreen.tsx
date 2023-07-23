@@ -29,10 +29,11 @@ const EmailVerificationScreen: React.FC<EmailVerificationProps> = ({
   };
 
   useEffect(() => {
+    const controller = new AbortController(); 
     AuthService.handleDynamicLink;
 
     if (email) {
-      AuthService.emailExist(email).then(result => {
+      AuthService.emailExist(email, controller.signal).then(result => {
         if (result && result.type === 'success' && actionType === 'login') {
           AuthService.createDynamicLink().then(dynamicLink => {
             AuthService.sendSignInLinkToEmail(email, dynamicLink)
@@ -57,6 +58,8 @@ const EmailVerificationScreen: React.FC<EmailVerificationProps> = ({
         }
       });
     }
+
+    return () => {controller.abort}
   }, [email]);
 
   return (

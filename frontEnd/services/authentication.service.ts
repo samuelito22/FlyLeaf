@@ -173,7 +173,7 @@ const OAuthService = () => {
 };
 
 const UserExistService = () => {
-  const emailExist = async (email: string) => {
+  const emailExist = async (email: string, signal?: AbortSignal) => {
     const formData = new URLSearchParams();
     formData.append('email', email.toLowerCase());
 
@@ -184,6 +184,7 @@ const UserExistService = () => {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: formData.toString(),
+        signal
       });
       const data = await response.json();
       return data;
@@ -193,7 +194,7 @@ const UserExistService = () => {
     }
   };
 
-  const phoneNumberExist = async (phoneNumber: string) => {
+  const phoneNumberExist = async (phoneNumber: string, signal?: AbortSignal) => {
     const formData = new URLSearchParams();
     formData.append('phoneNumber', phoneNumber);
 
@@ -204,6 +205,7 @@ const UserExistService = () => {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: formData.toString(),
+        signal
       });
       const data = await response.json();
       return data;
@@ -213,7 +215,7 @@ const UserExistService = () => {
     }
   };
 
-  const userUidExist = async (uid: string) => {
+  const userUidExist = async (uid: string, signal?: AbortSignal) => {
     const formData = new URLSearchParams();
     formData.append('uid', uid);
 
@@ -224,6 +226,7 @@ const UserExistService = () => {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: formData.toString(),
+        signal
       });
       const data = await response.json();
       return data;
@@ -240,7 +243,7 @@ const UserExistService = () => {
   };
 };
 
-const userRegister = async (userData: TYPES.UserRegisterParams) => {
+const userRegister = async (userData: TYPES.UserRegisterParams, signal?: AbortSignal) => {
   try {
     const response = await fetch(API_ENDPOINTS.REGISTER, {
       method: 'POST',
@@ -248,6 +251,7 @@ const userRegister = async (userData: TYPES.UserRegisterParams) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(userData),
+      signal
       
     });
 

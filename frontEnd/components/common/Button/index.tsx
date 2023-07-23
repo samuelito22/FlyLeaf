@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import {Text, Image, View, Pressable} from 'react-native';
 import {styles} from './styles';
-import {BORDER_RADIUS, PALETTE, THEME_COLORS, TYPES} from '../../../constants';
+import {BORDER_RADIUS, PALETTE, THEME_COLORS, TYPES, themeText} from '../../../constants';
 import {images} from '../../../assets';
 import {TouchableRipple} from 'react-native-paper';
 
@@ -13,17 +13,27 @@ export const PrimaryButton = ({
   width,
   textStyle
 }: TYPES.ButtonProps) => {
+  let buttonStyle = {
+    ...styles.button, 
+    backgroundColor: THEME_COLORS.primary,
+    ...style
+  };
+
+  if (height) buttonStyle.height = height;
+  if (width) buttonStyle.width = width;
+  
   return (
-    <View style={[styles.primaryButton, {backgroundColor: THEME_COLORS.primary, height, width,}, style]}>
+    <View style={buttonStyle}>
       <TouchableRipple
         onPress={onPress}
         style={styles.fullCenterContainer}
         rippleColor={PALETTE.GRAY400}>
-        <Text style={textStyle ? textStyle : styles.buttonTextLight}>{children}</Text>
+        <Text style={[{color: PALETTE.WHITE, ...themeText.bodyBoldFive}, textStyle]}>{children}</Text>
       </TouchableRipple>
     </View>
   );
 };
+
 
 export const DarkButton = ({
   onPress,
@@ -33,13 +43,22 @@ export const DarkButton = ({
   width,
   textStyle
 }: TYPES.ButtonProps) => {
+  let buttonStyle = {
+    ...styles.button,
+    backgroundColor: THEME_COLORS.dark,
+    ...style
+  };
+
+  if (height) buttonStyle.height = height;
+  if (width) buttonStyle.width = width;
+
   return (
-    <View style={[styles.primaryButton, style, {backgroundColor: THEME_COLORS.dark, height, width,}]}>
+    <View style={buttonStyle}>
       <TouchableRipple
         onPress={onPress}
         style={styles.fullCenterContainer}
         rippleColor={PALETTE.GRAY400}>
-        <Text style={textStyle ? textStyle : styles.buttonTextLight}>{children}</Text>
+        <Text style={[{color: PALETTE.WHITE, ...themeText.bodyBoldFive}, textStyle]}>{children}</Text>
       </TouchableRipple>
     </View>
   );
@@ -53,17 +72,27 @@ export const LightButton = ({
   width,
   textStyle
 }: TYPES.ButtonProps) => {
+  let buttonStyle = {
+    ...styles.button,
+    backgroundColor: PALETTE.WHITE,
+    ...style
+  };
+
+  if (height) buttonStyle.height = height;
+  if (width) buttonStyle.width = width;
+
   return (
-    <View style={[styles.primaryButton, style, {backgroundColor: PALETTE.WHITE, height, width,}]}>
+    <View style={buttonStyle}>
       <TouchableRipple
         onPress={onPress}
         style={styles.fullCenterContainer}
         rippleColor={PALETTE.GRAY400}>
-        <Text style={textStyle ? textStyle : styles.buttonTextDark}>{children}</Text>
+        <Text style={[{color: PALETTE.DARK, ...themeText.bodyBoldFive}, textStyle]}>{children}</Text>
       </TouchableRipple>
     </View>
   );
 };
+
 
 export const ButtonImage = ({
   imgUrl,

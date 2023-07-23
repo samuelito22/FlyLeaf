@@ -8,12 +8,13 @@ import {
 } from '../../../constants';
 
 export const styles = StyleSheet.create({
-  primaryButton: {
+  button: {
     width: '100%',
     height: 48,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: BORDER_RADIUS.medium,
+    overflow: 'hidden'
   },
   customizableButton:{
     height: 48,

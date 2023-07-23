@@ -57,19 +57,13 @@ const UserProfileScreen = () => {
             movementActive={false}
           />
           <View style={{flexDirection: 'row', marginTop: 15}}>
-            <Ripple
-              onPress={() => navigation.navigate(ROUTES.EDIT_PROFILE_SCREEN)}
-              style={[
-                GeneralStyles.button,
-                {backgroundColor: THEME_COLORS.dark},
-              ]}>
-              <Text style={[GeneralStyles.text, {color: 'white'}]}>Edit</Text>
-            </Ripple>
-            <Ripple style={[GeneralStyles.button, {backgroundColor: 'white'}]}>
-              <Text style={[GeneralStyles.text, {color: THEME_COLORS.dark}]}>
-                Your thoughts
-              </Text>
-            </Ripple>
+            <Button.DarkButton onPress={() => navigation.navigate(ROUTES.EDIT_PROFILE_SCREEN)} height={50} width={150} style={GeneralStyles.button} textStyle={GeneralStyles.text}>
+                    Edit
+                    </Button.DarkButton>
+            
+            <Button.LightButton height={50} width={150} style={GeneralStyles.button} textStyle={GeneralStyles.text}>
+                    Your thoughts
+                    </Button.LightButton>
           </View>
           <View style={styles.planContainer}>
             <View style={styles.creditAndPlainInformation}>
@@ -92,22 +86,12 @@ const UserProfileScreen = () => {
                     flexDirection: 'row',
                     marginTop: 15,
                   }}>
-                  <Ripple
-                    style={[
-                      GeneralStyles.button,
-                      {backgroundColor: THEME_COLORS.dark, marginHorizontal: 0},
-                    ]}>
-                    <Text style={[GeneralStyles.text, {color: 'white'}]}>
-                      From £4.99
-                    </Text>
-                  </Ripple>
-                  <Ripple
-                    style={[GeneralStyles.button, {backgroundColor: 'white'}]}>
-                    <Text
-                      style={[GeneralStyles.text, {color: THEME_COLORS.dark}]}>
-                      Read more
-                    </Text>
-                  </Ripple>
+                    <Button.DarkButton height={50} width={150} style={styles.planCard_button} textStyle={GeneralStyles.text}>
+                    From £4.99
+                    </Button.DarkButton>
+                    <Button.LightButton height={50} width={150} style={styles.planCard_button} textStyle={GeneralStyles.text}>
+                    Read more
+                    </Button.LightButton>
                 </View>
               </View>
               <Image
@@ -131,22 +115,12 @@ const UserProfileScreen = () => {
                     flexDirection: 'row',
                     marginTop: 15,
                   }}>
-                  <Ripple
-                    style={[
-                      GeneralStyles.button,
-                      {backgroundColor: THEME_COLORS.dark, marginHorizontal: 0},
-                    ]}>
-                    <Text style={[GeneralStyles.text, {color: 'white'}]}>
-                      From £0.79
-                    </Text>
-                  </Ripple>
-                  <Ripple
-                    style={[GeneralStyles.button, {backgroundColor: 'white'}]}>
-                    <Text
-                      style={[GeneralStyles.text, {color: THEME_COLORS.dark}]}>
-                      Read more
-                    </Text>
-                  </Ripple>
+                  <Button.DarkButton height={50} width={150} style={styles.planCard_button} textStyle={GeneralStyles.text}>
+                    From £0.79
+                    </Button.DarkButton>
+                    <Button.LightButton height={50} width={150} style={styles.planCard_button} textStyle={GeneralStyles.text}>
+                    Read more
+                    </Button.LightButton>
                 </View>
               </View>
               <Image
@@ -207,4 +181,8 @@ export const styles = StyleSheet.create({
     top: -10,
     right: -10,
   },
+  planCard_button: {
+    marginRight: 10,
+    borderRadius: BORDER_RADIUS.extraLarge
+  }
 });

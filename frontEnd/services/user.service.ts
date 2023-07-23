@@ -6,6 +6,7 @@ const locationService = () => {
   const updateLocation = async (
     uid: string,
     locationData: {city: string; coordinates: [number, number]},
+    signal?: AbortSignal,
   ) => {
     try {
       const response = await fetch(API_ENDPOINTS.UPDATE_LOCATION, {
@@ -14,6 +15,7 @@ const locationService = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({uid, locationData}),
+        signal,
       });
       const data = await response.json();
       return data;
@@ -22,13 +24,14 @@ const locationService = () => {
     }
   };
 
-  const getLocation = async (uid: string) => {
+  const getLocation = async (uid: string, signal?: AbortSignal) => {
     try {
       const response = await fetch(`${API_ENDPOINTS.GET_LOCATION}/${uid}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
+        signal,
       });
       const data = await response.json();
       return data;
@@ -41,13 +44,14 @@ const locationService = () => {
 };
 
 const profileService = () => {
-  const getProfile = async (uid: string) => {
+  const getProfile = async (uid: string, signal?: AbortSignal) => {
     try {
       const response = await fetch(`${API_ENDPOINTS.GET_PROFILE}/${uid}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-        },      
+        },
+        signal,     
       });
       const data = await response.json();
       return data;

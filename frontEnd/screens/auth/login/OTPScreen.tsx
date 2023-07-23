@@ -86,6 +86,7 @@ const LoginOTPScreen = ({navigation, route}: LoginOTPScreenProps) => {
 
   const confirmOTPCode = async () => {
     setIsLoading(true);
+    const controller = new AbortController(); 
 
     if (!confirmation) return;
 
@@ -99,10 +100,11 @@ const LoginOTPScreen = ({navigation, route}: LoginOTPScreenProps) => {
         result.userCredential.user.uid &&
         phoneNumber
       ) {
-        // dispatch(setUserCredential(result.userCredential));
+        
         try {
           const userUidExistResult = await AuthService.userUidExist(
             result.userCredential.user.uid,
+            controller.signal
           );
           if (userUidExistResult.type === 'success') {
             navigation?.navigate(ROUTES.BOTTOM_TAB_NAVIGATOR);
@@ -118,6 +120,7 @@ const LoginOTPScreen = ({navigation, route}: LoginOTPScreenProps) => {
     }
 
     setShowError(!result?.success);
+    return () => controller.abort
   };
 
   const sendOTP = async () => {

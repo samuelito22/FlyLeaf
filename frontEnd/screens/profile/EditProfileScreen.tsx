@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, TextInput, Image, Modal, Pressable} from 'react-native'
-import React, {useEffect, useReducer, useState} from 'react'
+import React, {useEffect, useMemo, useReducer, useState} from 'react'
 import { Button, EditProfileHeader, KeyboardAvoidingViewWrapper, Ripple, SafeContainer, questionsList } from '../../components'
 import { BORDER_RADIUS, COMPONENT_COLORS, PALETTE, THEME_COLORS, TYPES, themeText } from '../../constants'
 import { useSelector } from 'react-redux'
@@ -264,8 +264,11 @@ const BiographySection = ({state, dispatch} : SectionProps) =>{
 }
 
 const ModalSelection = ({state, dispatch, data} : ModalSelectionProps) => {
-  const field = state.additionalInformation.find(field => field.question.includes(data.question))
-  const [selectedAnswer, setSelectedAnswer] = useState<null | undefined |string>(field?.answer)
+  const field = useMemo(() => {
+    return state.additionalInformation.find(field => field.question.includes(data.question))
+  }, [data.question, state.additionalInformation]);
+  
+  const [selectedAnswer, setSelectedAnswer] = useState<null | undefined |string>(null)
 
   const onPress = () => {
     const question = state.additionalInformation.find(field => field.question.includes(data.question));
@@ -276,6 +279,15 @@ const ModalSelection = ({state, dispatch, data} : ModalSelectionProps) => {
 
     dispatch({type:'SET_MODAL_VISIBLE',payload:false})
   }
+
+  useEffect(() => {
+    if (state.modalVisible) {
+      setSelectedAnswer(field?.answer); 
+    } else {
+      
+      setSelectedAnswer(null); 
+    }
+  }, [field, state.modalVisible]);
 
   return(
     
@@ -291,8 +303,8 @@ const ModalSelection = ({state, dispatch, data} : ModalSelectionProps) => {
           style={modalSelectionStyles.container}
           onPress={e => e.stopPropagation()}>
             <View style={modalSelectionStyles.iconsContainer}>
-            <View onStartShouldSetResponder={() => true} onResponderRelease={() => dispatch({type: 'SET_MODAL_VISIBLE', payload: false})} style={modalSelectionStyles.iconContainer}><Image source={icons.normalCross} resizeMode='contain' style={[modalSelectionStyles.icon, {tintColor: PALETTE.DARK}]}/></View>
-            <View onStartShouldSetResponder={() => true} onResponderRelease={() => onPress()} style={modalSelectionStyles.iconContainer}><Image source={icons.normalTick} resizeMode='contain' style={[modalSelectionStyles.icon , {tintColor: PALETTE.GREEN300}]}/></View>
+            <View onStartShouldSetResponder={() => true} onResponderRelease={() => dispatch({type: 'SET_MODAL_VISIBLE', payload: false})} style={modalSelectionStyles.iconContainer}><Image source={icons.normalCross} resizeMode='contain' style={[modalSelectionStyles.crossIcon, {tintColor: PALETTE.DARK}]}/></View>
+            <View onStartShouldSetResponder={() => true} onResponderRelease={() => onPress()} style={modalSelectionStyles.iconContainer}><Image source={icons.normalTick} resizeMode='contain' style={[modalSelectionStyles.tickIcon , {tintColor: PALETTE.GREEN300}]}/></View>
             </View>
           <Text style={modalSelectionStyles.header}>
             {data.question}
@@ -363,8 +375,14 @@ const modalSelectionStyles = StyleSheet.create({
   iconContainer:{
     width: 30,
     height: 30,
+    justifyContent:"center",
+    alignItems: "center"
   },
-  icon:{
+  crossIcon:{
+    width: "50%",
+    height:"50%"
+  },
+  tickIcon:{
     width: "100%",
     height:"100%"
   }

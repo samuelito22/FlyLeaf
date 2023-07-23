@@ -26,11 +26,17 @@ const MainContent = () => {
     const getProfile = async () => {
       const uid = auth().currentUser?.uid;
       if (uid) {
-        UserService.getProfile(uid).then(result => {
+        const controller = new AbortController();
+        try {
+          const result = await UserService.getProfile(uid, controller.signal);
           dispatch(setUserProfile(result.profile));
-        });
+        } catch (e) {
+          console.log(e);
+        }
+        return () => controller.abort();
       }
     };
+    
     const currentUid = auth().currentUser?.uid;
     if (isRegisterCompleted.status && currentUid) {
       getProfile();

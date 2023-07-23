@@ -59,17 +59,18 @@ const TermsAndConditionsScreen = ({
             additionalInformation
           },
         };       
-        
+  
         if (email) {
           userRegisterParams.contact.email = email;
         }
-
+  
         if (pictures.length > 0) {
           userRegisterParams.profile.pictures = pictures;
         }
-
+  
+        const controller = new AbortController(); 
         try {
-          await AuthService.userRegister(userRegisterParams).then(result => {
+          await AuthService.userRegister(userRegisterParams, controller.signal).then(result => {
             if (result.type === 'error') {
               console.log(result.message);
             } else {
@@ -77,17 +78,15 @@ const TermsAndConditionsScreen = ({
               navigation.navigate(ROUTES.BOTTOM_TAB_NAVIGATOR);
             }
           });
-
-          // CLEAR ALL THE REGISTER REDUCER REDUX
-
-          // TODO: Check response for success/failure and provide feedback to the user
         } catch (error) {
-          // TODO: Handle error and provide feedback to the user
           console.error('Error during registration', error);
         }
+  
+        return () => controller.abort(); 
       }
     }
   };
+  
 
   useEffect(
     () =>

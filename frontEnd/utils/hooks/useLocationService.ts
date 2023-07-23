@@ -93,11 +93,12 @@ const useLocationService = () => {
   };
 
   const checkLocationEnabled = () => {
+    const controller = new AbortController(); 
     Geolocation.getCurrentPosition(
       async position => {
         dispatch(setShowLocationScreen(false));
         if (uid) {
-          UserService.getLocation(uid)
+          UserService.getLocation(uid, controller.signal)
             .then(result => {
               let newLocationData = null;
               if (result?.location) {
@@ -119,11 +120,14 @@ const useLocationService = () => {
       },
       {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
     );
+
+    controller.abort
   };
 
   const updateUserLocation = async (locationData: LocationData | null) => {
+    const controller = new AbortController(); 
     if (uid && locationData) {
-      await UserService.updateLocation(uid, locationData)
+      await UserService.updateLocation(uid, locationData, controller.signal)
         .then(result => {
           if (result.type === 'success') {
             console.log('Database successfully updated');
@@ -136,6 +140,8 @@ const useLocationService = () => {
       // Handle the scenario where uid is not defined.
       console.error('User is not authenticated.');
     }
+
+    return () => controller.abort
   };
 
   useEffect(() => {
