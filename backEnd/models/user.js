@@ -36,7 +36,7 @@ const UserSchema = new Schema({
   preferences: {
     genderPreferences: { type: [String], required: true },
     relationshipGoal: { type: String, required: true, enum: ['Relationship', 'Friendship', 'Exploring'] },
-    sexualOrientation: {type: String},
+    sexualOrientation: {type: [String]},
   },
   contact: {
     phoneNumber: { type: String, trim: true, sparse: true, unique: true },

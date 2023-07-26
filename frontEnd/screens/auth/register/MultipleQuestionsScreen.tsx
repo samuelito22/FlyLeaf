@@ -93,6 +93,9 @@ const MultipleQuestionsScreen = ({
   const [currentQuestion, setCurrentQuestion] = useState(-1);
   const [answer, setAnswer] = useState<string | Array<string>>('');
 
+  const questionFieldList = questionsList.filter(item => item.id >= 1 && item.id <= 9) as Array<{question: string, id: number, answers: string[], icon:string}>;
+
+
   const handlePress = () => {
     if (valid) {
       setIsLoading(true);
@@ -103,9 +106,9 @@ const MultipleQuestionsScreen = ({
               setAdditionalInformation([
                 ...additionalInformation,
                 {
-                  question: questionsList[currentQuestion].question,
+                  question: questionFieldList[currentQuestion].question,
                   answer: answer,
-                  icon:  questionsList[currentQuestion].icon
+                  icon:  questionFieldList[currentQuestion].icon
                 },
               ]),
             );
@@ -118,9 +121,9 @@ const MultipleQuestionsScreen = ({
           dispatch(
             setAdditionalInformation([
               {
-                question: questionsList[currentQuestion].question,
+                question: questionFieldList[currentQuestion].question,
                 answer: answer,
-                icon:  questionsList[currentQuestion].icon
+                icon:  questionFieldList[currentQuestion].icon
               },
             ]),
           );
@@ -203,7 +206,7 @@ const MultipleQuestionsScreen = ({
           </Text>
           <Text style={generalStyles.title}>
             {currentQuestion < 9
-              ? questionsList[currentQuestion].question
+              ? questionFieldList[currentQuestion].question
               : interestsList.question}
           </Text>
           {currentQuestion === 9 && (
@@ -218,9 +221,9 @@ const MultipleQuestionsScreen = ({
             overScrollMode={'never'}
             contentContainerStyle={{flexGrow: 1}}>
             {currentQuestion < 9
-              ? questionsList[currentQuestion].answers.map((answer, index) => (
+              ? questionFieldList[currentQuestion].answers.map((answer, index) => (
                   <View
-                    key={questionsList[currentQuestion].question + index}
+                    key={questionFieldList[currentQuestion].question + index}
                     style={generalStyles.clickableIndicatorPrimaryButton}>
                     <Button.ClickableIndicatorPrimaryButton
                       onPress={() =>

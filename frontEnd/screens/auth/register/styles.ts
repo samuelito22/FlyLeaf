@@ -85,7 +85,7 @@ export const styles = StyleSheet.create({
     color: PALETTE.GRAY300,
   },
   title: {
-    ...themeText.headingOne,
+    ...themeText.headingTwo,
     color: THEME_COLORS.dark,
     marginBottom: verticalScale(12),
   },

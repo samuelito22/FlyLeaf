@@ -233,6 +233,58 @@ interface setUserProfileAction {
   payload: any;
 }
 
+// Edit Profile
+interface EditSetBioAction {
+  type: 'EDIT_SET_BIO';
+  payload: string | null;
+}
+
+interface EditSetHeightAction {
+  type: 'EDIT_SET_HEIGHT';
+  payload: {feet: number, inches: number} | null;
+}
+
+interface EditSetAdditionalInformationAction {
+  type: 'EDIT_SET_ADDITIONAL_INFORMATION';
+  payload: {question: string, answer: string, icon: string}[] | null;
+}
+
+interface EditSetGenderInformationAction {
+  type: 'EDIT_SET_GENDER_INFORMATION';
+  payload: {general: string, specific: string | null} | null;
+}
+
+interface EditSetJobTitleAction {
+  type: 'EDIT_SET_JOB_TITLE';
+  payload: string | null;
+}
+
+interface EditSetCompanyAction {
+  type: 'EDIT_SET_COMPANY';
+  payload: string | null;
+}
+
+interface EditSetSexualOrientationAction {
+  type: 'EDIT_SET_SEXUAL_ORIENTATION';
+  payload: string[] | null;
+}
+
+interface EditSetModalVisibleAction {
+  type: 'EDIT_SET_MODAL_VISIBLE';
+  payload: boolean;
+}
+
+interface EditSetLanguagesAction {
+  type: 'EDIT_SET_LANGUAGES';
+  payload: string[] | null;
+}
+
+interface EditInitUserProfileAction {
+  type: 'EDIT_INIT_USER_PROFILE';
+  payload: any;
+}
+
+
 export type AppAction =
   | SetPhoneNumberAction
   | SetDateOfBirthAction
@@ -248,7 +300,17 @@ export type AppAction =
   | SetQuestionAndAnswerAction
   | SetInterestsActionAction
   | resetRegisterAction
-  | setUserProfileAction;
+  | setUserProfileAction
+  | EditSetBioAction
+  | EditSetHeightAction
+  | EditSetAdditionalInformationAction
+  | EditSetGenderInformationAction
+  | EditSetJobTitleAction
+  | EditSetCompanyAction
+  | EditSetSexualOrientationAction
+  | EditSetModalVisibleAction
+  | EditSetLanguagesAction
+  | EditInitUserProfileAction;
 
 export interface InitialStateRegisterType {
   dateOfBirth: Date | null;
@@ -275,6 +337,19 @@ export interface InitialStateAppStatusType {
 export interface InitialStateUserType {
   userProfile: any;
 }
+
+export interface InitialStateEditUserType {
+  bio: string | null;
+  height: {feet: number, inches: number} | null;
+  additionalInformation: {question: string, answer: string, icon: string}[] | null;
+  genderInformation: {general: string, specific: string | null} | null;
+  jobTitle: string | null;
+  company: string | null;
+  sexualOrientation: string[] | null;
+  modalVisible: boolean;
+  languages: string[] | null
+}
+
 
 /**
  * Redux stor - App State
@@ -321,6 +396,9 @@ export type RootStackParamList = {
   USER_PROFILE_SCREEN: undefined;
   PUBLIC_PROFILE_SCREEN: undefined;
   EDIT_PROFILE_SCREEN: undefined;
+  EDIT_GENDER_SCREEN: undefined;
+  EDIT_SEXUAL_ORIENTATION_SCREEN: undefined
+  EDIT_LANGUAGE_SCREEN: undefined
 };
 
 /**

@@ -159,7 +159,9 @@ const TermsAndConditionsScreen = ({
                 ? icons.activeTickSquare
                 : icons.inactiveTickSquare
             }
-            style={styles.checkBox_image}
+            contentContainerStyle={styles.checkBox_image}
+            height={20}
+            width={20}
             tintColor={
               checkBoxClicked ? THEME_COLORS.primary : THEME_COLORS.tertiary
             }

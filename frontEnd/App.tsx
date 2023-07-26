@@ -1,7 +1,7 @@
 import MainNavigator from './navigation/MainNavigator';
 import {Provider, useSelector} from 'react-redux';
 import {PersistGate} from 'redux-persist/integration/react';
-import {Store, Persistor, setUserProfile} from './redux';
+import {Store, Persistor, setUserProfile, editInitUserProfile} from './redux';
 import {StatusBar} from 'react-native';
 import {TYPES} from './constants';
 import {LocationScreen} from './screens';
@@ -20,6 +20,10 @@ const MainContent = () => {
     (state: TYPES.AppState) => state.registerReducer,
   );
 
+  const {userProfile} = useSelector(
+    (state: TYPES.AppState) => state.userReducer,
+  );
+
   useLocationService();
 
   useEffect(() => {
@@ -30,6 +34,7 @@ const MainContent = () => {
         try {
           const result = await UserService.getProfile(uid, controller.signal);
           dispatch(setUserProfile(result.profile));
+          dispatch(editInitUserProfile(result.profile))
         } catch (e) {
           console.log(e);
         }

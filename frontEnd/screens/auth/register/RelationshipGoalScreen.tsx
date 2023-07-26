@@ -1,6 +1,6 @@
 import {Text, View, ScrollView} from 'react-native';
 import React, {useEffect, useState} from 'react';
-import {SafeContainer, Button, LoadingSpinner} from '../../../components';
+import {SafeContainer, Button, LoadingSpinner, questionsList} from '../../../components';
 import {styles} from './styles';
 import {THEME_COLORS, ROUTES, TYPES} from '../../../constants';
 import {
@@ -27,11 +27,8 @@ const RelationshipGoalsScreen = ({
 
   const dispatch = useDispatch();
 
-  const relationshipGoalList = [
-    {id: 1, name: 'Relationship'},
-    {id: 2, name: 'Friendship'},
-    {id: 3, name: 'Exploring'},
-  ];
+  const relationshipGoalField = questionsList.find(field => field.id === 11) as {question: string, id: number, answers: string[],  icon:string}
+
 
   const handlePress = () => {
     if (valid) {
@@ -82,21 +79,21 @@ const RelationshipGoalsScreen = ({
       <View style={styles.container}>
         {isLoading && <LoadingSpinner />}
         <Text style={styles.requirement}>Required</Text>
-        <Text style={styles.title}>What's your relationship goal?</Text>
+        <Text style={styles.title}>{relationshipGoalField?.question}</Text>
 
         <ScrollView
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           overScrollMode={'never'}
           contentContainerStyle={{flexGrow: 1}}>
-          {relationshipGoalList.map(goal => (
-            <View key={goal.id} style={styles.clickableIndicatorPrimaryButton}>
+          {relationshipGoalField?.answers.map((goal, index) => (
+            <View key={index} style={styles.clickableIndicatorPrimaryButton}>
               <Button.ClickableIndicatorPrimaryButton
                 onPress={() =>
-                  ClickableIndicatorPrimaryButtonHandlePress(goal.id, goal.name)
+                  ClickableIndicatorPrimaryButtonHandlePress(index, goal)
                 }
-                isActive={goal.id === activeId}>
-                {goal.name}
+                isActive={index === activeId}>
+                {goal}
               </Button.ClickableIndicatorPrimaryButton>
             </View>
           ))}

@@ -27,9 +27,15 @@ import NotificationScreen from './bottomTabNavigator/NotificationScreen';
 import UserProfileScreen from './profile/UserProfileScreen';
 import PublicProfileScreen from './profile/PublicProfileScreen';
 import EditProfileScreen from './profile/EditProfileScreen';
+import EditGenderScreen from './profile/EditGenderScreen';
+import EditSexualOrientationScreen from './profile/EditSexualOrientationScreen';
+import EditLanguageScreen from './profile/EditLanguageScreen';
 
 export {
+  EditLanguageScreen,
+  EditSexualOrientationScreen,
   EditProfileScreen,
+  EditGenderScreen,
   EmailVerificationScreen,
   DateOfBirthScreen,
   FirstNameEntryScreen,

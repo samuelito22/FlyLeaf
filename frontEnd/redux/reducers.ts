@@ -14,6 +14,16 @@ import {
   RESET_REGISTER,
   SET_USER_PROFILE,
   SET_ADDITIONAL_INFORMATION,
+  EDIT_SET_BIO,
+  EDIT_SET_HEIGHT,
+  EDIT_SET_ADDITIONAL_INFORMATION,
+  EDIT_SET_GENDER_INFORMATION,
+  EDIT_SET_JOB_TITLE,
+  EDIT_SET_COMPANY,
+  EDIT_SET_SEXUAL_ORIENTATION,
+  EDIT_SET_MODAL_VISIBLE,
+  EDIT_SET_LANGUAGES,
+  EDIT_INIT_USER_PROFILE
 } from './actions';
 import {TYPES} from '../constants';
 
@@ -117,4 +127,55 @@ const userReducer = (
   }
 };
 
-export {registerReducer, appStatusReducer, userReducer};
+const initialStateEditUser: TYPES.InitialStateEditUserType = {
+  bio: '',
+  height: null,
+  additionalInformation: null,
+  genderInformation: null,
+  jobTitle: '',
+  company: '',
+  sexualOrientation: null,
+  modalVisible: false,
+  languages: []
+};
+
+const editUserReducer = (
+  state = initialStateEditUser,
+  action: TYPES.AppAction,
+): TYPES.InitialStateEditUserType => {
+  switch (action.type) {
+    case EDIT_SET_BIO:
+      return {...state, bio: action.payload as string | null};
+    case EDIT_SET_HEIGHT:
+      return {...state, height: action.payload as {feet: number, inches: number} | null};
+    case EDIT_SET_ADDITIONAL_INFORMATION:
+      return {...state, additionalInformation: action.payload as {question: string, answer: string, icon: string}[]};
+    case EDIT_SET_GENDER_INFORMATION:
+      return {...state, genderInformation: action.payload as {general: string, specific: string | null}};
+    case EDIT_SET_JOB_TITLE:
+      return {...state, jobTitle: action.payload as string | null};
+    case EDIT_SET_COMPANY:
+      return {...state, company: action.payload as string | null};
+    case EDIT_SET_SEXUAL_ORIENTATION:
+      return {...state, sexualOrientation: action.payload as string[] | null};
+    case EDIT_SET_MODAL_VISIBLE:
+      return {...state, modalVisible: action.payload as boolean};
+    case EDIT_SET_LANGUAGES:
+      return {...state, languages: action.payload as string[] | null};
+    case EDIT_INIT_USER_PROFILE:
+      let initState = initialStateEditUser;
+      initState.bio = action.payload.profile.bio;
+      initState.height = action.payload.profile.height;
+      initState.additionalInformation = action.payload.interests.additionalInformation;
+      initState.genderInformation = action.payload.profile.gender;
+      initState.jobTitle = action.payload.profile.jobTitle;
+      initState.company = action.payload.profile.company;
+      initState.sexualOrientation = action.payload.preferences.sexualOrientation;
+      initState.languages = action.payload.languages;
+      return initState;
+    default:
+      return state;
+  }
+};
+
+export {registerReducer, appStatusReducer, userReducer, editUserReducer};

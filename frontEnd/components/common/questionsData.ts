@@ -1,4 +1,4 @@
-import { icons } from "../../assets";
+import { languagesList } from "./languagesList";
 
 export const questionsList = [
   {
@@ -111,7 +111,82 @@ export const questionsList = [
       'Trade school'
     ],
     icon: 'education'
-  }
+  },
+  {
+    id: 10,
+    question: "Who are you open to dating?",
+    answers: ['Male', 'Female', 'Non-Binary'],
+  },
+  {
+    id: 11,
+    question: "What's your relationship goal?",
+    answers: ['Relationship', 'Friendship', 'Exploring'],
+  },
+  {
+    id: 12,
+    question: "What's your gender identity?",
+    answers: [
+      {
+        id: 1,
+        gender: "Male",
+        extra: [
+          'Intersex man',
+          'Trans man',
+          'Transmasculine',
+          'Man and Nonbinary',
+          'Cis man',
+        ],
+      },
+      {
+        id: 2,
+        gender: "Female",
+        extra: [
+          'Intersex woman',
+          'Trans woman',
+          'Transfeminine',
+          'Woman and Nonbinary',
+          'Cis woman',
+        ]
+      },
+      {
+        id: 3,
+        gender: "Non-Binary",
+        extra: [
+          'Agender',
+          'Bigender',
+          'Genderfluid',
+          'Genderqueer',
+          'Gender nonconforming',
+          'Gender questioning',
+          'Gendervariant',
+          'Intersex',
+          'Neutrois',
+          'Nonbinary man',
+          'Nonbinary woman',
+          'Pangender',
+          'Polygender',
+          'Transgender',
+          'Two-spirit',
+        ]
+      }
+    ]
+  },
+  {
+    id: 13,
+    question: "What is your sexual orientation?",
+    answers: ['Straight', 'Gay', 'Lesbian', 'Bisexual', 'Asexual', 'Demisexual', 'Pansexual', 'Queer', 'Questioning', 'Aromantic', 'Omnisexual']
+  },
+  {
+    id: 14,
+    question: "What languages do you speak?",
+    answers: languagesList.map(language => {
+      let names = language.name.split(';');
+      return {
+        ...language,
+        name: names[0].trim(),
+      };
+    }),
+  },
   
 ];
 

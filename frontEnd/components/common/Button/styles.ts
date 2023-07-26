@@ -79,6 +79,7 @@ export const styles = StyleSheet.create({
   },
   imageButtonContainer: {
     alignItems: 'center',
+    justifyContent:'center',
     backgroundColor: 'white',
     overflow: 'hidden',
   },

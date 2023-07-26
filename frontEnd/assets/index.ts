@@ -55,6 +55,7 @@ import zodiac from "./icons/zodiac.png"
 import education from "./icons/education.png"
 import normalTick from "./icons/normalTick.png"
 import normalCross from "./icons/normalCross.png"
+import search from "./icons/search.png"
 
 import swap from './images/swap.png';
 import logo from './images/logo.png';
@@ -66,6 +67,7 @@ import manAvatar from './images/manAvatar.png';
 import successIllustration from './images/successillustration.png';
 
 export const icons: { [key: string]: any } = {
+  search,
   normalCross,
   normalTick,
   fashion,

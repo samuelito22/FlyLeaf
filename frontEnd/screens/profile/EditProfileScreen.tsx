@@ -1,11 +1,14 @@
-import { StyleSheet, Text, View, TextInput, Image, Modal, Pressable} from 'react-native'
+import { StyleSheet, Text, View, TextInput, Image, Modal, Pressable, BackHandler} from 'react-native'
 import React, {useEffect, useMemo, useReducer, useState} from 'react'
-import { Button, EditProfileHeader, KeyboardAvoidingViewWrapper, Ripple, SafeContainer, questionsList } from '../../components'
-import { BORDER_RADIUS, COMPONENT_COLORS, PALETTE, THEME_COLORS, TYPES, themeText } from '../../constants'
+import { Button, EditProfileHeader, KeyboardAvoidingViewWrapper, LoadingSpinner, Ripple, SafeContainer, questionsList } from '../../components'
+import { BORDER_RADIUS, COMPONENT_COLORS, PALETTE, ROUTES, THEME_COLORS, TYPES, themeText } from '../../constants'
 import { useSelector } from 'react-redux'
 import { icons } from '../../assets'
 import { ScrollView } from 'react-native-gesture-handler'
 import { TouchableRipple } from 'react-native-paper'
+import {useNavigation, NavigationProp} from '@react-navigation/native';
+import { useDispatch } from '../../utils/hooks'
+import { editSetBio, editSetCompany, editSetHeight, editSetJobTitle, editSetModalVisible } from '../../redux'
 
 const styles = StyleSheet.create({
   section:{
@@ -19,6 +22,7 @@ const styles = StyleSheet.create({
     ...themeText.bodyBoldFour,
     color:THEME_COLORS.dark,
     paddingHorizontal: 20,
+    
   },
   section_textInput: {
     backgroundColor: "white",
@@ -28,20 +32,19 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.medium,
     paddingHorizontal: 20,
     marginHorizontal: 20,
+    marginTop: 10,
     ...themeText.bodyRegularSix,
   },
   section_subHeader:{
     ...themeText.bodyRegularSix,
     color: THEME_COLORS.dark,
-    marginBottom: 10,
     paddingHorizontal: 20,
   },
   section_height:{
     width: "50%",
     maxWidth: 200,
     marginTop: 10,
-    paddingRight:10,
-    paddingHorizontal: 20,
+    paddingLeft: 20,
   },
   section_height_header:{
     ...themeText.bodyRegularFive,
@@ -53,31 +56,31 @@ const styles = StyleSheet.create({
     color: THEME_COLORS.dark,
     borderWidth: 1,
     borderColor: PALETTE.GHOSTWHITE,
-    paddingHorizontal: 10
+    paddingHorizontal: 10,
+    borderRadius: BORDER_RADIUS.medium,
+
   },
   section_height_error:{
     ...themeText.bodyRegularSeven,
     color: PALETTE.RED500,
     marginTop: 5
   },
-  section_additionalInformation: {
-    borderTopWidth: 1,
+  section_withBorder: {
     borderColor: PALETTE.GHOSTWHITE,
-    paddingTop: 15,
-    paddingBottom:10,
+    paddingVertical: 15,
     paddingHorizontal:20
   },
-  section_additionalInformation_header: {
+  section_withBorder_header: {
     ...themeText.bodyMediumSix,
     color: THEME_COLORS.dark,
     flex:1
   },
-  section_additionalInformation_paragraph: {
+  section_withBorder_paragraph: {
     ...themeText.bodyRegularSix,
     color: THEME_COLORS.tertiary,
     paddingTop: 5,
   },
-  section_additionalInformation_icon: {
+  section_withBorder_icon: {
     tintColor: THEME_COLORS.dark,
     width:20,
     height: 20,
@@ -88,74 +91,149 @@ const styles = StyleSheet.create({
   }
 })
 
-interface State {
-  bio: string;
-  height: {feet: number, inches: number} | null;
-  save: boolean;
-  additionalInformation: {question: string, answer: string, icon: string}[];
-  modalVisible: boolean
-}
-
 interface SectionProps {
-  state: State;
-  dispatch: React.Dispatch<Action>;
+    state: TYPES.InitialStateEditUserType;
+    dispatch: React.Dispatch<TYPES.AppAction>;  
 }
 
 interface ModalSelectionProps extends SectionProps {
   data: any;
 }
 
-type Action =  { type: 'SET_BIO'; payload: string } 
-  | { type: 'SET_HEIGHT'; payload: {feet: number, inches: number} | null } 
-  | { type: 'SET_ADDITIONAL_INFORMATION'; payload: {question: string, answer: string, icon: string}[]}
-  | {type: 'SET_SAVE'; payload: boolean}
-  | {type: 'SET_MODAL_VISIBLE'; payload: boolean}
-  ;
-
-const reducer = (state: State, action: Action): State => {
-  switch (action.type) {
-    case 'SET_BIO':
-      return { ...state, bio: action.payload };
-    case 'SET_HEIGHT':
-        return { ...state, height: action.payload };
-    case 'SET_SAVE':
-        return { ...state, save: action.payload };
-    case 'SET_ADDITIONAL_INFORMATION':
-      return {...state, additionalInformation: action.payload}
-    case 'SET_MODAL_VISIBLE':
-      return {...state, modalVisible:action.payload}
-    default:
-      throw new Error();
-  }
-};
-
-
 const EditProfileScreen = () => {
+  const state = useSelector(
+    (state: TYPES.AppState) => state.editUserReducer,
+  );
+  const dispatch = useDispatch()
+
+  useEffect(() => {
+    // Add event listener for hardware back button
+    const backAction = () => {
+      return false;
+    };
+
+    const backHandler = BackHandler.addEventListener("hardwareBackPress", backAction);
+
+    return () => {
+      // Remove event listener when the component is unmounted
+      backHandler.remove();
+    };
+  }, []);
+
+  const handleBackPress = async () => {
+    console.log("Updating database")
+  }
   
-const {userProfile} = useSelector(
-  (state: TYPES.AppState) => state.userReducer,
-);
-
-const initialState = { 
-  bio: userProfile?.profile.bio, 
-  height: userProfile?.profile.height, 
-  additionalInformation: userProfile?.interests.additionalInformation,
-  save: false, 
-  modalVisible: false
-};
-
-  const [state, dispatch] = useReducer(reducer, initialState);
-
   return (
    
       <KeyboardAvoidingViewWrapper>
          <SafeContainer>
-      <EditProfileHeader/>
+      <EditProfileHeader onBackPress={handleBackPress} leftIconText='Edit Profile'/>
+      <PicturesSection state={state} dispatch={dispatch}/>
       <BiographySection state={state} dispatch={dispatch}/>
-      <HeightSection state={state} dispatch={dispatch}/>
+      <HeightSection state={state} dispatch={dispatch}/>  
+      <GenderSection state={state} dispatch={dispatch}/>  
+      <SexualOrientationSection state={state} dispatch={dispatch}/>
+      <LanguagesSection state={state} dispatch={dispatch}/>
       <AdditionalInformation state={state} dispatch={dispatch}/>   
+      <JobSection state={state} dispatch={dispatch}/>   
+      <CompanySection state={state} dispatch={dispatch}/> 
       </SafeContainer>
       </KeyboardAvoidingViewWrapper>
+  )
+}
+
+const JobSection = ({state, dispatch} : SectionProps) =>{
+
+  return (
+    <View style={styles.section}>
+        <Text style={styles.section_header}>Job title</Text>
+        <TextInput
+        style={styles.section_textInput}
+        onChangeText={text => dispatch(editSetJobTitle(text))}
+        value={state.jobTitle ?? ''}
+        placeholder="Add job title"
+        placeholderTextColor={THEME_COLORS.tertiary}
+        />
+      </View>
+  )
+}
+
+const CompanySection = ({state, dispatch} : SectionProps) =>{
+
+  return (
+    <View style={styles.section}>
+        <Text style={styles.section_header}>Company</Text>
+        <TextInput
+        style={styles.section_textInput}
+        onChangeText={text => dispatch(editSetCompany(text))}
+        value={state.company ?? ''}
+        placeholder="Add company"
+        placeholderTextColor={THEME_COLORS.tertiary}
+        />
+      </View>
+  )
+}
+
+const GenderSection = ({state, dispatch}: SectionProps) => {
+  const navigation = useNavigation<NavigationProp<TYPES.RootStackParamList>>();
+  const onPress = () => {
+    navigation.navigate(ROUTES.EDIT_GENDER_SCREEN)
+  }
+
+  return(
+    <View style={styles.section}>
+        <Text style={[styles.section_header, {marginBottom: 0}]}>Gender</Text>
+          <TouchableRipple style={[styles.section_withBorder, {paddingVertical: 20}]} onPress={() => onPress()} rippleColor={PALETTE.LIGHT100}>
+              <Text style={[styles.section_withBorder_paragraph, {paddingTop: 0}]}>{state.genderInformation?.specific ? state.genderInformation.specific : state.genderInformation?.general}</Text>
+          </TouchableRipple>
+      </View>
+  )
+}
+
+const LanguagesSection = ({state, dispatch}: SectionProps) => {
+  const navigation = useNavigation<NavigationProp<TYPES.RootStackParamList>>();
+  const [loading, setLoading] = useState(false)
+  const onPress = () => {
+    setLoading(true)
+    navigation.navigate(ROUTES.EDIT_LANGUAGE_SCREEN)
+    setLoading(false)
+  }
+
+  return(
+    <View style={styles.section}>
+      {loading && <LoadingSpinner/>}
+        <Text style={[styles.section_header, {marginBottom: 10}]}>Languages that I know</Text>
+          <TouchableRipple style={[styles.section_withBorder, { paddingVertical: 20}]} onPress={() => onPress()} rippleColor={PALETTE.LIGHT100}>
+              <Text style={[styles.section_withBorder_paragraph, {paddingTop: 0}]}>{(state.languages && state.languages.length != 0 )? state.languages.join(', ') : 'Add'}</Text>
+          </TouchableRipple>
+      </View>
+  )
+}
+
+const SexualOrientationSection = ({state, dispatch}: SectionProps) => {
+  const navigation = useNavigation<NavigationProp<TYPES.RootStackParamList>>();
+  const onPress = () => {
+    navigation.navigate(ROUTES.EDIT_SEXUAL_ORIENTATION_SCREEN)
+  }
+
+  return(
+    <View style={styles.section}>
+        <Text style={[styles.section_header, {marginBottom: 0}]}>Sexual Orientation</Text>
+          <TouchableRipple style={[styles.section_withBorder, { paddingVertical: 20}]} onPress={() => onPress()} rippleColor={PALETTE.LIGHT100}>
+          <Text 
+  style={[
+    styles.section_withBorder_paragraph, 
+    {paddingTop: 0}
+  ]}
+>
+  {(state.sexualOrientation && state.sexualOrientation.length !== 0) 
+    ? state.sexualOrientation.join(', ')
+    : 'Add'
+  }
+</Text>
+          </TouchableRipple>
+      </View>
   )
 }
 
@@ -164,18 +242,18 @@ const AdditionalInformation = ({state, dispatch}: SectionProps) => {
   const onPress = (text:string) => {
     let result = questionsList.find(item => item.question.includes(text))
     setResult(result)
-    dispatch({type: 'SET_MODAL_VISIBLE', payload: true})
+    dispatch(editSetModalVisible(true))
   }
 
   return(
     <View style={styles.section}>
         <Text style={styles.section_header}>Additional information</Text>
-        <Text style={styles.section_subHeader}>Make your adjustments here, and let others know more about youself</Text>
-        {state.additionalInformation.map((field, index) => (
-          <TouchableRipple key={index} style={styles.section_additionalInformation} onPress={() => onPress(field.question)} rippleColor={PALETTE.GRAY400}>
+        <Text style={[styles.section_subHeader, {paddingBottom: 10}]}>Make your adjustments here, and let others know more about youself</Text>
+        {state.additionalInformation?.map((field, index) => (
+          <TouchableRipple key={index} style={styles.section_withBorder} onPress={() => onPress(field.question)} rippleColor={PALETTE.LIGHT100}>
             <View style={{flexDirection:'row', alignItems:'center'}}>
-              <Image source={icons[field.icon]} style={styles.section_additionalInformation_icon} resizeMode='contain'/>
-              <View><Text style={styles.section_additionalInformation_header}>{field.question}</Text><Text style={styles.section_additionalInformation_paragraph}>{field.answer}</Text></View>
+              <Image source={icons[field.icon]} style={styles.section_withBorder_icon} resizeMode='contain'/>
+              <View><Text style={styles.section_withBorder_header}>{field.question}</Text><Text style={styles.section_withBorder_paragraph}>{field.answer}</Text></View>
             </View>
             
           </TouchableRipple>
@@ -219,11 +297,9 @@ const HeightSection = ({state, dispatch}: SectionProps) => {
   useEffect(() => setShowFeetError(false),[feet])
   useEffect(() => setShowInchesError(false),[inches])
   
-  useEffect(() =>{ if(state.save) handleSave()}, [state.save])
-
   const handleSave = () => {
     if(!showFeetError && !showInchesError){
-      dispatch({ type: 'SET_HEIGHT', payload: {feet: Number(feet), inches:Number(inches)} })
+      dispatch(editSetHeight({feet: Number(feet), inches:Number(inches)}))
     }
   }
 
@@ -245,6 +321,17 @@ const HeightSection = ({state, dispatch}: SectionProps) => {
       </View>
   )
 }
+
+const PicturesSection = ({state, dispatch} : SectionProps) =>{
+
+  return (
+    <View style={styles.section}>
+        <Text style={styles.section_header}>Pictures</Text>
+        <Text style={styles.section_subHeader}>Pick the best pictures of yourself</Text>
+      </View>
+  )
+}
+
 const BiographySection = ({state, dispatch} : SectionProps) =>{
 
   return (
@@ -253,8 +340,8 @@ const BiographySection = ({state, dispatch} : SectionProps) =>{
         <Text style={styles.section_subHeader}>Write a coincised and interesting biography to impress your viewers</Text>
         <TextInput
         style={styles.section_textInput}
-        onChangeText={text => dispatch({ type: 'SET_BIO', payload: text })}
-        value={state.bio}
+        onChangeText={text => dispatch(editSetBio(text))}
+        value={state.bio ?? ''}
         placeholder="About me"
         placeholderTextColor={THEME_COLORS.tertiary}
         multiline={true}
@@ -265,19 +352,19 @@ const BiographySection = ({state, dispatch} : SectionProps) =>{
 
 const ModalSelection = ({state, dispatch, data} : ModalSelectionProps) => {
   const field = useMemo(() => {
-    return state.additionalInformation.find(field => field.question.includes(data.question))
+    return state.additionalInformation?.find(field => field.question.includes(data.question))
   }, [data.question, state.additionalInformation]);
   
   const [selectedAnswer, setSelectedAnswer] = useState<null | undefined |string>(null)
 
   const onPress = () => {
-    const question = state.additionalInformation.find(field => field.question.includes(data.question));
+    const question = state.additionalInformation?.find(field => field.question.includes(data.question));
   
     if (question && selectedAnswer) {
       question.answer = selectedAnswer;
     }
 
-    dispatch({type:'SET_MODAL_VISIBLE',payload:false})
+    dispatch(editSetModalVisible(false))
   }
 
   useEffect(() => {
@@ -294,17 +381,17 @@ const ModalSelection = ({state, dispatch, data} : ModalSelectionProps) => {
   <Modal
     transparent={true}
     visible={state.modalVisible}
-    onRequestClose={() => dispatch({type: 'SET_MODAL_VISIBLE', payload: false})}>
+    onRequestClose={() => dispatch(editSetModalVisible(false))}>
     <Pressable
       style={{flex: 1}}
-      onPress={() => dispatch({type: 'SET_MODAL_VISIBLE', payload: false})}>
+      onPress={() => dispatch(editSetModalVisible(false))}>
       <View style={modalSelectionStyles.flexEnd}>
         <Pressable
           style={modalSelectionStyles.container}
           onPress={e => e.stopPropagation()}>
             <View style={modalSelectionStyles.iconsContainer}>
-            <View onStartShouldSetResponder={() => true} onResponderRelease={() => dispatch({type: 'SET_MODAL_VISIBLE', payload: false})} style={modalSelectionStyles.iconContainer}><Image source={icons.normalCross} resizeMode='contain' style={[modalSelectionStyles.crossIcon, {tintColor: PALETTE.DARK}]}/></View>
-            <View onStartShouldSetResponder={() => true} onResponderRelease={() => onPress()} style={modalSelectionStyles.iconContainer}><Image source={icons.normalTick} resizeMode='contain' style={[modalSelectionStyles.tickIcon , {tintColor: PALETTE.GREEN300}]}/></View>
+            <View onStartShouldSetResponder={() => true} onResponderRelease={() => dispatch(editSetModalVisible(false))} style={modalSelectionStyles.iconContainer}><Image source={icons.normalCross} resizeMode='contain' style={modalSelectionStyles.crossIcon}/></View>
+            <View onStartShouldSetResponder={() => true} onResponderRelease={() => onPress()} style={modalSelectionStyles.iconContainer}><Image source={icons.normalTick} resizeMode='contain' style={modalSelectionStyles.tickIcon}/></View>
             </View>
           <Text style={modalSelectionStyles.header}>
             {data.question}
@@ -379,12 +466,14 @@ const modalSelectionStyles = StyleSheet.create({
     alignItems: "center"
   },
   crossIcon:{
-    width: "50%",
-    height:"50%"
+    width: "40%",
+    height:"40%",
+    tintColor: PALETTE.DARK
   },
   tickIcon:{
     width: "100%",
-    height:"100%"
+    height:"100%",
+    tintColor: THEME_COLORS.primary
   }
 })
 

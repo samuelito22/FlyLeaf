@@ -15,6 +15,16 @@ import {
   setInterests,
   resetRegister,
   setUserProfile,
+  editSetBio,
+  editSetHeight,
+  editSetAdditionalInformation,
+  editSetGenderInformation,
+  editSetJobTitle,
+  editSetCompany,
+  editSetSexualOrientation,
+  editSetModalVisible,
+  editSetLanguages,
+  editInitUserProfile,
 } from './actions';
 
 import {Store, Persistor} from './store';
@@ -38,4 +48,14 @@ export {
   setInterests,
   resetRegister,
   setUserProfile,
+  editSetBio,
+  editSetHeight,
+  editSetAdditionalInformation,
+  editSetGenderInformation,
+  editSetJobTitle,
+  editSetCompany,
+  editSetSexualOrientation,
+  editSetModalVisible,
+  editSetLanguages,
+  editInitUserProfile,
 };

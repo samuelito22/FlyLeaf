@@ -4,7 +4,8 @@ import {
   THEME_COLORS,
   HEIGHT,
   COMPONENT_COLORS,
-} from '../../../../constants';
+  themeText,
+} from '../../../constants';
 
 export const styles = StyleSheet.create({
   container: {
@@ -35,6 +36,16 @@ export const styles = StyleSheet.create({
     width:80,
     height:"100%",
     alignItems: "center",
-    justifyContent:'center',   
+    justifyContent:'center',
+      
   },
+  iconText: {
+    color: THEME_COLORS.dark,
+    ...themeText.bodyMediumFour,
+    marginLeft:5,
+    transform:[
+      {translateY: 2}
+    ]
+
+  }
 });

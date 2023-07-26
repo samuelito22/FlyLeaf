@@ -1,7 +1,7 @@
 import {createStackNavigator} from '@react-navigation/stack';
 import {ROUTES} from '../constants';
 import React from 'react';
-import {UserProfileScreen, PublicProfileScreen, EditProfileScreen} from '../screens';
+import {UserProfileScreen, PublicProfileScreen, EditProfileScreen, EditGenderScreen, EditSexualOrientationScreen, EditLanguageScreen} from '../screens';
 import {cardSlideLeftAnimation} from '../utils/navigatorSlideAnimation';
 
 const Stack = createStackNavigator();
@@ -25,6 +25,17 @@ const ProfileNavigator = () => {
       <Stack.Screen
         name={ROUTES.EDIT_PROFILE_SCREEN}
         component={EditProfileScreen}
+      />
+      <Stack.Screen
+        name={ROUTES.EDIT_GENDER_SCREEN}
+        component={EditGenderScreen}/>
+      <Stack.Screen 
+        name={ROUTES.EDIT_SEXUAL_ORIENTATION_SCREEN}
+        component={EditSexualOrientationScreen}
+      />
+      <Stack.Screen
+      name={ROUTES.EDIT_LANGUAGE_SCREEN}
+      component={EditLanguageScreen}
       />
     </Stack.Navigator>
   );

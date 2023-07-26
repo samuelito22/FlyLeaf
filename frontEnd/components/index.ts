@@ -12,8 +12,7 @@ export {default as UploadSelectionAlert} from './screens/RegisterComponents/Uplo
 
 // Home
 export {default as UserProfileCard} from './screens/HomeComponents/UserProfileCard';
-export {default as HomeHeader} from './screens/HomeComponents/HomeHeader';
-export * from "./screens/ProfileComponents/ProfileHeader";
+export * from "./common/Headers"
 
 // common
 export * as Button from './common/Button';
