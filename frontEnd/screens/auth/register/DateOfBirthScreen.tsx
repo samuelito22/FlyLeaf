@@ -93,11 +93,8 @@ const DateOfBirthScreen = ({
         const uid = auth().currentUser?.uid
         if(uid)
         {
-          AuthService.ageRestrictUser(uid, moment(dateOfBirthTemp, 'DD/MM/YYYY').toDate(), controller.signal).then(result => {
           dispatch(setIsBlocked(true))
         }
-        ).catch(e => console.error(e))
-      }
         setIsLoading(false)
         return () => controller.abort()
       } 
