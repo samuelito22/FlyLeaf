@@ -21,6 +21,9 @@ import {
   setProgressBarValue,
   setIsRegisterCompleted,
 } from '../../../redux';
+import { AuthService } from '../../../services';
+import { setIsBlocked } from '../../../redux';
+import auth from "@react-native-firebase/auth"
 
 const DateOfBirthScreen = ({
   navigation,
@@ -54,11 +57,7 @@ const DateOfBirthScreen = ({
       typeof dateOfBirthTemp === 'string' &&
       dateOfBirthTemp.length > 7
     ) {
-      if (moment().year() - moment(dateOfBirthTemp, 'DDMMYYYY').year() >= 18) {
-        setValid(true);
-      } else {
-        // Block the user
-      }
+      setValid(true);
     } else {
       setValid(false);
     }
@@ -89,7 +88,19 @@ const DateOfBirthScreen = ({
     setIsLoading(true);
     try {
       setAlertVisible(false);
-
+      if (moment().year() - moment(dateOfBirthTemp, 'DDMMYYYY').year() < 18) {
+        const controller = new AbortController()
+        const uid = auth().currentUser?.uid
+        if(uid)
+        {
+          AuthService.ageRestrictUser(uid, moment(dateOfBirthTemp, 'DD/MM/YYYY').toDate(), controller.signal).then(result => {
+          dispatch(setIsBlocked(true))
+        }
+        ).catch(e => console.error(e))
+      }
+        setIsLoading(false)
+        return () => controller.abort()
+      } 
       // Dispatch the action to update the birthday in Redux
       dispatch(setDateOfBirth(moment(dateOfBirthTemp, 'DD/MM/YYYY').toDate()));
       // Navigate to the next screen

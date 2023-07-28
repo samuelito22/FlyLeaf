@@ -1,52 +1,28 @@
 import MainNavigator from './navigation/MainNavigator';
 import {Provider, useSelector} from 'react-redux';
 import {PersistGate} from 'redux-persist/integration/react';
-import {Store, Persistor, setUserProfile, editInitUserProfile} from './redux';
+import {Store, Persistor} from './redux';
 import {StatusBar} from 'react-native';
 import {TYPES} from './constants';
-import {LocationScreen} from './screens';
-import {useDispatch, useLocationService} from './utils/hooks';
-import auth from '@react-native-firebase/auth';
-import {useEffect} from 'react';
-import {UserService} from './services';
+import {BlockedScreen, LocationScreen} from './screens';
+import {useGetProfile, useLocationService} from './utils/hooks';
 
 const MainContent = () => {
-  const dispatch = useDispatch();
-  const {showLocationScreen} = useSelector(
+  const {showLocationScreen, isBlocked} = useSelector(
     (state: TYPES.AppState) => state.appStatusReducer,
   );
 
   const {isRegisterCompleted} = useSelector(
     (state: TYPES.AppState) => state.registerReducer,
-  );
+  );  
 
-  const {userProfile} = useSelector(
-    (state: TYPES.AppState) => state.userReducer,
-  );
 
-  useLocationService();
+  useLocationService()
 
-  useEffect(() => {
-    const getProfile = async () => {
-      const uid = auth().currentUser?.uid;
-      if (uid) {
-        const controller = new AbortController();
-        try {
-          const result = await UserService.getProfile(uid, controller.signal);
-          dispatch(setUserProfile(result.profile));
-          dispatch(editInitUserProfile(result.profile))
-        } catch (e) {
-          console.log(e);
-        }
-        return () => controller.abort();
-      }
-    };
-    
-    const currentUid = auth().currentUser?.uid;
-    if (isRegisterCompleted.status && currentUid) {
-      getProfile();
-    }
-  }, [isRegisterCompleted, auth().currentUser?.uid]);
+  useGetProfile();
+
+  if(isBlocked) return <BlockedScreen/>
+
 
   return showLocationScreen && isRegisterCompleted.status ? (
     <LocationScreen />
