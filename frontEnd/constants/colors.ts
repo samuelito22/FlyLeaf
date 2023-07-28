@@ -13,6 +13,7 @@ export const PALETTE = {
   INDIGO300: '#666473',
   INDIGO500: '#55567e',
   INDIGO600: '#55567e',
+  PURPLE: '#5446b7',
 
   // Light shades
   LIGHT400: '#ededed',
@@ -40,7 +41,7 @@ export const PALETTE = {
 };
 
 export const THEME_COLORS = {
-  primary: PALETTE.INDIGO500,
+  primary: PALETTE.INDIGO600,
   secondary: PALETTE.LIGHT100,
   tertiary: PALETTE.GRAY300,
   background: PALETTE.WHITE,
@@ -60,6 +61,7 @@ export const COMPONENT_COLORS = {
   primaryIndicatorBackground: PALETTE.GHOSTWHITE2,
   primaryIndicatorBorder: PALETTE.LIGHT100,
   interestCard: PALETTE.INDIGO600,
+  modalBackground: 'rgba(0, 0, 0, 0.1)'
 };
 
 /**

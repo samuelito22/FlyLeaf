@@ -1,6 +1,6 @@
 import {Text, View, ScrollView, Pressable, Image, Modal} from 'react-native';
 import React, {useEffect, useState} from 'react';
-import {SafeContainer, Button, LoadingSpinner} from '../../../components';
+import {SafeContainer, Button, LoadingSpinner, questionsList} from '../../../components';
 import {styles} from './styles';
 import {THEME_COLORS, ROUTES, TYPES, PALETTE} from '../../../constants';
 import {
@@ -32,51 +32,13 @@ const GenderSelectionScreen = ({
 
   const dispatch = useDispatch();
 
-  const genderList = [
-    {
-      id: 1,
-      name: 'Male',
-      extra: [
-        'Intersex man',
-        'Trans man',
-        'Transmasculine',
-        'Man and Nonbinary',
-        'Cis man',
-      ].map((name, index) => ({id: index + 1, name})),
-    },
-    {
-      id: 2,
-      name: 'Female',
-      extra: [
-        'Intersex woman',
-        'Trans woman',
-        'Transfeminine',
-        'Woman and Nonbinary',
-        'Cis woman',
-      ].map((name, index) => ({id: index + 1, name})),
-    },
-    {
-      id: 3,
-      name: 'Non-Binary',
-      extra: [
-        'Agender',
-        'Bigender',
-        'Genderfluid',
-        'Genderqueer',
-        'Gender nonconforming',
-        'Gender questioning',
-        'Gendervariant',
-        'Intersex',
-        'Neutrois',
-        'Nonbinary man',
-        'Nonbinary woman',
-        'Pangender',
-        'Polygender',
-        'Transgender',
-        'Two-spirit',
-      ].map((name, index) => ({id: index + 1, name})),
-    },
-  ];
+  interface IGender {
+    gender: string;
+    extra: string[];
+    id: number
+  }
+
+  const genderListField = questionsList.find(question => question.id === 12) as { id: number,question: string, answers: IGender[] };
 
   const handlePress = async () => {
     if (valid) {
@@ -128,27 +90,27 @@ const GenderSelectionScreen = ({
       <View style={styles.container}>
         {isLoading && <LoadingSpinner />}
         <Text style={styles.requirement}>Required</Text>
-        <Text style={styles.title}>What's your gender identity?</Text>
+        <Text style={styles.title}>{genderListField?.question}</Text>
         <ScrollView
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           overScrollMode={'never'}
           contentContainerStyle={{flexGrow: 1}}>
-          {genderList.map(gender => (
+          {genderListField?.answers.map(genderField => (
             <View
-              key={gender.id}
+              key={genderField.id}
               style={styles.clickableIndicatorPrimaryButton}>
               <Button.ClickableIndicatorPrimaryButton
                 onPress={() =>
                   ClickableIndicatorPrimaryButtonHandlePress(
-                    gender.id,
-                    gender.name,
+                    genderField.id,
+                    genderField.gender,
                   )
                 }
-                isActive={gender.id === activeId}>
-                {gender.name}
+                isActive={genderField.id === activeId}>
+                {genderField.gender}
               </Button.ClickableIndicatorPrimaryButton>
-              {gender.id === activeId && (
+              {genderField.id === activeId && (
                 <Pressable
                   onPress={() => setMoreSpecificPress(true)}
                   style={
@@ -212,16 +174,15 @@ const GenderSelectionScreen = ({
               <ScrollView
                 contentContainerStyle={styles.extraScrollViewContainer}>
                 {activeId &&
-                  genderList
-                    .find(gender => gender.id === activeId)
-                    ?.extra.map(extraGender => (
+                  genderListField.answers.find(gender => gender.id === activeId)
+                    ?.extra.map((extraGender, index) => (
                       <Pressable
                         style={styles.extraGenderModal_button}
-                        key={extraGender.id}
+                        key={index}
                         onPress={() => {
-                          if (extraGenderTemp === extraGender.name)
+                          if (extraGenderTemp === extraGender)
                             setExtraGenderTemp(null);
-                          else setExtraGenderTemp(extraGender.name);
+                          else setExtraGenderTemp(extraGender);
                           setMoreSpecificPress(false);
                         }}>
                         <View style={styles.extraGenderModal_content}>
@@ -230,7 +191,7 @@ const GenderSelectionScreen = ({
                               styles.extraGenderModal_button__icon,
                               {
                                 tintColor:
-                                  extraGenderTemp === extraGender.name
+                                  extraGenderTemp === extraGender
                                     ? THEME_COLORS.primary
                                     : PALETTE.LIGHT400,
                               },
@@ -239,7 +200,7 @@ const GenderSelectionScreen = ({
                             resizeMode="contain"
                           />
                           <Text style={styles.extraGenderModal_button__text}>
-                            {extraGender.name}
+                            {extraGender}
                           </Text>
                         </View>
                       </Pressable>

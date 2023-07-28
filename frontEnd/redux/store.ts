@@ -1,20 +1,16 @@
-import {createStore, combineReducers, applyMiddleware} from 'redux';
+import {createStore, applyMiddleware} from 'redux';
 import thunk from 'redux-thunk';
-import {registerReducer, appStatusReducer, userReducer} from './reducers';
 import {persistStore, persistReducer, PURGE} from 'redux-persist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import combineReducer from "./reducers"
 
-const rootReducer = combineReducers({
-  registerReducer,
-  appStatusReducer,
-  userReducer,
-});
+const rootReducer = combineReducer
 
 const persistConfig = {
   type: PURGE,
   key: 'root',
   storage: AsyncStorage,
-  whitelist: ['registerReducer'],
+  whitelist: ['registerReducer', 'appStatusReducer'],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

@@ -63,7 +63,9 @@ const Dropdown: React.FC<TYPES.DropdownProps> = ({
         <Text style={styles.dropdown__toggle__value}>{selectedValue}</Text>
         <ButtonImage
           imgUrl={icons.arrowDown}
-          style={styles.dropdown__arrowDown}
+          contentContainerStyle={styles.dropdown__arrowDown}
+          height={18}
+          width={18}
         />
       </Pressable>
       <Modal visible={isOpen} transparent>

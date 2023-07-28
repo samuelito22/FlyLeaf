@@ -14,6 +14,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import {icons} from '../../../../assets';
+import Ripple from '../../../common/Ripple';
 
 const UserProfileCard = ({
   about,
@@ -22,11 +23,8 @@ const UserProfileCard = ({
   statusText,
   interests,
   movementActive = true,
-  questionAndAnswer
+  dailyThoughts
 }: TYPES.UserProfileCardProps) => {
-  const defaultAbout =
-    "This user hasn't added a bio yet, but feel free to explore their profile to get to know them better!";
-
   const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window');
   const SWIPE_DURATION = 200;
   const THRESHOLD_LEFT = -SCREEN_WIDTH * 0.2;
@@ -108,7 +106,7 @@ const UserProfileCard = ({
 
   return (
     <View  onLayout={handleLayout}>
-    <Animated.View style={animatedHeightToZero}>
+    <Animated.View style={animatedHeightToZero} >
       <PanGestureHandler onGestureEvent={panGesture}>
         <Animated.View style={[animatedContainerStyle, styles.container]}>
           <View style={styles.profileInfoContainer}>
@@ -129,15 +127,17 @@ const UserProfileCard = ({
             <Text style={styles.headerText}>About</Text>
             <Text
               style={styles.paragraphText}>
-              {about ? about : defaultAbout}
+              {about}
             </Text>
+            {dailyThoughts &&
           <View style={styles.additionInfoContainer}>
             <Text style={styles.headerText}>Thoughts of the day?</Text>
             <Text
               style={styles.paragraphText}>
-              {about ? about : defaultAbout}
+             {dailyThoughts}
             </Text>
           </View>
+}
         </Animated.View>
       </PanGestureHandler>
       <Animated.View style={[styles.icon, animatedRightIconStyle, {right: 0}]}>

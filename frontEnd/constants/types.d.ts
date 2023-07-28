@@ -1,5 +1,5 @@
 import {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import {ImageSourcePropType} from 'react-native';
+import {ImageSourcePropType, ViewStyle} from 'react-native';
 import {NavigationProp} from '@react-navigation/native';
 
 /**
@@ -8,17 +8,22 @@ import {NavigationProp} from '@react-navigation/native';
 export interface ButtonProps {
   style?: ViewStyle;
   onPress?: () => void;
-}
-
-export interface PrimaryButtonProps extends ButtonProps {
   children?: ReactNode;
+  width?: number,
+  height?: number,
+  textStyle?: TextStyle
 }
 
-export type InterestsButtonPress = PrimaryButtonProps;
+export interface InterestsButtonProps extends ButtonProps{
+  active: boolean
+}
 
 export interface ButtonImageProps extends ButtonProps {
   imgUrl: Image;
   tintColor?: string;
+  contentContainerStyle?: ViewStyle,
+  iconHeaderLeft?: boolean,
+  iconHeaderRight?: boolean
 }
 
 export interface ClickableIndicatorPrimaryButton extends ButtonProps {
@@ -129,7 +134,7 @@ export interface UserProfileCardProps {
   statusText: string;
   interests: string[];
   movementActive?: boolean;
-  questionAndAnswer?: [{question:string, answer:string}]
+  dailyThoughts?: string;
 }
 
 /**
@@ -223,9 +228,75 @@ interface resetRegisterAction {
   type: 'RESET_REGISTER';
 }
 
-interface setUserProfileAction {
+interface SetUserProfileAction {
   type: 'SET_USER_PROFILE';
+  payload: { id: string; data: any }; 
+}
+
+interface SetCurrentUserIdAction {
+  type: 'SET_CURRENT_USER_ID';
+  payload: string;
+}
+
+interface RemoveUserProfileAction {
+  type: 'REMOVE_USER_PROFILE';
+  payload: string;
+}
+
+// Edit Profile
+interface EditSetBioAction {
+  type: 'EDIT_SET_BIO';
+  payload: string | null;
+}
+
+interface EditSetHeightAction {
+  type: 'EDIT_SET_HEIGHT';
+  payload: {feet: number, inches: number} | null;
+}
+
+interface EditSetAdditionalInformationAction {
+  type: 'EDIT_SET_ADDITIONAL_INFORMATION';
+  payload: {question: string, answer: string, icon: string}[] | null;
+}
+
+interface EditSetGenderInformationAction {
+  type: 'EDIT_SET_GENDER_INFORMATION';
+  payload: {general: string, specific: string | null} | null;
+}
+
+interface EditSetJobTitleAction {
+  type: 'EDIT_SET_JOB_TITLE';
+  payload: string | null;
+}
+
+interface EditSetCompanyAction {
+  type: 'EDIT_SET_COMPANY';
+  payload: string | null;
+}
+
+interface EditSetSexualOrientationAction {
+  type: 'EDIT_SET_SEXUAL_ORIENTATION';
+  payload: string[] | null;
+}
+
+interface EditSetModalVisibleAction {
+  type: 'EDIT_SET_MODAL_VISIBLE';
+  payload: boolean;
+}
+
+interface EditSetLanguagesAction {
+  type: 'EDIT_SET_LANGUAGES';
+  payload: string[] | null;
+}
+
+interface EditInitUserProfileAction {
+  type: 'EDIT_INIT_USER_PROFILE';
   payload: any;
+}
+
+interface setIsBlocked { 
+  type: 'SET_IS_BLOCKED';
+  payload: boolean
 }
 
 export type AppAction =
@@ -243,7 +314,20 @@ export type AppAction =
   | SetQuestionAndAnswerAction
   | SetInterestsActionAction
   | resetRegisterAction
-  | setUserProfileAction;
+  | setUserProfileAction
+  | SetCurrentUserIdAction
+  | RemoveUserProfileAction
+  | EditSetBioAction
+  | EditSetHeightAction
+  | EditSetAdditionalInformationAction
+  | EditSetGenderInformationAction
+  | EditSetJobTitleAction
+  | EditSetCompanyAction
+  | EditSetSexualOrientationAction
+  | EditSetModalVisibleAction
+  | EditSetLanguagesAction
+  | setIsBlocked
+  | EditInitUserProfileAction;
 
 export interface InitialStateRegisterType {
   dateOfBirth: Date | null;
@@ -255,7 +339,7 @@ export interface InitialStateRegisterType {
   relationshipGoal: string | null;
   phoneNumber: string | null;
   progressBarValue: number;
-  questionAndAnswer: {question: string; answer: string}[] | null;
+  additionalInformation: {question: string; answer: string, icon: string}[] | null;
   interests: string[];
   isRegisterCompleted: {
     status: boolean;
@@ -265,11 +349,28 @@ export interface InitialStateRegisterType {
 
 export interface InitialStateAppStatusType {
   showLocationScreen: boolean;
+  isBlocked: boolean;
+  locationFetchComplete:boolean;
+  profileFetchComplete: boolean
 }
 
-export interface InitialStateUserType {
-  userProfile: any;
+export interface InitialStateUsersType {
+  [key: string]: any;
+  currentUserId: string | null
 }
+
+export interface InitialStateEditUserType {
+  bio: string | null;
+  height: {feet: number, inches: number} | null;
+  additionalInformation: {question: string, answer: string, icon: string}[] | null;
+  genderInformation: {general: string, specific: string | null} | null;
+  jobTitle: string | null;
+  company: string | null;
+  sexualOrientation: string[] | null;
+  modalVisible: boolean;
+  languages: string[] | null
+}
+
 
 /**
  * Redux stor - App State
@@ -293,6 +394,8 @@ export type RootStackParamList = {
   REGISTER_RELATIONSHIP_GOAL_SCREEN: undefined;
   REGISTER_MULTIPLE_QUESTIONS_SCREEN: undefined;
   REGISTER_TERMS_AND_CONDITIONS_SCREEN: undefined;
+  REGISTER_WELCOME_SCREEN: undefined;
+  REGISTER_INTEREST_SCREEN: undefined;
 
   // Login
   LOGIN_NAVIGATOR: undefined;
@@ -315,6 +418,10 @@ export type RootStackParamList = {
   };
   USER_PROFILE_SCREEN: undefined;
   PUBLIC_PROFILE_SCREEN: undefined;
+  EDIT_PROFILE_SCREEN: undefined;
+  EDIT_GENDER_SCREEN: undefined;
+  EDIT_SEXUAL_ORIENTATION_SCREEN: undefined
+  EDIT_LANGUAGE_SCREEN: undefined
 };
 
 /**
@@ -322,16 +429,26 @@ export type RootStackParamList = {
  */
 
 export interface UserRegisterParams {
-  [key: string]: string | string[] | Date;
   uid: string;
-  phoneNumber?: string;
-  firstName: string;
-  email?: string;
-  dateOfBirth: Date;
-  gender: {general: string; specific: string};
-  genderPreferences: string;
-  relationshipGoal: string;
-  pictures?: string[];
-  questionAndAnswer: {question: string; answer: string}[];
-  interests: string[];
+  profile: {
+    firstName: string;
+    dateOfBirth: Date;
+    gender: { general: string; specific?: string };
+    pictures?: string[];
+  };
+  preferences: {
+    genderPreferences: string[];
+    relationshipGoal: string;
+  };
+  contact: {
+    email?: string;
+    phoneNumber?: string;
+  };
+  interests: {
+    interests: string[];
+    additionalInformation: { question: string; answer: string; icon: string }[];
+  };
 }
+
+
+

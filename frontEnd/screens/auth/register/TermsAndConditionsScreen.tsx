@@ -28,9 +28,10 @@ const TermsAndConditionsScreen = ({
     pictures,
     relationshipGoal,
     phoneNumber,
-    questionAndAnswer,
+    additionalInformation,
     interests,
   } = useSelector((state: TYPES.AppState) => state.registerReducer);
+
 
   usePreventBackHandler();
 
@@ -41,29 +42,35 @@ const TermsAndConditionsScreen = ({
         const uid = currentUser.uid;
         let userRegisterParams: TYPES.UserRegisterParams = {
           uid,
-          firstName,
-          dateOfBirth,
-          genderPreferences,
-          gender,
-          relationshipGoal,
-          questionAndAnswer,
-          interests,
-        };
-
+          profile: {
+            firstName,
+            dateOfBirth,
+            gender,
+          },
+          preferences: {
+            genderPreferences,
+            relationshipGoal,
+          },
+          contact: {
+            phoneNumber,
+          },
+          interests: {
+            interests,
+            additionalInformation
+          },
+        };       
+  
         if (email) {
-          userRegisterParams.email = email;
+          userRegisterParams.contact.email = email;
         }
-
-        if (phoneNumber) {
-          userRegisterParams.phoneNumber = phoneNumber;
-        }
-
+  
         if (pictures.length > 0) {
-          userRegisterParams.pictures = pictures;
+          userRegisterParams.profile.pictures = pictures;
         }
-
+  
+        const controller = new AbortController(); 
         try {
-          await AuthService.userRegister(userRegisterParams).then(result => {
+          await AuthService.userRegister(userRegisterParams, controller.signal).then(result => {
             if (result.type === 'error') {
               console.log(result.message);
             } else {
@@ -71,17 +78,15 @@ const TermsAndConditionsScreen = ({
               navigation.navigate(ROUTES.BOTTOM_TAB_NAVIGATOR);
             }
           });
-
-          // CLEAR ALL THE REGISTER REDUCER REDUX
-
-          // TODO: Check response for success/failure and provide feedback to the user
         } catch (error) {
-          // TODO: Handle error and provide feedback to the user
           console.error('Error during registration', error);
         }
+  
+        return () => controller.abort(); 
       }
     }
   };
+  
 
   useEffect(
     () =>
@@ -154,7 +159,9 @@ const TermsAndConditionsScreen = ({
                 ? icons.activeTickSquare
                 : icons.inactiveTickSquare
             }
-            style={styles.checkBox_image}
+            contentContainerStyle={styles.checkBox_image}
+            height={20}
+            width={20}
             tintColor={
               checkBoxClicked ? THEME_COLORS.primary : THEME_COLORS.tertiary
             }

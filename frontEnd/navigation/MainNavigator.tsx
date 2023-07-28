@@ -4,7 +4,7 @@ import {ROUTES, TYPES} from '../constants';
 import LoginNavigator from './auth/Login';
 import RegisterNavigator from './auth/Register';
 import BottomTabNavigator from './BottomTabNavigator';
-import {cardSlideAnimation} from '../utils/navigatorSlideAnimation';
+import {cardSlideLeftAnimation} from '../utils/navigatorSlideAnimation';
 import {useSelector} from 'react-redux';
 import {firebase} from '@react-native-firebase/auth';
 import ProfileNavigator from './ProfileNavigator';
@@ -35,9 +35,9 @@ const MainNavigator = () => {
         screenOptions={{
           headerShown: false,
 
-          cardStyleInterpolator: cardSlideAnimation,
+          cardStyleInterpolator: cardSlideLeftAnimation,
         }}
-        initialRouteName={initialRouteNameDecider()}>
+        initialRouteName={ROUTES.BOTTOM_TAB_NAVIGATOR}>
         <Stack.Screen
           name={ROUTES.LOGIN_NAVIGATOR}
           component={LoginNavigator}

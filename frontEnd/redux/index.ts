@@ -8,19 +8,34 @@ import {
   setEmail,
   setRelationshipGoal,
   setPhoneNumber,
-  setShowLocationScreen,
   setIsRegisterCompleted,
   setProgressBarValue,
-  setQuestionAndAnswer,
+  setAdditionalInformation,
   setInterests,
   resetRegister,
-  setUserProfile,
-} from './actions';
+} from './actions/registerActions';
+import {
+  editSetBio,
+  editSetHeight,
+  editSetAdditionalInformation,
+  editSetGenderInformation,
+  editSetJobTitle,
+  editSetCompany,
+  editSetSexualOrientation,
+  editSetModalVisible,
+  editSetLanguages,
+  editInitUserProfile,
+} from './actions/editProfileActions';
+import {setUserProfile,setCurrentUserId, removeUserProfile} from './actions/userActions';
+import { setIsBlocked, setProfileFetchComplete,setLocationFetchComplete,setShowLocationScreen } from './actions/appStatusActions';
 
 import {Store, Persistor} from './store';
 
 // Export the action creators
 export {
+  setIsBlocked,
+  setLocationFetchComplete,
+  setProfileFetchComplete,
   setDateOfBirth,
   setFirstName,
   setGenderPreferences,
@@ -34,8 +49,20 @@ export {
   setIsRegisterCompleted,
   Persistor,
   setProgressBarValue,
-  setQuestionAndAnswer,
+  setAdditionalInformation,
   setInterests,
   resetRegister,
   setUserProfile,
+  editSetBio,
+  editSetHeight,
+  editSetAdditionalInformation,
+  editSetGenderInformation,
+  editSetJobTitle,
+  editSetCompany,
+  editSetSexualOrientation,
+  editSetModalVisible,
+  editSetLanguages,
+  editInitUserProfile,
+  setCurrentUserId,
+  removeUserProfile
 };

@@ -1,11 +1,11 @@
 import React from 'react';
-import {View, ActivityIndicator, StyleSheet, Modal, Text} from 'react-native';
-import {BORDER_RADIUS, themeText} from '../../../constants';
+import {View, ActivityIndicator, StyleSheet, Modal, Text, ViewStyle} from 'react-native';
+import {BORDER_RADIUS, COMPONENT_COLORS, themeText} from '../../../constants';
 
-const LoadingSpinner = () => {
+const LoadingSpinner = ({modalBackground}:{modalBackground?: ViewStyle}) => {
   return (
     <Modal transparent={true}>
-      <View style={styles.modalBackground}>
+      <View style={[styles.modalBackground, modalBackground]}>
         <View style={styles.activityIndicatorWrapper}>
           <ActivityIndicator animating={true} size={15} color={'white'} />
           <Text style={styles.loadingText}>Loading...</Text>
@@ -21,7 +21,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'column',
     justifyContent: 'space-around',
-    backgroundColor: '#00000020',
+    backgroundColor: COMPONENT_COLORS.modalBackground,
   },
   activityIndicatorWrapper: {
     height: 50,

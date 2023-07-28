@@ -1,12 +1,12 @@
 import {StyleSheet} from 'react-native';
-import {BORDER_RADIUS, THEME_COLORS, themeText} from '../../../constants';
+import {BORDER_RADIUS, COMPONENT_COLORS, THEME_COLORS, themeText} from '../../../constants';
 
 export const styles = StyleSheet.create({
   centeredView: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // semi-transparent black overlay
+    backgroundColor: COMPONENT_COLORS.modalBackground, // semi-transparent black overlay
   },
   centeredView__modalView: {
     margin: 20,

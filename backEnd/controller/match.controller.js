@@ -27,7 +27,8 @@ export const emailExist = async (req, res) => {
   };
 */
 
-import { SERVER_ERR } from "../errors";
+import Joi from "joi";
+import { SERVER_ERR, USER_NOT_FOUND_ERR } from "../errors";
 import User from "../models/user.js";
 
 export const findMatchUser = async (req, res) => {

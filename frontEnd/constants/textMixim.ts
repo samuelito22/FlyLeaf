@@ -54,7 +54,7 @@ export const themeText = {
   bodyRegularTwo: generateFontStyles(FONTS.rubikRegular, 24, 36, '150%'),
   bodyRegularThree: generateFontStyles(FONTS.rubikRegular, 20, 30, '150%'),
   bodyRegularFour: generateFontStyles(FONTS.rubikRegular, 18, 27, '150%'),
-  bodyRegularFive: generateFontStyles(FONTS.rubikRegular, 16, 18.96, '100%'),
+  bodyRegularFive: generateFontStyles(FONTS.rubikRegular, 16, 18.96, '120%'),
   bodyRegularSix: generateFontStyles(FONTS.rubikRegular, 14, 21, '150%'),
   bodyRegularSeven: generateFontStyles(FONTS.rubikRegular, 12, 19.2, '160%'),
 };

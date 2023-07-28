@@ -3,7 +3,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import dynamicLinks from '@react-native-firebase/dynamic-links';
 import {LoginManager, AccessToken} from 'react-native-fbsdk-next';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
-import {API_ENDPOINTS, TYPES} from '../constants';
+import {getApiEndpoints, TYPES} from '../constants';
+
+const API_ENDPOINTS = getApiEndpoints()
 
 interface ConfirmationResult {
   success: boolean;
@@ -171,7 +173,7 @@ const OAuthService = () => {
 };
 
 const UserExistService = () => {
-  const emailExist = async (email: string) => {
+  const emailExist = async (email: string, signal?: AbortSignal) => {
     const formData = new URLSearchParams();
     formData.append('email', email.toLowerCase());
 
@@ -182,6 +184,7 @@ const UserExistService = () => {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: formData.toString(),
+        signal
       });
       const data = await response.json();
       return data;
@@ -191,7 +194,7 @@ const UserExistService = () => {
     }
   };
 
-  const phoneNumberExist = async (phoneNumber: string) => {
+  const phoneNumberExist = async (phoneNumber: string, signal?: AbortSignal) => {
     const formData = new URLSearchParams();
     formData.append('phoneNumber', phoneNumber);
 
@@ -202,6 +205,7 @@ const UserExistService = () => {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: formData.toString(),
+        signal
       });
       const data = await response.json();
       return data;
@@ -211,7 +215,7 @@ const UserExistService = () => {
     }
   };
 
-  const userUidExist = async (uid: string) => {
+  const userUidExist = async (uid: string, signal?: AbortSignal) => {
     const formData = new URLSearchParams();
     formData.append('uid', uid);
 
@@ -222,6 +226,7 @@ const UserExistService = () => {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: formData.toString(),
+        signal
       });
       const data = await response.json();
       return data;
@@ -238,7 +243,7 @@ const UserExistService = () => {
   };
 };
 
-const userRegister = async (userData: TYPES.UserRegisterParams) => {
+const userRegister = async (userData: TYPES.UserRegisterParams, signal?: AbortSignal) => {
   try {
     const response = await fetch(API_ENDPOINTS.REGISTER, {
       method: 'POST',
@@ -246,6 +251,8 @@ const userRegister = async (userData: TYPES.UserRegisterParams) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(userData),
+      signal
+      
     });
 
     const data = await response.json();
@@ -256,10 +263,58 @@ const userRegister = async (userData: TYPES.UserRegisterParams) => {
   }
 };
 
+const ageRestrictionServices = () => {
+  const ageRestrictUser = async (uid: string, dateOfBirth: Date, signal?: AbortSignal) => {
+    try {
+      const response = await fetch(API_ENDPOINTS.AGE_RESTRICTE_USER, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({uid, dateOfBirth}),
+        signal
+        
+      });
+  
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  }
+
+  const isUserAgeRestricted = async (uid: string, signal?: AbortSignal) => {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.IS_USER_AGE_RESTRICTED}/${uid}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal
+        
+      });
+  
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  }
+
+  return {
+    ageRestrictUser,
+    isUserAgeRestricted
+  }
+}
+
 export const AuthService = {
   ...PhoneAuthService(),
   ...EmailLinkAuthService(),
   ...OAuthService(),
   ...UserExistService(),
   userRegister,
+  ...ageRestrictionServices()
 };
+

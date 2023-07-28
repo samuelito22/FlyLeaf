@@ -1,6 +1,6 @@
 import {StyleSheet} from 'react-native';
 import {verticalScale} from 'react-native-size-matters';
-import {PALETTE, THEME_COLORS, themeText} from '../../../constants';
+import {BORDER_RADIUS, PALETTE, THEME_COLORS, themeText} from '../../../constants';
 
 export const styles = StyleSheet.create({
   container: {
@@ -28,7 +28,7 @@ export const styles = StyleSheet.create({
     marginBottom: verticalScale(17),
   },
   paragraph_marginBottom_otp: {
-    marginBottom: verticalScale(52),
+    marginBottom: 30,
   },
   resendInfo: {
     marginTop: verticalScale(12),
@@ -47,6 +47,7 @@ export const styles = StyleSheet.create({
     position: 'absolute',
     top: -10,
     right: 0,
+    borderRadius: BORDER_RADIUS.circle
   },
   inputBox: {
     marginBottom: verticalScale(32),
@@ -66,6 +67,7 @@ export const styles = StyleSheet.create({
     width: 301.54,
     height: 51,
     marginBottom: 18,
+    borderRadius: BORDER_RADIUS.large
   },
   error: {
     color: PALETTE.RED500,

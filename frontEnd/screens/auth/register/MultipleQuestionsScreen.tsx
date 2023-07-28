@@ -11,7 +11,8 @@ import {
 import {
   setInterests,
   setIsRegisterCompleted,
-  setQuestionAndAnswer,
+  setAdditionalInformation,
+  resetRegister,
 } from '../../../redux';
 import {
   THEME_COLORS,
@@ -24,6 +25,8 @@ import {NavigationProp} from '@react-navigation/native';
 import {usePreventBackHandler, useDispatch} from '../../../utils/hooks';
 import {useSelector} from 'react-redux';
 import {icons} from '../../../assets';
+import {AuthService} from '../../../services';
+import auth from '@react-native-firebase/auth';
 
 const styles = StyleSheet.create({
   interest_title: {
@@ -83,57 +86,49 @@ const MultipleQuestionsScreen = ({
 }) => {
   usePreventBackHandler();
   const dispatch = useDispatch();
-  const {questionAndAnswer, interests} = useSelector(
+  const {additionalInformation} = useSelector(
     (state: TYPES.AppState) => state.registerReducer,
   );
 
   const [valid, setValid] = useState(false);
   const [activeId, setActiveId] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(-1);
-  const [answer, setAnswer] = useState<string | Array<string>>('');
+  const [answer, setAnswer] = useState<string>('');
+
+  const questionFieldList = questionsList.filter(
+    item => item.id >= 1 && item.id <= 9 || item.id == 15,
+  ) as Array<{question: string; id: number; answers: string[]; icon: string}>;
 
   const handlePress = () => {
     if (valid) {
-      setIsLoading(true);
-      try {
-        if (questionAndAnswer) {
-          if (currentQuestion < 9) {
-            dispatch(
-              setQuestionAndAnswer([
-                ...questionAndAnswer,
-                {
-                  question: questionsList[currentQuestion].question,
-                  answer: answer,
-                },
-              ]),
-            );
-          } else {
-            if (Array.isArray(answer)) {
-              dispatch(setInterests(answer));
-            }
-          }
-        } else if (typeof answer === 'string') {
-          dispatch(
-            setQuestionAndAnswer([
-              {
-                question: questionsList[currentQuestion].question,
-                answer: answer,
-              },
-            ]),
-          );
-        }
+      if(additionalInformation){
+      dispatch(
+        setAdditionalInformation([
+          ...additionalInformation,
+          {
+            question: questionFieldList[currentQuestion].question,
+            answer: answer,
+            icon: questionFieldList[currentQuestion].icon,
+          },
+        ]),
+      );
+      }else{
+        dispatch(
+          setAdditionalInformation([
+            {
+              question: questionFieldList[currentQuestion].question,
+              answer: answer,
+              icon: questionFieldList[currentQuestion].icon,
+            },
+          ]),
+        );
+      }
 
-        currentQuestion < 9 ? setAnswer('') : setAnswer([]);
-        setActiveId(null);
+      setAnswer('');
+      setActiveId(null);
 
-        if (questionAndAnswer && questionAndAnswer.length === 9 && interests) {
-          navigation.navigate(ROUTES.REGISTER_TERMS_AND_CONDITIONS_SCREEN);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setIsLoading(false);
+      if (additionalInformation && additionalInformation.length === 9) {
+        navigation.navigate(ROUTES.REGISTER_INTEREST_SCREEN)
       }
     }
   };
@@ -152,23 +147,8 @@ const MultipleQuestionsScreen = ({
     }
   };
 
-  const handleInterestPress = (interest: string) => {
-    setAnswer(prevState => {
-      if (Array.isArray(prevState) && prevState.includes(interest)) {
-        return (prevState as Array<string>).filter(item => item !== interest);
-      } else {
-        if (prevState.length === 5) return prevState;
-        else return [...(prevState as Array<string>), interest];
-      }
-    });
-  };
-
   useEffect(() => {
-    if (currentQuestion < 9) {
-      setValid(answer ? true : false);
-    } else {
-      setValid(answer.length === 5);
-    }
+    setValid(answer ? true : false);
   }, [answer]);
 
   useEffect(
@@ -183,10 +163,11 @@ const MultipleQuestionsScreen = ({
   );
 
   useEffect(() => {
-    if (questionAndAnswer) {
-      setCurrentQuestion(questionAndAnswer.length);
+    if (additionalInformation && additionalInformation.length < 10) {
+      setCurrentQuestion(additionalInformation.length);
     }
-  }, [questionAndAnswer]);
+  }, [additionalInformation]);
+
 
   return (
     <SafeContainer>
@@ -194,62 +175,31 @@ const MultipleQuestionsScreen = ({
         <BuildYourProfileScreen handlePress={() => setCurrentQuestion(0)} />
       ) : (
         <View style={generalStyles.container}>
-          {isLoading && <LoadingSpinner />}
           <Text style={generalStyles.requirement}>
             {currentQuestion + 1}/10
           </Text>
           <Text style={generalStyles.title}>
-            {currentQuestion < 9
-              ? questionsList[currentQuestion].question
-              : interestsList.question}
+            {questionFieldList[currentQuestion].question}
           </Text>
-          {currentQuestion === 9 && (
-            <Text style={generalStyles.paragraph}>
-              Please select at least 5 interests
-            </Text>
-          )}
 
           <ScrollView
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
             overScrollMode={'never'}
             contentContainerStyle={{flexGrow: 1}}>
-            {currentQuestion < 9
-              ? questionsList[currentQuestion].answers.map((answer, index) => (
-                  <View
-                    key={questionsList[currentQuestion].question + index}
-                    style={generalStyles.clickableIndicatorPrimaryButton}>
-                    <Button.ClickableIndicatorPrimaryButton
-                      onPress={() =>
-                        ClickableIndicatorPrimaryButtonHandlePress(
-                          index,
-                          answer,
-                        )
-                      }
-                      isActive={index === activeId}>
-                      {answer}
-                    </Button.ClickableIndicatorPrimaryButton>
-                  </View>
-                ))
-              : interestsList.answers.map((category, index) => (
-                  <View
-                    key={category.title + index}
-                    style={styles.interest_section}>
-                    <Text style={styles.interest_title}>{category.title}</Text>
-                    <View style={styles.interest_buttonsContainer}>
-                      {category.interests.map((interest, idx) => {
-                        return (
-                          <Button.interestsButton
-                            key={interest + idx}
-                            style={styles.interest_button}
-                            onPress={() => handleInterestPress(interest)}>
-                            {interest}
-                          </Button.interestsButton>
-                        );
-                      })}
-                    </View>
-                  </View>
-                ))}
+            {questionFieldList[currentQuestion].answers.map((answer, index) => (
+              <View
+                key={questionFieldList[currentQuestion].question + index}
+                style={generalStyles.clickableIndicatorPrimaryButton}>
+                <Button.ClickableIndicatorPrimaryButton
+                  onPress={() =>
+                    ClickableIndicatorPrimaryButtonHandlePress(index, answer)
+                  }
+                  isActive={index === activeId}>
+                  {answer}
+                </Button.ClickableIndicatorPrimaryButton>
+              </View>
+            ))}
           </ScrollView>
           <View style={generalStyles.alignNextButtonContainer}>
             <Button.PrimaryButton

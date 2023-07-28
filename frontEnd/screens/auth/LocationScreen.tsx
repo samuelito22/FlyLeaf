@@ -10,7 +10,8 @@ import {useDispatch} from '../../utils/hooks';
 const LocationScreen = () => {
   const dispatch = useDispatch();
 
-  const getLocation = () =>
+  const getLocation = () => {
+
     LocationEnabler.promptForEnableLocationIfNeeded({
       interval: 10000,
       fastInterval: 5000,
@@ -21,6 +22,8 @@ const LocationScreen = () => {
       .catch(err => {
         // The user has not enabled the location services or doesn't want to enable them
       });
+
+  }
 
   return (
     <SafeContainer>

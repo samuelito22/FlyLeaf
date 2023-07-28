@@ -1,60 +1,137 @@
 import React, {useState} from 'react';
 import {Text, Image, View, Pressable} from 'react-native';
 import {styles} from './styles';
-import {PALETTE, TYPES} from '../../../constants';
+import {BORDER_RADIUS, PALETTE, THEME_COLORS, TYPES, themeText} from '../../../constants';
 import {images} from '../../../assets';
 import {TouchableRipple} from 'react-native-paper';
-import MaskedView from '@react-native-masked-view/masked-view';
 
 export const PrimaryButton = ({
   onPress,
   style,
   children,
-}: TYPES.PrimaryButtonProps) => {
+  height,
+  width,
+  textStyle
+}: TYPES.ButtonProps) => {
+  let buttonStyle = {
+    ...styles.button, 
+    backgroundColor: THEME_COLORS.primary,
+    ...style
+  };
+
+  if (height) buttonStyle.height = height;
+  if (width) buttonStyle.width = width;
+  
   return (
-    <View style={[styles.primaryButton, style]}>
+    <View style={buttonStyle}>
       <TouchableRipple
         onPress={onPress}
         style={styles.fullCenterContainer}
         rippleColor={PALETTE.GRAY400}>
-        <Text style={styles.primaryButtonTextLight}>{children}</Text>
+        <Text style={[{color: PALETTE.WHITE, ...themeText.bodyBoldFive}, textStyle]}>{children}</Text>
       </TouchableRipple>
     </View>
   );
 };
 
+
+export const DarkButton = ({
+  onPress,
+  style,
+  children,
+  height,
+  width,
+  textStyle
+}: TYPES.ButtonProps) => {
+  let buttonStyle = {
+    ...styles.button,
+    backgroundColor: THEME_COLORS.dark,
+    ...style
+  };
+
+  if (height) buttonStyle.height = height;
+  if (width) buttonStyle.width = width;
+
+  return (
+    <View style={buttonStyle}>
+      <TouchableRipple
+        onPress={onPress}
+        style={styles.fullCenterContainer}
+        rippleColor={PALETTE.GRAY400}>
+        <Text style={[{color: PALETTE.WHITE, ...themeText.bodyBoldFive}, textStyle]}>{children}</Text>
+      </TouchableRipple>
+    </View>
+  );
+};
+
+export const LightButton = ({
+  onPress,
+  style,
+  children,
+  height,
+  width,
+  textStyle
+}: TYPES.ButtonProps) => {
+  let buttonStyle = {
+    ...styles.button,
+    backgroundColor: PALETTE.WHITE,
+    ...style
+  };
+
+  if (height) buttonStyle.height = height;
+  if (width) buttonStyle.width = width;
+
+  return (
+    <View style={buttonStyle}>
+      <TouchableRipple
+        onPress={onPress}
+        style={styles.fullCenterContainer}
+        rippleColor={PALETTE.GRAY400}>
+        <Text style={[{color: PALETTE.DARK, ...themeText.bodyBoldFive}, textStyle]}>{children}</Text>
+      </TouchableRipple>
+    </View>
+  );
+};
+
+
 export const ButtonImage = ({
   imgUrl,
   onPress,
   tintColor,
+  width,
+  height,
+  contentContainerStyle,
   style,
+  iconHeaderLeft,
+  iconHeaderRight
 }: TYPES.ButtonImageProps) => {
+  const borderRight = {
+    borderTopLeftRadius: BORDER_RADIUS.medium,
+    borderBottomLeftRadius: BORDER_RADIUS.medium 
+  }
+
+  const borderLeft = {
+    borderTopRightRadius: BORDER_RADIUS.medium,
+    borderBottomRightRadius: BORDER_RADIUS.medium 
+  }
+
   return (
-    <View style={[styles.imageButtonContainer, style]}>
+    <View style={[styles.imageButtonContainer, contentContainerStyle, iconHeaderLeft && borderLeft, iconHeaderRight && borderRight ]}>
       <Image
         source={imgUrl}
         resizeMode="contain"
-        style={[styles.imageButton, {tintColor}]}
+        style={[styles.imageButton, {tintColor, width, height}]}
       />
-      <MaskedView
-        style={styles.fullCenterContainer}
-        maskElement={
-          <Image
-            source={imgUrl}
-            resizeMode="contain"
-            style={[styles.imageButton, {tintColor}]}
-          />
-        }>
         <TouchableRipple
           onPress={onPress}
           style={styles.fullCenterContainer}
           rippleColor={PALETTE.GRAY400}>
           <></>
         </TouchableRipple>
-      </MaskedView>
     </View>
   );
 };
+
 
 export const ClickableIndicatorPrimaryButton = ({
   onPress,
@@ -68,6 +145,7 @@ export const ClickableIndicatorPrimaryButton = ({
         <View style={styles.textContainer}>
           <Text style={styles.clickableButtonText}>{children}</Text>
         </View>
+        <View style={{height: "100%", justifyContent: 'flex-start', padding:5}}>
         <View
           style={[
             styles.clickableButtonIndicator,
@@ -76,10 +154,11 @@ export const ClickableIndicatorPrimaryButton = ({
           {isActive && (
             <Image
               source={images.successIllustration}
-              resizeMode="cover"
+              resizeMode="contain"
               style={styles.clickableButtonIndicatorImage}
             />
           )}
+        </View>
         </View>
       </View>
     </Pressable>
@@ -90,8 +169,8 @@ export const interestsButton = ({
   onPress,
   style,
   children,
-}: TYPES.InterestsButtonPress) => {
-  const [active, setActive] = useState(false);
+  active
+}: TYPES.InterestsButtonProps) => {
 
   return (
     <View
@@ -102,7 +181,6 @@ export const interestsButton = ({
       ]}>
       <TouchableRipple
         onPress={() => {
-          setActive(!active);
           if (onPress) onPress();
         }}
         style={styles.fullCenterContainer}

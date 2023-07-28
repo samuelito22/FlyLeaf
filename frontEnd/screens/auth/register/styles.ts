@@ -28,7 +28,7 @@ export const styles = StyleSheet.create({
   },
   extraGenderModal_flexEnd: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: COMPONENT_COLORS.modalBackground,
     justifyContent: 'flex-end',
     alignItems: 'center',
   },
@@ -58,18 +58,20 @@ export const styles = StyleSheet.create({
   },
   galleryButtonContainer: {
     borderRadius: BORDER_RADIUS.medium,
-    width: buttonWidth,
-    height: buttonWidth,
+    width: 150,
+    height: 190,
     position: 'relative',
     borderWidth: 1,
     borderColor: PALETTE.LIGHT400,
     overflow: 'hidden',
+    marginRight: 15,
   },
   galleryButtonImage: {
     height: '100%',
     width: '100%',
     backgroundColor: 'transparent',
     padding: 23,
+    
   },
   extraGenderModal_button: {
     height: 60,
@@ -85,7 +87,7 @@ export const styles = StyleSheet.create({
     color: PALETTE.GRAY300,
   },
   title: {
-    ...themeText.headingOne,
+    ...themeText.headingTwo,
     color: THEME_COLORS.dark,
     marginBottom: verticalScale(12),
   },

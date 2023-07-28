@@ -98,7 +98,9 @@ const LoginStartScreen = ({
             <Button.ButtonImage
               imgUrl={images.swap}
               onPress={() => setShowEmail(!showEmail)}
-              style={styles.toggleContainer_swapButton}
+              contentContainerStyle={styles.toggleContainer_swapButton}
+              width={37.08}
+              height={37.08}
             />
           </View>
           <View style={styles.inputBox}>
@@ -158,12 +160,16 @@ const LoginStartScreen = ({
             <Button.ButtonImage
               imgUrl={images.googleBar}
               onPress={AuthService.onGoogleButtonPress} //Need to check if user.uid exist or not, to decide wether to send the user to register or not
-              style={styles.socialButton}
+              contentContainerStyle={styles.socialButton}
+              width={301.54}
+              height={51}
             />
             <Button.ButtonImage
               imgUrl={images.facebookBar}
               onPress={AuthService.onFacebookButtonPress} //Need to check if user.uid exist or not, to decide wether to send the user to register or not
-              style={styles.socialButton}
+              contentContainerStyle={styles.socialButton}
+              width={301.54}
+              height={51}
             />
           </View>
         </View>

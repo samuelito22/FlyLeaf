@@ -45,6 +45,7 @@ export const styles = StyleSheet.create({
     marginRight: 12,
     paddingVertical: 5,
     paddingHorizontal: 10,
+    marginTop:5
   },
   interestCard_text: {
     ...themeText.bodyRegularSeven,
@@ -52,7 +53,7 @@ export const styles = StyleSheet.create({
   },
   interestList: {
     flexDirection: 'row',
-    marginTop: 4,
+    flexWrap: 'wrap',
   },
   icon: {
     position: 'absolute',

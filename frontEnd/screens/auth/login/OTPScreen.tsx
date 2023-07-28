@@ -19,6 +19,7 @@ import {setPhoneNumber} from '../../../redux';
 
 import {styles} from './styles';
 import {useCountdown, useDispatch} from '../../../utils/hooks';
+import { setIsBlocked } from '../../../redux/actions/appStatusActions';
 
 interface LoginOTPScreenProps {
   navigation?: NavigationProp<TYPES.RootStackParamList>;
@@ -86,6 +87,7 @@ const LoginOTPScreen = ({navigation, route}: LoginOTPScreenProps) => {
 
   const confirmOTPCode = async () => {
     setIsLoading(true);
+    const controller = new AbortController(); 
 
     if (!confirmation) return;
 
@@ -99,16 +101,22 @@ const LoginOTPScreen = ({navigation, route}: LoginOTPScreenProps) => {
         result.userCredential.user.uid &&
         phoneNumber
       ) {
-        // dispatch(setUserCredential(result.userCredential));
+        
         try {
           const userUidExistResult = await AuthService.userUidExist(
             result.userCredential.user.uid,
+            controller.signal
           );
           if (userUidExistResult.type === 'success') {
             navigation?.navigate(ROUTES.BOTTOM_TAB_NAVIGATOR);
           } else if (userUidExistResult.type === 'error') {
+            const isUserAgeRestricted = await AuthService.isUserAgeRestricted(result.userCredential.user.uid)
+            if(isUserAgeRestricted.type === "success"){
+              dispatch(setIsBlocked(true))
+            }else{
             navigation?.navigate(ROUTES.REGISTER_NAVIGATOR);
             dispatch(setPhoneNumber(phoneNumber));
+            }
           }
         } catch (error) {
           console.error(error);
@@ -118,6 +126,7 @@ const LoginOTPScreen = ({navigation, route}: LoginOTPScreenProps) => {
     }
 
     setShowError(!result?.success);
+    return () => controller.abort
   };
 
   const sendOTP = async () => {

@@ -12,7 +12,7 @@ export {default as UploadSelectionAlert} from './screens/RegisterComponents/Uplo
 
 // Home
 export {default as UserProfileCard} from './screens/HomeComponents/UserProfileCard';
-export {default as HomeHeader} from './screens/HomeComponents/HomeHeader';
+export * from "./common/Headers"
 
 // common
 export * as Button from './common/Button';
@@ -22,6 +22,7 @@ export {default as OTPField} from './common/OTPField';
 export {default as Alert} from './common/Alert';
 export {default as LoadingSpinner} from './common/LoadingSpinner';
 export {default as BackButton} from './common/BackButton';
+export { default as Ripple } from "./common/Ripple"
 
 // Data
 export {questionsList, interestsList} from './common/questionsData';

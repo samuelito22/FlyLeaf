@@ -1,6 +1,6 @@
 import {Text, View, ScrollView} from 'react-native';
 import React, {useEffect, useState} from 'react';
-import {SafeContainer, Button, LoadingSpinner} from '../../../components';
+import {SafeContainer, Button, LoadingSpinner, questionsList} from '../../../components';
 import {styles} from './styles';
 import {THEME_COLORS, ROUTES, TYPES} from '../../../constants';
 import {
@@ -29,11 +29,7 @@ const GenderPreferenceScreen = ({
 
   const dispatch = useDispatch();
 
-  const genderList = [
-    {id: 1, name: 'Male'},
-    {id: 2, name: 'Female'},
-    {id: 3, name: 'Non-Binary'},
-  ];
+  const genderField = questionsList.find(field => field.id === 10) as {question: string, id: number, answers: string[],  icon:string}
 
   const handlePress = async () => {
     if (valid) {
@@ -80,7 +76,7 @@ const GenderPreferenceScreen = ({
       <View style={styles.container}>
         {isLoading && <LoadingSpinner />}
         <Text style={styles.requirement}>Required</Text>
-        <Text style={styles.title}>Who are you open to dating?</Text>
+        <Text style={styles.title}>{genderField?.question}</Text>
         <Text style={styles.paragraph}>
           Multiple selections and future changes are allowed
         </Text>
@@ -89,16 +85,16 @@ const GenderPreferenceScreen = ({
           showsVerticalScrollIndicator={false}
           overScrollMode={'never'}
           contentContainerStyle={{flexGrow: 1}}>
-          {genderList.map(gender => (
+          {genderField?.answers.map((gender, index) => (
             <View
-              key={gender.id}
+              key={index}
               style={styles.clickableIndicatorPrimaryButton}>
               <Button.ClickableIndicatorPrimaryButton
                 onPress={() =>
-                  ClickableIndicatorPrimaryButtonHandlePress(gender.name)
+                  ClickableIndicatorPrimaryButtonHandlePress(gender)
                 }
-                isActive={genderPreferencesTemp.includes(gender.name)}>
-                {gender.name}
+                isActive={genderPreferencesTemp.includes(gender)}>
+                {gender}
               </Button.ClickableIndicatorPrimaryButton>
             </View>
           ))}

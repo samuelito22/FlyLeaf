@@ -4,7 +4,6 @@ import {useSelector} from 'react-redux';
 import {TYPES} from '../../constants';
 import {setShowLocationScreen} from '../../redux';
 import useDispatch from './useDispatch';
-import auth, {firebase} from '@react-native-firebase/auth';
 import {API_KEY_GEO} from '@env';
 import {UserService} from '../../services';
 
@@ -16,10 +15,13 @@ type LocationData = {
 
 const useLocationService = () => {
   const dispatch = useDispatch();
-  const uid = firebase.auth().currentUser?.uid;
 
   const isRegisterCompleted = useSelector(
     (state: TYPES.AppState) => state.registerReducer.isRegisterCompleted,
+  );
+
+  const {currentUserId} = useSelector(
+    (state: TYPES.AppState) => state.usersReducer,
   );
 
   const getPosition = async (
@@ -92,56 +94,77 @@ const useLocationService = () => {
     }
   };
 
-  const checkLocationEnabled = () => {
-    Geolocation.getCurrentPosition(
-      async position => {
-        dispatch(setShowLocationScreen(false));
-        if (uid) {
-          UserService.getLocation(uid)
-            .then(result => {
-              let newLocationData = null;
-              if (result?.location) {
-                newLocationData = {
-                  coordinates: result.location.coordinates,
-                  city: result.location.city,
-                  country: result.location.country,
-                };
-              }
+  const MAX_RETRIES = 3;
+const RETRY_DELAY = 2000;
 
-              getPosition(position, newLocationData);
-            })
-            .catch(e => console.log(e));
-        }
-      },
-      error => {
-        console.log(error.code, error.message);
-        dispatch(setShowLocationScreen(true));
-      },
-      {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
-    );
-  };
+const checkLocationEnabled = (retryCount = 0) => {
+  const controller = new AbortController(); 
+  Geolocation.getCurrentPosition(
+    async position => {
+      dispatch(setShowLocationScreen(false));
+        UserService.getLocation(currentUserId, controller.signal)
+          .then(result => {
+            let newLocationData = null;
+            if (result?.location) {
+              newLocationData = {
+                coordinates: result.location.coordinates,
+                city: result.location.city,
+                country: result.location.country,
+              };
+            }
 
-  const updateUserLocation = async (locationData: LocationData | null) => {
-    if (uid && locationData) {
-      await UserService.updateLocation(uid, locationData)
-        .then(result => {
-          if (result.type === 'success') {
-            console.log('Database successfully updated');
-          } else {
-            console.log(result.message);
+            getPosition(position, newLocationData);
+          })
+          .catch(e => {
+            console.log(e);
+            if (retryCount < MAX_RETRIES) {
+              setTimeout(() => checkLocationEnabled(retryCount + 1), RETRY_DELAY);
+            }
+          });
+    },
+    error => {
+      console.log(error.code, error.message);
+      dispatch(setShowLocationScreen(true));
+    },
+    {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+  );
+
+  controller.abort
+};
+
+const updateUserLocation = async (locationData: LocationData | null, retryCount = 0) => {
+  const controller = new AbortController(); 
+  if (locationData) {
+    await UserService.updateLocation(currentUserId, locationData, controller.signal)
+      .then(result => {
+        if (result.type === 'success') {
+          console.log('Database successfully updated');
+        } else {
+          console.log(result.message);
+          if (retryCount < MAX_RETRIES) {
+            setTimeout(() => updateUserLocation(locationData, retryCount + 1), RETRY_DELAY);
           }
-        })
-        .catch(e => console.error(e));
-    } else {
-      // Handle the scenario where uid is not defined.
-      console.error('User is not authenticated.');
-    }
-  };
+        }
+      })
+      .catch(e => {
+        console.error(e);
+        if (retryCount < MAX_RETRIES) {
+          setTimeout(() => updateUserLocation(locationData, retryCount + 1), RETRY_DELAY);
+        }
+      });
+  } else {
+    // Handle the scenario where uid is not defined.
+    console.error('User is not authenticated.');
+  }
+
+  return () => controller.abort
+};
+
 
   useEffect(() => {
-    if (isRegisterCompleted.status && auth().currentUser?.uid)
+    if (isRegisterCompleted.status && currentUserId)
       checkLocationEnabled();
-  }, [isRegisterCompleted]);
+  }, [isRegisterCompleted, currentUserId]);
 };
 
 export default useLocationService;
