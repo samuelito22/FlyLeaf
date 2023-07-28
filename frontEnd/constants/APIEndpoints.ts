@@ -8,4 +8,6 @@ export const getApiEndpoints = () => ({
   UPDATE_LOCATION: `${BASE_URL}/user/update/location`,
   GET_LOCATION: `${BASE_URL}/user/get/location`,
   GET_PROFILE: `${BASE_URL}/user/get/profile`,
+  AGE_RESTRICTE_USER: `${BASE_URL}/user/ageRestrictUser`,
+  IS_USER_AGE_RESTRICTED: `${BASE_URL}/user/isUserAgeRestricted`
 });

@@ -124,39 +124,35 @@ const PictureUploadScreen = ({
               setAlertVisible(true);
               setIsFirstButtonPressed(true);
             }}>
-            <View style={styles.shadowContainer}>
               <View
                 style={[
                   styles.galleryButtonContainer,
                   imageOne ? null : {padding: 23},
                 ]}>
                 <Image
-                  source={imageOne ? {uri: imageOne} : icons.uploadPicture}
+                  source={imageOne ? {uri: imageOne} : icons.plus}
                   style={
                     imageOne
                       ? styles.imageInGalleryButtonContainer
                       : styles.galleryButtonImage
                   }
                 />
-              </View>
             </View>
           </TouchableNativeFeedback>
           <TouchableNativeFeedback onPress={() => setAlertVisible(true)}>
-            <View style={styles.shadowContainer}>
               <View
                 style={[
                   styles.galleryButtonContainer,
                   imageTwo ? null : {padding: 23},
                 ]}>
                 <Image
-                  source={imageTwo ? {uri: imageTwo} : icons.uploadPicture}
+                  source={imageTwo ? {uri: imageTwo} : icons.plus}
                   style={
                     imageTwo
                       ? styles.imageInGalleryButtonContainer
                       : styles.galleryButtonImage
                   }
                 />
-              </View>
             </View>
           </TouchableNativeFeedback>
         </View>

@@ -19,11 +19,15 @@ import {
 } from '../../components';
 import {style as GeneralStyles} from './styles';
 import {icons} from '../../assets';
+import { useDispatch } from '../../utils/hooks';
+import { editInitUserProfile } from '../../redux';
 
 const UserProfileScreen = () => {
-  const {userProfile} = useSelector(
-    (state: TYPES.AppState) => state.userReducer,
-  );
+  const dispatch = useDispatch()
+
+  const currentUserId = useSelector((state: TYPES.AppState) => state.usersReducer.currentUserId);
+  const userProfile = useSelector((state: TYPES.AppState) => state.usersReducer.byId[currentUserId]);
+
 
   const navigation = useNavigation<NavigationProp<TYPES.RootStackParamList>>();
 
@@ -42,6 +46,11 @@ const UserProfileScreen = () => {
     age--;
   }
 
+  const onEditPress = () => {
+    dispatch(editInitUserProfile(userProfile))
+    navigation.navigate(ROUTES.EDIT_PROFILE_SCREEN)
+  }
+
   return (
     <SafeContainer>
       <ProfilePrivateHeader />
@@ -57,7 +66,7 @@ const UserProfileScreen = () => {
             movementActive={false}
           />
           <View style={{flexDirection: 'row', marginTop: 15}}>
-            <Button.DarkButton onPress={() => navigation.navigate(ROUTES.EDIT_PROFILE_SCREEN)} height={50} width={150} style={GeneralStyles.button} textStyle={GeneralStyles.text}>
+            <Button.DarkButton onPress={onEditPress} height={50} width={150} style={GeneralStyles.button} textStyle={GeneralStyles.text}>
                     Edit
                     </Button.DarkButton>
             

@@ -19,6 +19,7 @@ import {setPhoneNumber} from '../../../redux';
 
 import {styles} from './styles';
 import {useCountdown, useDispatch} from '../../../utils/hooks';
+import { setIsBlocked } from '../../../redux/actions/appStatusActions';
 
 interface LoginOTPScreenProps {
   navigation?: NavigationProp<TYPES.RootStackParamList>;
@@ -109,8 +110,13 @@ const LoginOTPScreen = ({navigation, route}: LoginOTPScreenProps) => {
           if (userUidExistResult.type === 'success') {
             navigation?.navigate(ROUTES.BOTTOM_TAB_NAVIGATOR);
           } else if (userUidExistResult.type === 'error') {
+            const isUserAgeRestricted = await AuthService.isUserAgeRestricted(result.userCredential.user.uid)
+            if(isUserAgeRestricted.type === "success"){
+              dispatch(setIsBlocked(true))
+            }else{
             navigation?.navigate(ROUTES.REGISTER_NAVIGATOR);
             dispatch(setPhoneNumber(phoneNumber));
+            }
           }
         } catch (error) {
           console.error(error);

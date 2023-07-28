@@ -1,25 +1,26 @@
 import passport from "passport";
 import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import User from "../models/user.js";
 import {
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
   JWT_SECRET,
 } from "./config.js";
-import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 
 passport.serializeUser((user, done) => {
-  done(null, user.id);
+  done(null, user.uid);  // use uid here instead of id
 });
 
-passport.deserializeUser(async (id, done) => {
-  const user = await User.findById(id);
+passport.deserializeUser(async (uid, done) => {
+  const user = await User.findOne({ uid: uid });
   done(null, user);
 });
 
+
 const opts = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-  secretOrKey: JWT_SECRET
+  secretOrKey: JWT_SECRET,
 };
 
 export default function passportConfig(passport) {
@@ -44,7 +45,12 @@ export default function passportConfig(passport) {
         callbackURL: "http://localhost:4000/auth/users/google/callback",
       },
 
-      async (accessToken, refreshToken, profile, done) => {
+      async (
+        accessToken,
+        refreshToken,
+        profile,
+        done
+      ) => {
         const user = await User.findOne({ googleId: profile.id });
 
         if (!user) {

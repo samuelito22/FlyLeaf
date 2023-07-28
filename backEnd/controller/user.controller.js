@@ -1,4 +1,3 @@
-import * as Validation from "../validation/auth.js";
 import {
   USER_ALREADY_EXIST,
   EMAIL_NOT_EXIST,

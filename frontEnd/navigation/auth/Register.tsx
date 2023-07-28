@@ -6,11 +6,13 @@ import {
   FirstNameEntryScreen,
   GenderPreferenceScreen,
   GenderSelectionScreen,
+  InterestScreen,
   MultipleQuestionsScreen,
   PictureUploadScreen,
   RecoveryEmailScreen,
   RelationshipGoalScreen,
   TermsAndConditionsScreen,
+  WelcomeScreen,
 } from '../../screens';
 import {ProgressBar} from '../../components';
 import {THEME_COLORS, ROUTES, TYPES} from '../../constants';
@@ -28,13 +30,14 @@ const RegisterNavigator = () => {
       //suppose to be without the exlamation mark
       return isRegisterCompleted.currentScreen;
     } else {
-      return ROUTES.REGISTER_FIRST_NAME_SCREEN;
+      return ROUTES.REGISTER_WELCOME_SCREEN;
     }
   };
+  
 
   return (
     <>
-      {progressBarValue !== 100 ? (
+      {progressBarValue !== 100 && isRegisterCompleted.currentScreen ? (
         <ProgressBar
           color={THEME_COLORS.primary}
           height={8}
@@ -89,6 +92,13 @@ const RegisterNavigator = () => {
           name={ROUTES.REGISTER_TERMS_AND_CONDITIONS_SCREEN}
           component={TermsAndConditionsScreen}
         />
+        <Stack.Screen
+        name={ROUTES.REGISTER_WELCOME_SCREEN}
+        component={WelcomeScreen}
+        />
+        <Stack.Screen
+        name={ROUTES.REGISTER_INTEREST_SCREEN}
+        component={InterestScreen}/>
       </Stack.Navigator>
     </>
   );

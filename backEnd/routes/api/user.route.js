@@ -9,6 +9,7 @@ import {
   updateUserLocation,
   getUserProfile
 } from "../../controller/user.controller.js";
+import { ageRestrictUser, isUserAgeRestricted } from "../../controller/ageRestrictedUser.controller.js";
 
 const router = express.Router();
 
@@ -25,5 +26,9 @@ router.post("/update/location", updateUserLocation);
 router.get("/get/location/:uid", getUserLocation);
 
 router.get("/get/profile/:uid", getUserProfile);
+
+// Restricted user
+router.post("/ageRestrictUser", ageRestrictUser)
+router.get("/isUserAgeRestricted/:uid", isUserAgeRestricted)
 
 export default router;

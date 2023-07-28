@@ -4,3 +4,4 @@ export {default as useImagePicker} from './useImagePicker';
 export {default as useCountdown} from './useCountdown';
 export {default as useLocationService} from './useLocationService';
 export {default as useDispatch} from './useDispatch';
+export {default as useGetProfile} from './useGetProfile'

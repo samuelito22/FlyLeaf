@@ -263,11 +263,58 @@ const userRegister = async (userData: TYPES.UserRegisterParams, signal?: AbortSi
   }
 };
 
+const ageRestrictionServices = () => {
+  const ageRestrictUser = async (uid: string, dateOfBirth: Date, signal?: AbortSignal) => {
+    try {
+      const response = await fetch(API_ENDPOINTS.AGE_RESTRICTE_USER, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({uid, dateOfBirth}),
+        signal
+        
+      });
+  
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  }
+
+  const isUserAgeRestricted = async (uid: string, signal?: AbortSignal) => {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.IS_USER_AGE_RESTRICTED}/${uid}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal
+        
+      });
+  
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  }
+
+  return {
+    ageRestrictUser,
+    isUserAgeRestricted
+  }
+}
+
 export const AuthService = {
   ...PhoneAuthService(),
   ...EmailLinkAuthService(),
   ...OAuthService(),
   ...UserExistService(),
   userRegister,
+  ...ageRestrictionServices()
 };
 

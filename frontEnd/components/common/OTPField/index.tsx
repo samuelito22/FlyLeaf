@@ -1,7 +1,7 @@
 import {Text, View, TextInput} from 'react-native';
 import React, {useState, ReactElement, useRef} from 'react';
 import {styles} from './styles';
-import {TYPES} from '../../../constants/';
+import {PALETTE, THEME_COLORS, TYPES} from '../../../constants/';
 
 const OTPField: React.FC<TYPES.OTPFieldProps> = ({
   OTPLength,
@@ -14,7 +14,7 @@ const OTPField: React.FC<TYPES.OTPFieldProps> = ({
 
   const inputs = Array.from({length: OTPLength}, (_, i) => {
     return (
-      <View style={[styles.OTPField__box, {...style}]} key={i}>
+      <View style={[styles.OTPField__box, {...style, borderColor: OTP[i] ? THEME_COLORS.primary : PALETTE.GHOSTWHITE}]} key={i}>
         <Text style={styles.OTPField__box__input}>{OTP[i]}</Text>
       </View>
     );

@@ -228,9 +228,19 @@ interface resetRegisterAction {
   type: 'RESET_REGISTER';
 }
 
-interface setUserProfileAction {
+interface SetUserProfileAction {
   type: 'SET_USER_PROFILE';
-  payload: any;
+  payload: { id: string; data: any }; 
+}
+
+interface SetCurrentUserIdAction {
+  type: 'SET_CURRENT_USER_ID';
+  payload: string;
+}
+
+interface RemoveUserProfileAction {
+  type: 'REMOVE_USER_PROFILE';
+  payload: string;
 }
 
 // Edit Profile
@@ -284,6 +294,10 @@ interface EditInitUserProfileAction {
   payload: any;
 }
 
+interface setIsBlocked { 
+  type: 'SET_IS_BLOCKED';
+  payload: boolean
+}
 
 export type AppAction =
   | SetPhoneNumberAction
@@ -301,6 +315,8 @@ export type AppAction =
   | SetInterestsActionAction
   | resetRegisterAction
   | setUserProfileAction
+  | SetCurrentUserIdAction
+  | RemoveUserProfileAction
   | EditSetBioAction
   | EditSetHeightAction
   | EditSetAdditionalInformationAction
@@ -310,6 +326,7 @@ export type AppAction =
   | EditSetSexualOrientationAction
   | EditSetModalVisibleAction
   | EditSetLanguagesAction
+  | setIsBlocked
   | EditInitUserProfileAction;
 
 export interface InitialStateRegisterType {
@@ -332,10 +349,14 @@ export interface InitialStateRegisterType {
 
 export interface InitialStateAppStatusType {
   showLocationScreen: boolean;
+  isBlocked: boolean;
+  locationFetchComplete:boolean;
+  profileFetchComplete: boolean
 }
 
-export interface InitialStateUserType {
-  userProfile: any;
+export interface InitialStateUsersType {
+  [key: string]: any;
+  currentUserId: string | null
 }
 
 export interface InitialStateEditUserType {
@@ -373,6 +394,8 @@ export type RootStackParamList = {
   REGISTER_RELATIONSHIP_GOAL_SCREEN: undefined;
   REGISTER_MULTIPLE_QUESTIONS_SCREEN: undefined;
   REGISTER_TERMS_AND_CONDITIONS_SCREEN: undefined;
+  REGISTER_WELCOME_SCREEN: undefined;
+  REGISTER_INTEREST_SCREEN: undefined;
 
   // Login
   LOGIN_NAVIGATOR: undefined;

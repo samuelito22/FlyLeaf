@@ -28,7 +28,6 @@ const EditLanguageScreen = () => {
   }, [languagesTemp]);
 
   const handleBackPress = useCallback(() => {
-    console.log(languagesTemp)
     if(isLanguagesValid) dispatch(editSetLanguages(Array.from(languagesTemp)))
   }, [isLanguagesValid, languagesTemp, dispatch]);
 

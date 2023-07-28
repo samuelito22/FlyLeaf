@@ -4,8 +4,8 @@ import { DB_URI, PORT } from "./config/config.js";
 
 export async function main() {
   try {
-    mongoose
-      .connect(DB_URI, { useNewUrlParser: true })
+    await mongoose
+      .connect(DB_URI)
       .then(() => console.log("🍃 MongoDB successfully connected!"))
       .catch((err) => console.log(err));
 

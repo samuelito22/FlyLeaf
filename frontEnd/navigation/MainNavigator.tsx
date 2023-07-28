@@ -37,7 +37,7 @@ const MainNavigator = () => {
 
           cardStyleInterpolator: cardSlideLeftAnimation,
         }}
-        initialRouteName={initialRouteNameDecider()}>
+        initialRouteName={ROUTES.BOTTOM_TAB_NAVIGATOR}>
         <Stack.Screen
           name={ROUTES.LOGIN_NAVIGATOR}
           component={LoginNavigator}

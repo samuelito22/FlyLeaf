@@ -2,6 +2,7 @@ import {StyleSheet} from 'react-native';
 import {
   BORDER_RADIUS,
   COMPONENT_COLORS,
+  PALETTE,
   THEME_COLORS,
   themeText,
 } from '../../../constants';
@@ -17,8 +18,9 @@ export const styles = StyleSheet.create({
     height: 55,
     width: 44.23,
     marginHorizontal: 5,
-    backgroundColor: COMPONENT_COLORS.otpBox,
-    borderRadius: BORDER_RADIUS.medium,
+    backgroundColor: "white",
+    borderBottomWidth:2,
+    borderColor: PALETTE.GHOSTWHITE
   },
   OTPField__box__input: {
     ...themeText.headingOne,
