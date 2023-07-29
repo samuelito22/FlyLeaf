@@ -58,6 +58,7 @@ import normalCross from "./icons/normalCross.png"
 import search from "./icons/search.png"
 import plus from "./icons/plus.png"
 import warning from "./icons/warning.png"
+import babies from "./icons/babies.png"
 
 import swap from './images/swap.png';
 import logo from './images/logo.png';
@@ -69,6 +70,7 @@ import manAvatar from './images/manAvatar.png';
 import successIllustration from './images/successillustration.png';
 
 export const icons: { [key: string]: any } = {
+  babies,
   warning,
   plus,
   search,

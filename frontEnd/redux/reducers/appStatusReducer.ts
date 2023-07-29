@@ -2,12 +2,14 @@ import { persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import { TYPES } from "../../constants";
 import * as appStatusActions from "../actions/appStatusActions"
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const initialStateAppStatus: TYPES.InitialStateAppStatusType = {
     showLocationScreen: false,
     isBlocked: false,
-    locationFetchComplete: false,
-    profileFetchComplete: false
+    isLocationFetchComplete: false,
+    isProfileFetchComplete: false,
+    isLoggedIn: false
 };
 
 const appStatusReducer = (
@@ -19,10 +21,13 @@ const appStatusReducer = (
             return { ...state, showLocationScreen: action.payload as boolean };
         case appStatusActions.SET_IS_BLOCKED:
             return { ...state, isBlocked: action.payload as boolean }
-            case appStatusActions.SET_LOCATION_FETCH_COMPLETE:
-              return { ...state,locationFetchComplete: action.payload as boolean };
-              case appStatusActions.SET_PROFILE_FETCH_COMPLETE:
-                return { ...state, profileFetchComplete: action.payload as boolean };
+            case appStatusActions.SET_IS_LOCATION_FETCH_COMPLETE:
+              return { ...state,isLocationFetchComplete: action.payload as boolean };
+              case appStatusActions.SET_IS_PROFILE_FETCH_COMPLETE:
+                return { ...state, isProfileFetchComplete: action.payload as boolean };
+                case appStatusActions.SET_IS_LOGGED_IN:
+                return { ...state, isLoggedIn: action.payload as boolean };
+        
         default:
             return state;
     }
@@ -30,8 +35,8 @@ const appStatusReducer = (
 
 const persistConfig = {
     key: 'appStatus',
-    storage,
-    whitelist: ['isBlocked'], // only isBlocked will be persisted
+    storage: AsyncStorage,
+    whitelist: ['isBlocked', 'isLoggedIn'],
 };
 
 export default persistReducer(persistConfig, appStatusReducer);

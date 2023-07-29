@@ -33,7 +33,7 @@ export const styles = StyleSheet.create({
     tintColor: THEME_COLORS.primary,
   },
   iconContainer: {
-    width:80,
+    width:70,
     height:"100%",
     alignItems: "center",
     justifyContent:'center',

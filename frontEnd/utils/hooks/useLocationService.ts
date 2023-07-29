@@ -2,7 +2,7 @@ import Geolocation from '@react-native-community/geolocation';
 import {useEffect} from 'react';
 import {useSelector} from 'react-redux';
 import {TYPES} from '../../constants';
-import {setShowLocationScreen} from '../../redux';
+import {setIsLocationFetchComplete, setShowLocationScreen} from '../../redux';
 import useDispatch from './useDispatch';
 import {API_KEY_GEO} from '@env';
 import {UserService} from '../../services';
@@ -16,12 +16,12 @@ type LocationData = {
 const useLocationService = () => {
   const dispatch = useDispatch();
 
-  const isRegisterCompleted = useSelector(
-    (state: TYPES.AppState) => state.registerReducer.isRegisterCompleted,
-  );
-
   const {currentUserId} = useSelector(
     (state: TYPES.AppState) => state.usersReducer,
+  );
+
+  const {locationFetchComplete} = useSelector(
+    (state: TYPES.AppState) => state.appStatusReducer,
   );
 
   const getPosition = async (
@@ -91,6 +91,7 @@ const useLocationService = () => {
       console.log(
         'The difference between the last position and the current position is not great, hence there has been no update in the database',
       );
+      dispatch(setIsLocationFetchComplete(true));
     }
   };
 
@@ -139,6 +140,7 @@ const updateUserLocation = async (locationData: LocationData | null, retryCount 
       .then(result => {
         if (result.type === 'success') {
           console.log('Database successfully updated');
+          dispatch(setIsLocationFetchComplete(true));
         } else {
           console.log(result.message);
           if (retryCount < MAX_RETRIES) {
@@ -162,9 +164,9 @@ const updateUserLocation = async (locationData: LocationData | null, retryCount 
 
 
   useEffect(() => {
-    if (isRegisterCompleted.status && currentUserId)
+    if (currentUserId && !locationFetchComplete)
       checkLocationEnabled();
-  }, [isRegisterCompleted, currentUserId]);
+  }, [currentUserId, locationFetchComplete]);
 };
 
 export default useLocationService;

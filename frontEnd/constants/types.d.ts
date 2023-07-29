@@ -299,6 +299,21 @@ interface setIsBlocked {
   payload: boolean
 }
 
+interface setIsLocationFetchComplete { 
+  type: 'SET_IS_LOCATION_FETCH_COMPLETE';
+  payload: boolean
+}
+
+interface setIsProfileFetchComplete { 
+  type: 'SET_IS_PROFILE_FETCH_COMPLETE';
+  payload: boolean
+}
+
+interface setIsLoggedIn { 
+  type: 'SET_IS_LOGGED_IN';
+  payload: boolean
+}
+
 export type AppAction =
   | SetPhoneNumberAction
   | SetDateOfBirthAction
@@ -327,7 +342,10 @@ export type AppAction =
   | EditSetModalVisibleAction
   | EditSetLanguagesAction
   | setIsBlocked
-  | EditInitUserProfileAction;
+  | EditInitUserProfileAction
+  | setIsLocationFetchComplete
+  | setIsProfileFetchComplete
+  | setIsLoggedIn;
 
 export interface InitialStateRegisterType {
   dateOfBirth: Date | null;
@@ -350,8 +368,9 @@ export interface InitialStateRegisterType {
 export interface InitialStateAppStatusType {
   showLocationScreen: boolean;
   isBlocked: boolean;
-  locationFetchComplete:boolean;
-  profileFetchComplete: boolean
+  isLocationFetchComplete:boolean;
+  isProfileFetchComplete: boolean;
+  isLoggedIn: boolean
 }
 
 export interface InitialStateUsersType {

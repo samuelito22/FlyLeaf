@@ -27,15 +27,15 @@ import {
   editInitUserProfile,
 } from './actions/editProfileActions';
 import {setUserProfile,setCurrentUserId, removeUserProfile} from './actions/userActions';
-import { setIsBlocked, setProfileFetchComplete,setLocationFetchComplete,setShowLocationScreen } from './actions/appStatusActions';
+import { setIsBlocked, setIsProfileFetchComplete,setIsLocationFetchComplete,setShowLocationScreen, setIsLoggedIn } from './actions/appStatusActions';
 
 import {Store, Persistor} from './store';
 
 // Export the action creators
 export {
   setIsBlocked,
-  setLocationFetchComplete,
-  setProfileFetchComplete,
+  setIsLocationFetchComplete,
+  setIsProfileFetchComplete,
   setDateOfBirth,
   setFirstName,
   setGenderPreferences,
@@ -64,5 +64,6 @@ export {
   editSetLanguages,
   editInitUserProfile,
   setCurrentUserId,
-  removeUserProfile
+  removeUserProfile,
+  setIsLoggedIn
 };

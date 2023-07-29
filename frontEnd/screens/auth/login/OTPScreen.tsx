@@ -15,7 +15,7 @@ import {
   SafeContainer,
 } from '../../../components';
 
-import {setPhoneNumber} from '../../../redux';
+import {setIsLoggedIn, setPhoneNumber} from '../../../redux';
 
 import {styles} from './styles';
 import {useCountdown, useDispatch} from '../../../utils/hooks';
@@ -107,6 +107,7 @@ const LoginOTPScreen = ({navigation, route}: LoginOTPScreenProps) => {
             controller.signal
           );
           if (userUidExistResult.type === 'success') {
+            dispatch(setIsLoggedIn(true))
             navigation?.navigate(ROUTES.BOTTOM_TAB_NAVIGATOR);
           } else if (userUidExistResult.type === 'error') {
             navigation?.navigate(ROUTES.REGISTER_NAVIGATOR);

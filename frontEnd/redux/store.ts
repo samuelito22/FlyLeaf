@@ -10,7 +10,7 @@ const persistConfig = {
   type: PURGE,
   key: 'root',
   storage: AsyncStorage,
-  whitelist: ['registerReducer', 'appStatusReducer'],
+  whitelist: ['registerReducer'],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

@@ -12,12 +12,16 @@ import ProfileNavigator from './ProfileNavigator';
 const Stack = createStackNavigator();
 
 const MainNavigator = () => {
+  const isLoggedIn = useSelector(
+    (state: TYPES.AppState) => state.appStatusReducer.isLoggedIn,
+  );
+
   const isRegisterCompleted = useSelector(
     (state: TYPES.AppState) => state.registerReducer.isRegisterCompleted,
   );
 
   const initialRouteNameDecider = () => {
-    if (firebase.auth().currentUser?.uid && isRegisterCompleted.status) {
+    if (isLoggedIn) {
       //suppose to be without the exlamation mark
       return ROUTES.BOTTOM_TAB_NAVIGATOR;
     } else {
@@ -37,7 +41,7 @@ const MainNavigator = () => {
 
           cardStyleInterpolator: cardSlideLeftAnimation,
         }}
-        initialRouteName={ROUTES.BOTTOM_TAB_NAVIGATOR}>
+        initialRouteName={initialRouteNameDecider()}>
         <Stack.Screen
           name={ROUTES.LOGIN_NAVIGATOR}
           component={LoginNavigator}
