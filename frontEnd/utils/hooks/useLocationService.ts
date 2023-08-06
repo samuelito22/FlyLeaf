@@ -127,7 +127,7 @@ const checkLocationEnabled = (retryCount = 0) => {
       console.log(error.code, error.message);
       dispatch(setShowLocationScreen(true));
     },
-    {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+    {enableHighAccuracy: true},
   );
 
   controller.abort

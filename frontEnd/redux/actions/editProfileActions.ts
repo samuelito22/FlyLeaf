@@ -8,6 +8,8 @@ export const EDIT_SET_SEXUAL_ORIENTATION = 'EDIT_SET_SEXUAL_ORIENTATION';
 export const EDIT_SET_MODAL_VISIBLE = 'EDIT_SET_MODAL_VISIBLE';
 export const EDIT_SET_LANGUAGES = 'EDIT_SET_LANGUAGES';
 export const EDIT_INIT_USER_PROFILE = 'EDIT_INIT_USER_PROFILE';
+export const EDIT_SET_PICTURES = 'EDIT_SET_PICTURES'
+export const EDIT_SET_COORDINATES = 'EDIT_SET_COORDINATES'
 
 
 import {TYPES} from '../../constants';
@@ -19,6 +21,21 @@ export const editSetBio = (bio: string) => (dispatch: (action: TYPES.AppAction) 
     payload: bio,
   });
 };
+
+export const editSetPictures =
+  (pictures: string[]) => (dispatch: (action: TYPES.AppAction) => void) => {
+    dispatch({
+      type: EDIT_SET_PICTURES,
+      payload: pictures,
+    });
+  };
+
+export const editSetCoordinates = (coordinates: { topLeft: { x: number, y: number }, bottomRight: { x: number, y: number } }[]) => (dispatch: (action: TYPES.AppAction) => void) => {
+  dispatch({
+    type: EDIT_SET_COORDINATES,
+    payload: coordinates
+  })
+}
 
 export const editSetHeight = (height: {feet: number, inches: number}) => (dispatch: (action: TYPES.AppAction) => void) => {
   dispatch({

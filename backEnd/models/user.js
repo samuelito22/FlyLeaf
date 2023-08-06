@@ -13,7 +13,7 @@ const LocationSchema = new Schema({
 const AdditionalInformationSchema = new Schema({
   question: { type: String, required: true },
   answer: { type: String, required: true },
-  icon: {type: String, required: true}
+  icon: {type: Number, required: true}
 }, { _id : false });
 
 const GenderSchema = new Schema({

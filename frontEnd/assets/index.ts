@@ -59,6 +59,11 @@ import search from "./icons/search.png"
 import plus from "./icons/plus.png"
 import warning from "./icons/warning.png"
 import babies from "./icons/babies.png"
+import company from "./icons/company.png"
+import job from "./icons/job.png"
+import sexualOrientation from "./icons/sexual-orientation.png"
+import languages from "./icons/language.png"
+import gender from "./icons/gender.png"
 
 import swap from './images/swap.png';
 import logo from './images/logo.png';
@@ -69,7 +74,12 @@ import flyleaf from './images/FlyLeaf.png';
 import manAvatar from './images/manAvatar.png';
 import successIllustration from './images/successillustration.png';
 
-export const icons: { [key: string]: any } = {
+export const icons = {
+  company,
+  job,
+  sexualOrientation,
+  languages,
+  gender,
   babies,
   warning,
   plus,

@@ -6,7 +6,7 @@ export const PALETTE = {
   // Gray shades
   GRAY300: '#bec2c4',
   GRAY400: '#A3A3A3',
-  GRAY500: '#a3a5b5',
+  GRAY500: '#6c6c6c',
 
   // Indigo shades
   INDIGO200: '#7b8590',
@@ -18,6 +18,7 @@ export const PALETTE = {
   // Light shades
   LIGHT400: '#ededed',
   LIGHT100: '#f5f7fb',
+  LIGHT200: '#f6f6f6',
   LIGHT600: '#eaebef',
 
   // Platinum shades

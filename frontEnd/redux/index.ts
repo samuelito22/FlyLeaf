@@ -25,6 +25,8 @@ import {
   editSetModalVisible,
   editSetLanguages,
   editInitUserProfile,
+  editSetPictures,
+  editSetCoordinates
 } from './actions/editProfileActions';
 import {setUserProfile,setCurrentUserId, removeUserProfile} from './actions/userActions';
 import { setIsBlocked, setIsProfileFetchComplete,setIsLocationFetchComplete,setShowLocationScreen, setIsLoggedIn } from './actions/appStatusActions';
@@ -33,6 +35,7 @@ import {Store, Persistor} from './store';
 
 // Export the action creators
 export {
+  editSetCoordinates,
   setIsBlocked,
   setIsLocationFetchComplete,
   setIsProfileFetchComplete,
@@ -65,5 +68,6 @@ export {
   editInitUserProfile,
   setCurrentUserId,
   removeUserProfile,
-  setIsLoggedIn
+  setIsLoggedIn,
+  editSetPictures
 };

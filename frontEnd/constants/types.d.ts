@@ -2,6 +2,17 @@ import {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import {ImageSourcePropType, ViewStyle} from 'react-native';
 import {NavigationProp} from '@react-navigation/native';
 
+export interface LayoutChangeEvent {
+  nativeEvent: {
+    layout: {
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    };
+  };
+}
+
 /**
  * Button Related Props
  */
@@ -94,6 +105,7 @@ export interface TextFieldProps extends TextInputProps {
     | 'email-address'
     | 'phone-pad';
   secureTextEntry?: boolean;
+  multiLine?: boolean
 }
 
 export interface OTPFieldProps {
@@ -249,6 +261,11 @@ interface EditSetBioAction {
   payload: string | null;
 }
 
+interface editSetPicture { 
+  type: 'EDIT_SET_PICTURES';
+  payload: string[]
+}
+
 interface EditSetHeightAction {
   type: 'EDIT_SET_HEIGHT';
   payload: {feet: number, inches: number} | null;
@@ -314,6 +331,11 @@ interface setIsLoggedIn {
   payload: boolean
 }
 
+interface editSetCoordinates {
+  type: 'EDIT_SET_COORDINATES';
+  payload: { topLeft: { x: number, y: number }, bottomRight: { x: number, y: number } }[]
+}
+
 export type AppAction =
   | SetPhoneNumberAction
   | SetDateOfBirthAction
@@ -345,7 +367,8 @@ export type AppAction =
   | EditInitUserProfileAction
   | setIsLocationFetchComplete
   | setIsProfileFetchComplete
-  | setIsLoggedIn;
+  | setIsLoggedIn
+  |editSetCoordinates
 
 export interface InitialStateRegisterType {
   dateOfBirth: Date | null;
@@ -387,7 +410,9 @@ export interface InitialStateEditUserType {
   company: string | null;
   sexualOrientation: string[] | null;
   modalVisible: boolean;
-  languages: string[] | null
+  languages: string[] | null;
+  pictures: string[] | null;
+  coordinates: { topLeft: { x: number, y: number }, bottomRight: { x: number, y: number } }[]
 }
 
 

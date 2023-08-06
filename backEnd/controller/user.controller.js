@@ -46,7 +46,7 @@ export async function registerUser(req, res) {
         additionalInformation: Joi.array().items(Joi.object({
           question: Joi.string().required(),
           answer: Joi.string().required(),
-          icon: Joi.string().required(),
+          icon: Joi.number().required(),
         })).required(),
       }).required(),
     });

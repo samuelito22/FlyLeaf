@@ -11,10 +11,11 @@ const TextField: React.FC<TYPES.TextFieldProps> = ({
   autoCapitalize,
   keyboardType,
   secureTextEntry,
+  multiLine
 }) => {
   return (
     <TextInput
-      style={[style, styles.inputBox]}
+      style={[styles.inputBox, style]}
       onChangeText={setText}
       value={text}
       placeholder={placeholder}
@@ -22,6 +23,7 @@ const TextField: React.FC<TYPES.TextFieldProps> = ({
       autoCapitalize={autoCapitalize}
       keyboardType={keyboardType}
       secureTextEntry={secureTextEntry}
+      multiline={multiLine}
     />
   );
 };
