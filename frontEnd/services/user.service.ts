@@ -1,6 +1,5 @@
-import {getApiEndpoints} from '../constants';
+import {API_ENDPOINTS} from '../constants';
 
-const API_ENDPOINTS = getApiEndpoints()
 
 const locationService = () => {
   const updateLocation = async (

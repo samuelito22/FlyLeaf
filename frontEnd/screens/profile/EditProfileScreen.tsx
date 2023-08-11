@@ -7,6 +7,8 @@ import {
   Modal,
   Pressable,
   BackHandler,
+  Animated,
+  Dimensions
 } from 'react-native';
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {
@@ -14,7 +16,7 @@ import {
   EditProfileHeader,
   KeyboardAvoidingViewWrapper,
   LoadingSpinner,
-  Ripple,
+  OAuth2WebView,
   SafeContainer,
   questionsList,
 } from '../../components';
@@ -30,32 +32,16 @@ import {
 import {useSelector} from 'react-redux';
 import {icons} from '../../assets';
 import {
-  LongPressGestureHandler,
-  LongPressGestureHandlerGestureEvent,
-  PanGestureHandler,
-  PanGestureHandlerGestureEvent,
+  FlatList,
   ScrollView,
-  State,
 } from 'react-native-gesture-handler';
 import {TouchableRipple} from 'react-native-paper';
 import {useNavigation, NavigationProp} from '@react-navigation/native';
 import {useDispatch} from '../../utils/hooks';
-import {
-  editSetBio,
-  editSetCompany,
-  editSetHeight,
-  editSetJobTitle,
-  editSetModalVisible,
-} from '../../redux';
-import Animated, {
-  runOnJS,
-  useAnimatedGestureHandler,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
+import {AppStatusActions, EditProfileActions} from '../../redux';
 import {isEqual} from 'lodash';
+import { SpotifyService } from '../../services';
+import auth from '@react-native-firebase/auth';
 
 const styles = StyleSheet.create({
   section: {
@@ -107,7 +93,7 @@ const styles = StyleSheet.create({
   },
   section_withBorder: {
     borderColor: PALETTE.GHOSTWHITE,
-    paddingVertical: 20,
+    paddingVertical: 10,
     paddingHorizontal: 20,
     borderTopWidth: 0.5,
     borderBottomWidth: 0.5,
@@ -129,7 +115,7 @@ const styles = StyleSheet.create({
 });
 
 interface SectionProps {
-  state: TYPES.InitialStateEditUserType;
+  state: any;
   dispatch: React.Dispatch<TYPES.AppAction>;
 }
 
@@ -188,6 +174,8 @@ const EditProfileScreen = () => {
         <AdditionalInformation state={state} dispatch={dispatch} />
 
         <PicturesSection state={state} dispatch={dispatch} />
+
+        <SpotifySection state={state} dispatch={dispatch} />
       </SafeContainer>
     </KeyboardAvoidingViewWrapper>
   );
@@ -218,8 +206,9 @@ const BasicInformation = ({state, dispatch}: SectionProps) => {
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
+            marginVertical: 10
           }}>
-          <View style={{flexDirection: 'row', alignItems: 'center', flex: 1}}>
+          <View style={{flexDirection: 'row', alignItems: 'center', flexGrow: 1}}>
             <Image
               source={Number(icon)}
               style={styles.section_withBorder_icon}
@@ -248,9 +237,9 @@ const BasicInformation = ({state, dispatch}: SectionProps) => {
       <CallToAction
         header="Gender"
         paragraph={
-          state.genderInformation?.specific
-            ? state.genderInformation.specific
-            : state.genderInformation?.general
+          state.profile.gender.specific
+            ? state.profile.gender.specific
+            : state.profile.gender.general
         }
         icon={icons.gender}
         onPress={() => navigation.navigate(ROUTES.EDIT_GENDER_SCREEN)}
@@ -258,8 +247,8 @@ const BasicInformation = ({state, dispatch}: SectionProps) => {
       <CallToAction
         header="Languages"
         paragraph={
-          state.languages && state.languages.length !== 0
-            ? state.languages.join(', ')
+          state.interests.languages && state.interests.languages.length !== 0
+            ? state.interests.languages.join(', ')
             : 'Add'
         }
         icon={icons.languages}
@@ -268,8 +257,8 @@ const BasicInformation = ({state, dispatch}: SectionProps) => {
       <CallToAction
         header="Sexual Orientation"
         paragraph={
-          state.sexualOrientation && state.sexualOrientation.length !== 0
-            ? state.sexualOrientation.join(', ')
+          state.preferences.sexualOrientation && state.preferences.sexualOrientation.length !== 0
+            ? state.preferences.sexualOrientation.join(', ')
             : 'Add'
         }
         icon={icons.sexualOrientation}
@@ -279,13 +268,13 @@ const BasicInformation = ({state, dispatch}: SectionProps) => {
       />
       <CallToAction
         header="Job Title"
-        paragraph={state.jobTitle ? state.jobTitle : 'Add'}
+        paragraph={state.profile.jobTitle ? state.profile.jobTitle : 'Add'}
         icon={icons.job}
         onPress={() => navigation.navigate(ROUTES.EDIT_LANGUAGE_SCREEN)}
       />
       <CallToAction
         header="Company"
-        paragraph={state.company ? state.company : 'Add'}
+        paragraph={state.profile.company ? state.profile.company : 'Add'}
         icon={icons.company}
         onPress={() => navigation.navigate(ROUTES.EDIT_LANGUAGE_SCREEN)}
       />
@@ -298,7 +287,7 @@ const AdditionalInformation = ({state, dispatch}: SectionProps) => {
   const onPress = (text: string) => {
     let result = questionsList.find(item => item.question.includes(text));
     setResult(result);
-    dispatch(editSetModalVisible(true));
+    dispatch(EditProfileActions.updateUserProfile('modalVisible',true));
   };
 
   return (
@@ -307,7 +296,7 @@ const AdditionalInformation = ({state, dispatch}: SectionProps) => {
       <Text style={[styles.section_subHeader, {paddingBottom: 10}]}>
         Make your adjustments here, and let others know more about youself
       </Text>
-      {state.additionalInformation?.map((field, index) => (
+      {state.interests.additionalInformation?.map((field:{question:string, icon: string, answer:string}, index:number) => (
         <TouchableRipple
           key={index}
           style={styles.section_withBorder}
@@ -339,10 +328,10 @@ const AdditionalInformation = ({state, dispatch}: SectionProps) => {
 
 const HeightSection = ({state, dispatch}: SectionProps) => {
   const [feet, setFeet] = useState(
-    state?.height?.feet ? state?.height?.feet.toString : '',
+    state?.height?.feet ? state?.profile.height?.feet.toString : '',
   );
   const [inches, setInches] = useState(
-    state?.height?.inches ? state?.height?.inches.toString : '',
+    state?.height?.inches ? state?.profile.height?.inches.toString : '',
   );
   const [active, setActive] = useState({feet: 0, inches: 0});
 
@@ -367,7 +356,7 @@ const HeightSection = ({state, dispatch}: SectionProps) => {
     try {
       if (!inches) return;
       const inchesToInt = parseInt(inches);
-      if (inchesToInt < 3 || inchesToInt > 11 || !inchesToInt) {
+      if (inchesToInt < 0 || inchesToInt > 11 || !inchesToInt) {
         setShowInchesError(true);
       }
     } catch {
@@ -380,7 +369,7 @@ const HeightSection = ({state, dispatch}: SectionProps) => {
 
   const handleSave = () => {
     if (!showFeetError && !showInchesError) {
-      dispatch(editSetHeight({feet: Number(feet), inches: Number(inches)}));
+      dispatch(EditProfileActions.updateUserProfile('height', {feet: Number(feet), inches: Number(inches)}))
     }
   };
 
@@ -444,228 +433,169 @@ const HeightSection = ({state, dispatch}: SectionProps) => {
 };
 
 const PicturesSection = ({state, dispatch}: SectionProps) => {
-  const [sectionWidth, setSectionWidth] = useState(0);
-  const [pictures, setPictures] = useState<(string | null | undefined)[]>(
-    state.pictures ? state.pictures : [],
+  const [pictures, setPictures] = useState<(string)[]>(
+    state.profile.pictures ? state.profile.pictures : [],
   );
-
-  const [picturesCoords, setPicturesCoords] = useState<
-    | {topLeft: {x: number; y: number}; bottomRight: {x: number; y: number}}[]
-    | null
-  >(null);
-
-  const pictureTranslations = pictures.map(index => ({
-    translateX: useSharedValue(0),
-    translateY: useSharedValue(0),
-    landingIndex: useSharedValue(index),
-  }));
-
-  const picturesWidth = [
-    (sectionWidth / 3) * 2,
-    ...Array(5).fill(sectionWidth / 3),
-  ];
-
-  const [moveablePicture, setMoveablePicture] = useState<null | string>(null)
-
-  const PictureField = ({
-    picture,
-    idx,
-    translations,
-  }: {
-    picture?: string | null;
-    idx: number;
-    translations: any;
-  }) => {
-    const pictureContainer = useRef<Animated.View>(null);
-    const indexContainer = useRef(idx);
-    
-
-    const getPosition = () => {
-      pictureContainer.current?.measureInWindow(
-        (x: number, y: number) => {
-          const topLeft = {x, y};
-          const bottomRight = {x: x + picturesWidth[idx], y: y + picturesWidth[idx]};
-          if (x && y) {
-            setPicturesCoords(prevState => {
-              let newCoords = prevState ? [...prevState] : [];
-
-              if (newCoords.length == indexContainer.current) {
-                newCoords[indexContainer.current] = {topLeft, bottomRight};
-                return newCoords;
-              } else {
-                return prevState;
-              }
-            });
-          }
-        },
-      );
-    };
-
-    useEffect(() => {
-      getPosition();
-    }, []);
-
-    const animatedImageStyle = useAnimatedStyle(() => {
-      const transform = [
-        {translateX: picture ? translations.translateX.value : 0},
-        {translateY: picture ? translations.translateY.value : 0},
-      ]
-
-      const side = picturesWidth[indexContainer.current]
-      
-      const height = withTiming(side)
-      const width = withTiming(side)
-
-      return {transform, width, height}
-  });
-
-    const animatedImageContainerStyle = useAnimatedStyle(() => ({
-      width: picturesWidth[indexContainer.current],
-      height: picturesWidth[indexContainer.current],
-      marginBottom: 5,
-      marginRight:
-        indexContainer.current === 3 || indexContainer.current === 4
-          ? 5
-          : indexContainer.current === 0
-          ? 10
-          : 0,
-      zIndex: 1,
-      
-    }));
-
-    return (
-      <LongPressGestureHandler
-        minDurationMs={100}
-        onActivated={() => {
-          if(picture){ 
-            setMoveablePicture(picture)
-            setPictures(prevState => {
-              const newState = [...prevState]
-              newState[idx] = null
-              return newState
-            })
-          }
-          }}>
-        <Animated.View
-          style={[animatedImageContainerStyle, {justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: PALETTE.LIGHT200,
-          borderRadius: BORDER_RADIUS.large,}]}
-          ref={pictureContainer}>
-              { picture ? (
-                <React.Fragment>
-                  <Animated.Image
-                    source={{uri: picture}}
-                    resizeMode="cover"
-                    style={[animatedImageStyle,{
-                      height: '100%',
-                      width: '100%',
-                      borderRadius: BORDER_RADIUS.large,
-                    }]}
-                  />
-                  <View
-                    style={{
-                      position: 'absolute',
-                      borderRadius: BORDER_RADIUS.circle,
-                      top: 5,
-                      left: 5,
-                      backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                      height: 20,
-                      minWidth: 20,
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                    }}>
-                    <Text
-                      style={{
-                        textAlign: 'center',
-                        ...themeText.bodyRegularSeven,
-                        flex: 1,
-                        paddingHorizontal:
-                          indexContainer.current === 0 ? 10 : 0,
-                      }}>
-                      {indexContainer.current === 0
-                        ? 'main'
-                        : indexContainer.current + 1}
-                    </Text>
-                  </View>
-                </React.Fragment>
-              ) : picture === undefined && (
-                <Image
-                  source={icons.plus}
-                  style={{
-                    tintColor: PALETTE.GRAY500,
-                    height: '50%',
-                    width: '50%',
-                  }}
-                  resizeMode="cover"
-                />
-              )}
-        </Animated.View>
-      </LongPressGestureHandler>
-    );
-  };
-
-  const MoveablePicture = () => {
-    const index = pictures.findIndex(picture => picture === null);
-    const [movPicCoord, setMovPicCoord] = useState<null | {topLeft:{x: number, y: number}, bottomRight:{x:Number, y:number}}>(null)
-    const MovPicRef = useRef<Animated.View>(null)
-
-    useEffect(() => {
-      MovPicRef.current?.measureInWindow((x: number, y: number) => {
-        const topLeft = {x, y};
-          const bottomRight = {x: x + picturesWidth[index], y: y + picturesWidth[index]};
-          setMovPicCoord({topLeft, bottomRight})
-      })
-    }, [])
-
-    const translateX = useSharedValue(0)
-    const translateY = useSharedValue(0)
-    useEffect(() => console.log(picturesCoords ? picturesCoords[index].topLeft.x : 0), [movPicCoord])
-
-    const animatedImageContainerStyle = useAnimatedStyle(() => ({
-      width: picturesWidth[index],
-      height: picturesWidth[index],
-      zIndex: 5,
-      position:'absolute',
-      transform: [{translateX: 0}, {translateY: 0}],
-    }));
-
-    
-    const panGesture = useAnimatedGestureHandler<PanGestureHandlerGestureEvent>(
-      {
-        onStart: () => {
-          if(picturesCoords){
-            //translateX.value = picturesCoords[index].topLeft.x - movPicCoord.topLeft.x
-            //translateY.value = picturesCoords[index].topLeft.y - movPicCoord.topLeft.y
-          }
-        },
-
-      },
-    )
-    
-    return (
-      <PanGestureHandler onGestureEvent={panGesture}>
-        <Animated.View style={animatedImageContainerStyle} ref={MovPicRef}>
-          {moveablePicture &&
-        <Image
-                    source={{uri: moveablePicture}}
-                    resizeMode="cover"
-                    style={[{
-                      height: '100%',
-                      width: '100%',
-                      borderRadius: BORDER_RADIUS.large,
-                    }]}
-                  />
-          }
-        </Animated.View>
-      </PanGestureHandler>
-    )
-  }
+  const [index, setIndex] = useState(0);
+  const [sectionWidth, setSectionWidth] = useState(0);
+  const [viewFullPic, setViewFullPic] = useState(false)
+  const flatListRef = useRef<FlatList>(null);
 
   const onLayout = (event: TYPES.LayoutChangeEvent) => {
     const {width} = event.nativeEvent.layout;
-    setSectionWidth(width - 40 - 20); //section width -40 padding and - 10 space per section hence 20
+    setSectionWidth(width); //section width -40 padding and - 10 space per section hence 20
   };
+
+  const scrollX = useRef(new Animated.Value(0)).current
+  const handleOnScroll = Animated.event(
+    [
+      {
+        nativeEvent: {
+          contentOffset: {
+            x: scrollX
+          }
+        }
+      }
+    ],
+    {
+      useNativeDriver: false
+    }
+  );
+
+  const handleOnViewableItemsChanged = useRef(({viewableItems}: {viewableItems:any}) => {
+    setIndex(viewableItems[viewableItems.length-1].index);
+  }).current;
+
+ 
+
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 0,
+  }).current;
+
+  
+  
+  const SlideItem = ({ item }: { item: string | null | undefined }) => {
+    if (!item) return null;
+    
+    return (
+      <View style={{width:sectionWidth - 40, height:300 }}>
+        <Image 
+          source={{ uri: item }} 
+          resizeMode='cover' 
+          style={{ width:"100%", height:"100%"}} 
+        />
+      </View>
+    );
+  }
+  
+  const Pagination = ({ data, scrollX, index }: { data: (string | null | undefined)[], scrollX: Animated.Value, index:number }) => {
+    return (
+    <View style={{position:"absolute", bottom:10, flexDirection:'row' ,width:"100%", justifyContent:"center", alignItems:"center"}}>
+      {data?.map((_,idx) => {
+        const width = sectionWidth - 40
+        const inputRange = [(idx-1) * width, idx * width, (idx+1)*width]
+        const dotWidth = scrollX.interpolate({
+          inputRange,
+          outputRange: [8,16,8],
+          extrapolate: 'clamp'
+        })
+
+        const backgroundColor = scrollX.interpolate({
+          inputRange,
+          outputRange: ['white', THEME_COLORS.dark, 'white'],
+          extrapolate: 'clamp',
+        });
+
+        return (<Animated.View key={idx} style={{borderRadius: 4, width:dotWidth, height:4, marginHorizontal:3, backgroundColor:backgroundColor}}/>)
+      })}
+    </View>
+    )
+
+  }
+
+  const DeleteSlide = () => {
+    const ICON_WIDTH = 20
+
+    const handleDelete = () => {
+      let newIndex;
+
+    if (index === pictures.length - 1 && index !== 0) {
+        // If deleting the last item but not the only item
+        newIndex = index - 1;
+    } else if (index < pictures.length - 1) {
+        // If deleting an item in the middle
+        newIndex = index;
+    } else {
+        // If there's only one item or deleting the first item
+        newIndex = 0;
+    }
+
+      setPictures(prevState => {
+        const newState = [...prevState];
+        newState.splice(index, 1);
+        return newState;
+      });
+
+
+      if (flatListRef.current) {
+        flatListRef.current.scrollToIndex({ index: newIndex, animated: true });
+      }
+
+    };
+ 
+    return (
+      <Button.ButtonImage onPress={handleDelete} height={ICON_WIDTH} width={ICON_WIDTH} tintColor='white' imgUrl={icons.bin} contentContainerStyle={{height:ICON_WIDTH*2, width: ICON_WIDTH*2, borderRadius:BORDER_RADIUS.medium, backgroundColor:"rgba(0, 0, 0, 0.3)", position:"absolute", top: 10, left:10}}/>
+    )
+  }
+
+  const AddSlide = () => {
+    const ICON_WIDTH = 20
+
+    const handleDelete = () => {
+    
+    }
+    return (
+      <Button.ButtonImage onPress={handleDelete} height={ICON_WIDTH} width={ICON_WIDTH} tintColor='white' imgUrl={icons.addImage} contentContainerStyle={{height:ICON_WIDTH*2, width: ICON_WIDTH*2, borderRadius:BORDER_RADIUS.medium, backgroundColor:"rgba(0, 0, 0, 0.3)", position:"absolute", top: 10, right:10}}/>
+    )
+  }
+
+  const ViewSlide = () => {
+    const ICON_WIDTH = 20
+
+    const handleView = () => {
+      setViewFullPic(true)
+    }
+    return (
+      <Button.ButtonImage onPress={handleView} height={ICON_WIDTH * 1.3} width={ICON_WIDTH*1.3} tintColor='white' imgUrl={icons.eye} contentContainerStyle={{height:ICON_WIDTH*2, width: ICON_WIDTH*2, borderRadius:BORDER_RADIUS.medium, backgroundColor:"rgba(0, 0, 0, 0.3)", position:"absolute", bottom: 10, left:10}}/>
+    )
+  }
+
+  const ViewFullSlide = () => {
+    const height = Dimensions.get('window').width * 1.3
+    return (
+      <Modal
+        transparent={true}
+        visible={viewFullPic}
+        onRequestClose={() => setViewFullPic(false)}>
+        <Pressable
+          style={{flex: 1}}
+          onPress={() => setViewFullPic(false)}>
+          <View style={[modalSelectionStyles.flexEnd, {justifyContent:"center", backgroundColor:"rgba(0, 0, 0, 0.9)"}]}>
+            <Pressable
+              style={{ width:"100%"}}
+              onPress={e => e.stopPropagation()}>
+                {pictures &&
+                 <Image 
+                  source={{ uri: pictures[index] }} 
+                  resizeMode='contain' 
+                  style={{ width:"100%", height:height}} 
+                />}
+                </Pressable>
+              </View>
+            </Pressable>
+          </Modal>
+    )
+  }
 
   return (
     <View style={styles.section} onLayout={onLayout}>
@@ -673,43 +603,25 @@ const PicturesSection = ({state, dispatch}: SectionProps) => {
       <Text style={styles.section_subHeader}>
         Pick the best pictures of yourself
       </Text>
-      <View
-        style={{
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          paddingHorizontal: 20,
-          paddingTop: 10,
-          overflow: 'hidden',
-        }}>
-        {moveablePicture && <MoveablePicture/>}
-        <PictureField
-          picture={pictures[0]}
-          idx={0}
-          translations={pictureTranslations[0]}
-        />
-        <View style={{flexDirection: 'column'}}>
-          <PictureField
-            picture={pictures[1]}
-            idx={1}
-            translations={pictureTranslations[1]}
-          />
-          <PictureField
-            picture={pictures[2]}
-            idx={2}
-            translations={pictureTranslations[2]}
-          />
-        </View>
-        <View style={{flexDirection: 'row', flexWrap: 'wrap'}}>
-          {[...Array(3)].map((_, index) => (
-            <React.Fragment key={index + 3}>
-              <PictureField
-                picture={pictures[index + 3]}
-                idx={index + 3}
-                translations={pictureTranslations[index + 3]}
-              />
-            </React.Fragment>
-          ))}
-        </View>
+      <View style={{borderRadius: BORDER_RADIUS.large, overflow:"hidden", marginHorizontal:20, marginTop:10, backgroundColor:PALETTE.LIGHT200, width:sectionWidth - 40, height:300}}>
+      <FlatList 
+      ref={flatListRef}
+      data={pictures} 
+      renderItem={({item}) => <SlideItem item={item}/>}
+      horizontal
+      pagingEnabled
+      snapToAlignment='center'
+      overScrollMode='never'
+      showsHorizontalScrollIndicator={false}
+      onScroll={handleOnScroll}
+      onViewableItemsChanged={handleOnViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig}
+      />
+      {sectionWidth > 0 && <Pagination data={pictures} scrollX={scrollX} index={index}/>}
+      {pictures.length > 0 && <DeleteSlide/>}
+      {pictures.length !== 6 && <AddSlide/>}
+      {pictures.length > 0 && <ViewSlide/>}
+      {viewFullPic && <ViewFullSlide/>}
       </View>
     </View>
   );
@@ -729,8 +641,8 @@ const BiographySection = ({state, dispatch}: SectionProps) => {
           styles.section_textInput,
           {borderColor: active ? THEME_COLORS.primary : THEME_COLORS.tertiary},
         ]}
-        onChangeText={text => dispatch(editSetBio(text))}
-        value={state.bio ?? ''}
+        onChangeText={text => dispatch(EditProfileActions.updateUserProfile('bio',text))}
+        value={state.profile.bio ?? ''}
         placeholder="About me"
         placeholderTextColor={THEME_COLORS.tertiary}
         multiline={true}
@@ -743,17 +655,17 @@ const BiographySection = ({state, dispatch}: SectionProps) => {
 
 const ModalSelection = ({state, dispatch, data}: ModalSelectionProps) => {
   const field = useMemo(() => {
-    return state.additionalInformation?.find(field =>
+    return state.interests.additionalInformation?.find((field:any) =>
       field.question.includes(data.question),
     );
-  }, [data.question, state.additionalInformation]);
+  }, [data.question, state.interests.additionalInformation]);
 
   const [selectedAnswer, setSelectedAnswer] = useState<
     null | undefined | string
   >(null);
 
   const onPress = () => {
-    const question = state.additionalInformation?.find(field =>
+    const question = state.interests.additionalInformation?.find((field:any) =>
       field.question.includes(data.question),
     );
 
@@ -761,7 +673,7 @@ const ModalSelection = ({state, dispatch, data}: ModalSelectionProps) => {
       question.answer = selectedAnswer;
     }
 
-    dispatch(editSetModalVisible(false));
+    dispatch(EditProfileActions.updateUserProfile('modalVisible',false))
   };
 
   useEffect(() => {
@@ -776,10 +688,10 @@ const ModalSelection = ({state, dispatch, data}: ModalSelectionProps) => {
     <Modal
       transparent={true}
       visible={state.modalVisible}
-      onRequestClose={() => dispatch(editSetModalVisible(false))}>
+      onRequestClose={() => dispatch(EditProfileActions.updateUserProfile('modalVisible',false))}>
       <Pressable
         style={{flex: 1}}
-        onPress={() => dispatch(editSetModalVisible(false))}>
+        onPress={() => dispatch(EditProfileActions.updateUserProfile('modalVisible',false))}>
         <View style={modalSelectionStyles.flexEnd}>
           <Pressable
             style={modalSelectionStyles.container}
@@ -787,7 +699,7 @@ const ModalSelection = ({state, dispatch, data}: ModalSelectionProps) => {
             <View style={modalSelectionStyles.iconsContainer}>
               <View
                 onStartShouldSetResponder={() => true}
-                onResponderRelease={() => dispatch(editSetModalVisible(false))}
+                onResponderRelease={() => dispatch(EditProfileActions.updateUserProfile('modalVisible',false))}
                 style={modalSelectionStyles.iconContainer}>
                 <Image
                   source={icons.normalCross}
@@ -891,5 +803,81 @@ const modalSelectionStyles = StyleSheet.create({
     tintColor: THEME_COLORS.primary,
   },
 });
+
+const SpotifySection =  ({state, dispatch}: SectionProps) => {
+  const [artists, setArtists] = useState<any>(Array(10).fill(null));
+  const authCodeRef = useRef<string>(""); 
+  const [showWebView, setShowWebView] = useState(false)
+  const [loading, setLoading] = useState(false)
+  
+  const handleFetchArtists = async () => {
+    setLoading(true)
+    const controller = new AbortController()
+   
+   if(state.profile.spotify?.isConnected){
+      SpotifyService().disconnectFromSpotify(state.uid,controller.signal).catch(e => console.log(e))
+   }else{
+    setShowWebView(true)
+    await waitForAuthCode();
+    SpotifyService().authenticateAndFetchSpotify(state.uid, authCodeRef.current, controller.signal).then((result) => {
+      //SpotifyService().fetchTopArtists(result.token, state.profile.spotify.spotify_id, controller.signal)
+    })
+    
+   }
+
+   setLoading(false)
+   return controller.abort
+  };
+
+  const config = {
+    clientId: '5f030af89dcf40e6a2f2cd3b5c8f09ef',
+    redirectUrl: 'com.frontend:/callback',
+    authorizationEndpoint: 'https://accounts.spotify.com/authorize',
+  };
+
+  const handleSpotifyAuth = async (code:string) => {
+    authCodeRef.current = code;
+    setShowWebView(false)
+  }
+
+  const waitForAuthCode = (): Promise<void> => {
+    return new Promise<void>((resolve) => {
+      const checkForCode = setInterval(() => {
+        if (authCodeRef.current) {
+          clearInterval(checkForCode);
+          resolve();
+        }
+      }, 500); // Check every half second
+    });
+  };
+  
+  
+  
+  
+
+  return (
+    <View style={{width:"100%", paddingHorizontal:20, marginBottom:20}}>
+    <View style={{backgroundColor:"black",width:"100%", borderRadius:15, flexDirection:'column', padding:15, overflow:"hidden"}}>
+      <View style={{flexDirection:'row', maxWidth:250, width:"100%", alignItems:'center',}}>
+        <Image source={icons.spotify} style={{height:30, width:30, marginRight:10}} resizeMode='contain'/>
+        <Text style={{...themeText.bodyMediumFive, color:"white"}}>{state.profile.spotify?.isConnected ? 'Connected to spotify' : 'Connect to spotify'}</Text>
+      </View>
+      <Text style={{marginTop:10, color:PALETTE.GRAY300, ...themeText.bodyRegularSeven}}>At FlyLeaf, we use your top 5 artists to connect you with like-minded music enthusiasts, enhancing conversations and personalizing your experience.</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{marginVertical:10}}>
+    {artists.map((artist:any, index:number) => {
+      return(
+        <View key={index} style={{width:60, height:60, backgroundColor:'rgba(128, 128, 128, 0.5)', borderRadius:10, marginRight:10}}>
+
+        </View>
+      )
+    })}
+    </ScrollView>
+    <Button.LightButton onPress={handleFetchArtists} style={{marginVertical:10}}>{state.profile.spotify?.isConnected ? 'Disconnect' : 'Connect now'}</Button.LightButton>
+    {loading && <View style={{position:"absolute", backgroundColor:"rgba(0,0,0,0.3)", borderWidth:1, top:0, left:0, right:0, bottom:0}}/>}
+    </View>
+    <OAuth2WebView isVisible={showWebView} onCodeReceived={(code) => handleSpotifyAuth(code)} config={config} onClose={() => setShowWebView(false)}/>
+    </View>
+  );
+}
 
 export default EditProfileScreen;

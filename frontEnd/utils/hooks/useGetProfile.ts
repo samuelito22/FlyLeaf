@@ -2,14 +2,14 @@ import {useEffect} from 'react'
 import useDispatch from './useDispatch';
 import { TYPES } from '../../constants';
 import { useSelector } from 'react-redux';
-import { setCurrentUserId, setIsProfileFetchComplete, setUserProfile } from '../../redux';
+import { UserActions, AppStatusActions } from '../../redux';
 import { UserService } from '../../services';
 import auth from "@react-native-firebase/auth"
 
 const useGetProfile = () => {
   const dispatch = useDispatch();
 
-  const {isLocationFetchComplete} = useSelector(
+  const {isLocationFetchComplete, isProfileFetchComplete} = useSelector(
     (state: TYPES.AppState) => state.appStatusReducer,
   );
 
@@ -25,9 +25,9 @@ const useGetProfile = () => {
         const controller = new AbortController();
         try {
           const result = await UserService.getProfile(uid, controller.signal);
-          dispatch(setUserProfile(currentUserId, result.profile));
-          dispatch(setCurrentUserId(uid));
-          dispatch(setIsProfileFetchComplete(true))
+          dispatch(UserActions.setUserProfile(currentUserId, result.profile));
+          dispatch(UserActions.setCurrentUserId(uid));
+          dispatch(AppStatusActions.setIsProfileFetchComplete(true))
           console.log("Profile Fetched")
         } catch (e) {
           console.log(e);
@@ -39,7 +39,7 @@ const useGetProfile = () => {
       }
     };
 
-    if (isLocationFetchComplete) {
+    if (isLocationFetchComplete && !isProfileFetchComplete) {
       getProfile();
     }
   }, [isLocationFetchComplete]);

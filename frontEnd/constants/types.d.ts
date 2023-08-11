@@ -336,6 +336,11 @@ interface editSetCoordinates {
   payload: { topLeft: { x: number, y: number }, bottomRight: { x: number, y: number } }[]
 }
 
+interface setIsRefreshSpotifyComplete {
+  type: 'SET_IS_REFRESH_SPOTIFY_COMPLETE';
+  payload: boolean
+}
+
 export type AppAction =
   | SetPhoneNumberAction
   | SetDateOfBirthAction
@@ -369,6 +374,7 @@ export type AppAction =
   | setIsProfileFetchComplete
   | setIsLoggedIn
   |editSetCoordinates
+  | setIsRefreshSpotifyComplete
 
 export interface InitialStateRegisterType {
   dateOfBirth: Date | null;
@@ -393,7 +399,8 @@ export interface InitialStateAppStatusType {
   isBlocked: boolean;
   isLocationFetchComplete:boolean;
   isProfileFetchComplete: boolean;
-  isLoggedIn: boolean
+  isLoggedIn: boolean;
+  isRefreshSpotifyComplete: boolean
 }
 
 export interface InitialStateUsersType {

@@ -1,11 +1,11 @@
 import MainNavigator from './navigation/MainNavigator';
 import {Provider, useSelector} from 'react-redux';
 import {PersistGate} from 'redux-persist/integration/react';
-import {Store, Persistor, setCurrentUserId} from './redux';
+import {Store, Persistor, UserActions} from './redux';
 import {StatusBar} from 'react-native';
 import {TYPES} from './constants';
 import {BlockedScreen, LocationScreen} from './screens';
-import {useDispatch, useGetProfile, useLocationService} from './utils/hooks';
+import {useDispatch, useGetProfile, useLocationService, useRefreshSpotify} from './utils/hooks';
 import {useEffect}  from "react"
 import auth from "@react-native-firebase/auth"
 
@@ -23,7 +23,7 @@ const MainContent = () => {
   useEffect(() => {
     if(isLoggedIn){
       const uid = auth().currentUser?.uid;
-      if(uid) dispatch(setCurrentUserId(uid))
+      if(uid) dispatch(UserActions.setCurrentUserId(uid))
     }
   },[isLoggedIn])
 
@@ -32,6 +32,7 @@ const MainContent = () => {
 
   useGetProfile();
   
+  useRefreshSpotify();
 
   if(isBlocked) return <BlockedScreen/>
 

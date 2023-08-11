@@ -21,8 +21,19 @@ const GenderSchema = new Schema({
   specific: { type: String }
 }, { _id : false });
 
+const SpotifySchema = new Schema({
+  isConnected: {type: Boolean, default: false},
+  spotify_id: {type: String, unique:true, sparse:true},
+  lastUpdated: {type: Date, default: Date.now}
+},{ _id : false })
+
+const InstagramSchema = new Schema({
+  isConnected: {type: Boolean, default: false},
+  instagram_id: {type: String, unique:true, sparse:true}
+})
+
 const UserSchema = new Schema({
-  uid: { type: String, required: true, unique: true },
+  _id: { type: String, alias: 'uid' },
   profile: {
     firstName: { type: String, required: true },
     dateOfBirth: { type: Date, required: true },
@@ -32,6 +43,8 @@ const UserSchema = new Schema({
     bio: { type: String, default: "Hello! I'm new here and haven't written my bio yet. Check my profile!" },
     height: {type: {feet: Number, inches: Number}},
     pictures: [{ type: String }],
+    spotify: {type:SpotifySchema},
+    instagram: {type:InstagramSchema}
   },
   preferences: {
     genderPreferences: { type: [String], required: true },
@@ -61,6 +74,7 @@ const UserSchema = new Schema({
     connects: { type: Number, default: 40 },
   },
   visibilityStatus: { type: String, enum: ['Public', 'Private', 'Matches Only'], default: 'Public' }, 
+  
 });
 
 const User = mongoose.models.User || mongoose.model("User", UserSchema);

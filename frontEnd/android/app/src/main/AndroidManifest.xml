@@ -17,10 +17,19 @@
         android:launchMode="singleTask"
         android:windowSoftInputMode="adjustResize"
         android:exported="true">
-        <intent-filter>
-            <action android:name="android.intent.action.MAIN" />
-            <category android:name="android.intent.category.LAUNCHER" />
-        </intent-filter>
+        <!-- Default intent filter for launching the app -->
+     <intent-filter>
+         <action android:name="android.intent.action.MAIN" />
+         <category android:name="android.intent.category.LAUNCHER" />
+     </intent-filter>
+
+     <!-- Intent filter for handling OAuth callback -->
+     <intent-filter>
+         <action android:name="android.intent.action.VIEW" />
+         <category android:name="android.intent.category.DEFAULT" />
+         <category android:name="android.intent.category.BROWSABLE" />
+         <data android:scheme="${appAuthRedirectScheme}" android:host="callback" />
+     </intent-filter>
       </activity>
       <provider android:authorities="com.facebook.app.FacebookContentProvider163312826651992"
     android:name="com.facebook.FacebookContentProvider"

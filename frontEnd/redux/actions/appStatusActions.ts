@@ -4,6 +4,7 @@ export const SET_IS_BLOCKED = 'SET_IS_BLOCKED';
 export const SET_IS_LOCATION_FETCH_COMPLETE = 'SET_IS_LOCATION_FETCH_COMPLETE'
 export const SET_IS_PROFILE_FETCH_COMPLETE = 'SET_IS_PROFILE_FETCH_COMPLETE'
 export const SET_IS_LOGGED_IN = 'SET_IS_LOGGED_IN'
+export const SET_IS_REFRESH_SPOTIFY_COMPLETE = 'SET_IS_REFRESH_SPOTIFY_COMPLETE'
 
 export const setShowLocationScreen =
   (showLocationScreen: boolean) =>
@@ -24,20 +25,20 @@ export const setShowLocationScreen =
   };
 
   export const setIsLocationFetchComplete =
-  (locationFetchComplete: boolean) =>
+  (isLocationFetchComplete: boolean) =>
   (dispatch: (action: TYPES.AppAction) => void) => {
     dispatch({
       type: SET_IS_LOCATION_FETCH_COMPLETE,
-      payload: locationFetchComplete,
+      payload: isLocationFetchComplete,
     });
   };
 
   export const setIsProfileFetchComplete =
-  (profileFetchComplete: boolean) =>
+  (isProfileFetchComplete: boolean) =>
   (dispatch: (action: TYPES.AppAction) => void) => {
     dispatch({
       type: SET_IS_PROFILE_FETCH_COMPLETE,
-      payload: profileFetchComplete,
+      payload: isProfileFetchComplete,
     });
   };
 
@@ -50,3 +51,10 @@ export const setShowLocationScreen =
       payload: isLoggedIn,
     });
   };
+
+ export const setIsRefreshSpotifyComplete = (isRefreshSpotifyComplete: boolean) => (dispatch: (action: TYPES.AppAction) => void) => {
+  dispatch({
+    type: SET_IS_REFRESH_SPOTIFY_COMPLETE,
+    payload: isRefreshSpotifyComplete,
+  });
+};

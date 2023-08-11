@@ -2,13 +2,13 @@ import morgan from "morgan";
 import express from "express";
 import mongoose from "mongoose";
 import passport from "passport";
-import userRoutes from "./routes/api/user.route.js";
 import bodyParser from "body-parser";
 import cookieSession from "cookie-session";
 import passportConfig from "./config/passport.js";
 import cors from "cors"
 import { COOKIE_KEY, DB_URI, NODE_ENV, PORT } from "./config/config.js";
 import { API_ENDPOINT_NOT_FOUND_ERR } from "./errors.js";
+import mainRoutes from "./routes/index.js"
 
 const app = express();
 
@@ -54,7 +54,7 @@ app.use(passport.session());
 passportConfig(passport);
 
 // Routes
-app.use("/user", userRoutes);
+app.use("/api", mainRoutes);
 
 app.get("/", (req, res) => {
   res.status(200).json({

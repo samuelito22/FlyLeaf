@@ -20,7 +20,7 @@ import {
 import {style as GeneralStyles} from './styles';
 import {icons} from '../../assets';
 import { useDispatch } from '../../utils/hooks';
-import { editInitUserProfile } from '../../redux';
+import { EditProfileActions } from '../../redux';
 
 const UserProfileScreen = () => {
   const dispatch = useDispatch()
@@ -47,7 +47,7 @@ const UserProfileScreen = () => {
   }
 
   const onEditPress = () => {
-    dispatch(editInitUserProfile(userProfile))
+    dispatch(EditProfileActions.initUserProfile(userProfile))
     navigation.navigate(ROUTES.EDIT_PROFILE_SCREEN)
   }
 

@@ -11,8 +11,7 @@ import {
   setInterests,
   setIsRegisterCompleted,
   resetRegister,
-  setCurrentUserId,
-  setIsLoggedIn,
+  AppStatusActions
 } from '../../../redux';
 import {
   THEME_COLORS,
@@ -120,7 +119,7 @@ const InterestScreen = ({
           if (result.type === 'error') {
             console.log(result.message);
           } else {
-            dispatch(setIsLoggedIn(true));
+            dispatch(AppStatusActions.setIsLoggedIn(true));
             dispatch(resetRegister());
             navigation.navigate(ROUTES.BOTTOM_TAB_NAVIGATOR);
           }
