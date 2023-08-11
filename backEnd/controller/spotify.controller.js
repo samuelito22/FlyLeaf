@@ -1,12 +1,15 @@
-import { SPOTIFY_IN_USE } from "../errors.js";
+import { SPOTIFY_IN_USE, USER_NOT_FOUND_ERR } from "../errors.js";
 import User from "../models/user.model.js";
 import Spotify from "../models/spotify.model.js";
 import Joi from "joi";
 import axios from "axios";
 
+// Constants
 const REDIRECT_URI = process.env.SPOTIFY_REDIRECT_URI;
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
+
+// Utility Functions
 
 const validateUid = (uid) => {
   const schema = Joi.object({ uid: Joi.string().required() });
@@ -18,34 +21,37 @@ async function fetchTopArtists(accessToken, spotify_id) {
     const response = await axios.get(
       "https://api.spotify.com/v1/me/top/artists?limit=10",
       {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: { Authorization: `Bearer ${accessToken}` },
       }
     );
 
     console.log(response.data.items);
-    return null
+    return null;
   } catch (error) {
-    return error
+    console.error("Error fetching top artists:", error);
+    return error;
   }
 }
+
+const sendError = (res, message, status = 500) => {
+  return res.status(status).json({ type: "error", message });
+};
+
+// Controller Functions
 
 async function authenticateAndFetchSpotify(req, res) {
   try {
     const { uid } = req.params;
     const { code } = req.body;
 
-    const schema = Joi.object({ uid: Joi.string().required(), code: Joi.string().required() });
+    const schema = Joi.object({
+      uid: Joi.string().required(),
+      code: Joi.string().required(),
+    });
 
-    const {error} =  schema.validate({uid, code})
+    const { error } = schema.validate({ uid, code });
 
-    if (error) {
-      return res.status(400).json({
-        type: "error",
-        message: error.details[0].message,
-      });
-    }
+    if (error) return sendError(res, error.details[0].message, 400);
 
     const tokenResponse = await axios.post(
       "https://accounts.spotify.com/api/token",
@@ -82,7 +88,7 @@ async function authenticateAndFetchSpotify(req, res) {
           "profile.spotify": {
             isConnected: false,
             spotify_id: null,
-            lastUpdated: null
+            lastUpdated: null,
           },
         },
       },
@@ -96,7 +102,7 @@ async function authenticateAndFetchSpotify(req, res) {
           "profile.spotify": {
             isConnected: true,
             spotify_id: spotifyUserId,
-            lastUpdated: Date.now
+            lastUpdated: Date.now,
           },
         },
       },
@@ -120,39 +126,46 @@ async function authenticateAndFetchSpotify(req, res) {
       }).save();
     }
 
-    await fetchTopArtists(accessToken, spotifyUserId)
+    await fetchTopArtists(accessToken, spotifyUserId);
 
     // Send success status back.
-    return res
-      .status(200)
-      .json({
-        type: "success",
-        message: "Authentication and fetch successful",
-        importantMessage: userAlreadyConnectedToSpotifyId && SPOTIFY_IN_USE,
-      });
+    return res.status(200).json({
+      type: "success",
+      message: "Authentication and fetch successful",
+      importantMessage: userAlreadyConnectedToSpotifyId && SPOTIFY_IN_USE,
+    });
   } catch (error) {
     console.error("Error authenticating with Spotify:", error);
-    return res
-      .status(500)
-      .json({ type: "error", message: "Internal Server Error" });
+    return sendError(res, "Internal Server Error");
   }
 }
 
 async function refetchSpotify(req, res) {
   try {
     const { uid } = req.body;
-    const { error } = validateUid(uid)
-    if (error) {
-        return res.status(400).json({
-          type: "error",
-          message: error.details[0].message,
-        });
-      }
+    const { error } = validateUid(uid);
 
-    const user = User.findOne({uid})
-    const spotify_id = user.profile.spotify.spotify_id
+    if (error) return sendError(res, error.details[0].message, 400);
 
-    const spotifyDoc = await Spotify.findOne({ spotify_id: spotify_id });
+    const user = await User.findOne({ uid });
+
+    if (!user) {
+      return res.status(404).json({
+        type: "error",
+        message: USER_NOT_FOUND_ERR,
+      });
+    }
+    const spotify_id = user.profile.spotify.spotify_id;
+
+    const spotifyDoc = await Spotify.findOne({ _id: spotify_id });
+
+    if (!spotifyDoc) {
+      return res.status(404).json({
+        type: "error",
+        message: "Spotify field not found",
+      });
+    }
+
     let refreshToken = spotifyDoc.refreshToken;
 
     const tokenResponse = await axios.post(
@@ -169,82 +182,76 @@ async function refetchSpotify(req, res) {
     );
 
     const accessToken = tokenResponse.data.access_token;
-    
+
     refreshToken = tokenResponse.data.refresh_token;
 
-    spotifyDoc.refreshToken = refreshToken;
-    await spotifyDoc.save();
+    if (refreshToken) {
+      spotifyDoc.refreshToken = refreshToken;
 
-    await fetchTopArtists(accessToken, spotify_id)
+      await spotifyDoc.save();
+    }
 
-    return res
-      .status(200)
-      .json({
-        type: "success",
-        message: "Refresh token created successfully",
-      });
+    await fetchTopArtists(accessToken, spotify_id);
+
+    return res.status(200).json({
+      type: "success",
+      message: "Refresh token created successfully",
+    });
   } catch (error) {
     console.error("Error refreshing access token:", error);
-    return res
-      .status(500)
-      .json({ type: "error", message: "Internal Server Error" });
+    return sendError(res, "Internal Server Error");
   }
 }
 
 async function disconnectFromSpotify(req, res) {
-    try {
-        const { uid } = req.params;
+  try {
+    const { uid } = req.params;
 
-        // Validate UID
-        const { error } = validateUid(uid);
-        if (error) {
-            return res.status(400).json({
-                type: "error",
-                message: error.details[0].message,
-            });
-        }
+    // Validate UID
+    const { error } = validateUid(uid);
 
-        const user = await User.findOne({ uid });
-        if (!user) {
-            return res.status(404).json({
-                type: "error",
-                message: "User not found.",
-            });
-        }
+    if (error) return sendError(res, error.details[0].message, 400);
 
-        const storedSpotifyId = user.profile.spotify.spotify_id;
-        await Spotify.deleteOne({ _id: storedSpotifyId });
-        console.log("Stored Spotify ID:", storedSpotifyId);
-
-        
-        const updatedUser = await User.findOneAndUpdate(
-            { uid },
-            {
-                $set: {
-                    "profile.spotify.isConnected": false,
-                    "profile.spotify.spotify_id": null
-                }
-            },
-            { new: true }
-        );
-    
-        if (!updatedUser) {
-            return { error: true, statusCode: 500, message: "Internal Server Error"};
-        }
-
-        return res.status(200).json({
-            type: "success",
-            message: "Disconnected from Spotify successfully",
-        });
-    } catch (error) {
-        console.error("Error disconnecting from Spotify:", error);
-        return res.status(500).json({
-            type: "error",
-            message: "Internal Server Error"
-        });
+    const user = await User.findOne({ uid });
+    if (!user) {
+      return res.status(404).json({
+        type: "error",
+        message: "User not found.",
+      });
     }
+
+    const storedSpotifyId = user.profile.spotify.spotify_id;
+    await Spotify.deleteOne({ _id: storedSpotifyId });
+    console.log("Stored Spotify ID:", storedSpotifyId);
+
+    const updatedUser = await User.findOneAndUpdate(
+      { uid },
+      {
+        $set: {
+          "profile.spotify.isConnected": false,
+          "profile.spotify.spotify_id": null,
+        },
+      },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return { error: true, statusCode: 500, message: "Internal Server Error" };
+    }
+
+    return res.status(200).json({
+      type: "success",
+      message: "Disconnected from Spotify successfully",
+    });
+  } catch (error) {
+    console.error("Error disconnecting from Spotify:", error);
+    return sendError(res, "Internal Server Error");
+  }
 }
 
-
-const spotifyController = { authenticateAndFetchSpotify, refetchSpotify, disconnectFromSpotify };
+const spotifyController = {
+  authenticateAndFetchSpotify,
+  refetchSpotify,
+  disconnectFromSpotify,
+};
 export default spotifyController;

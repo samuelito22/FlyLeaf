@@ -31,7 +31,7 @@ const useRefreshSpotify = () => {
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
 
             if(diffDays <= 10) {
-                SpotifyService().refetchSpotify(userProfile.profile.spotify.spotify_id).catch(e => console.log(e))
+                SpotifyService().refetchSpotify(userProfile.uid).catch(e => console.log(e))
             }
         }
 

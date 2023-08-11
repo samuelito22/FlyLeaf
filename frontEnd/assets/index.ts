@@ -68,6 +68,7 @@ import bin from "./icons/bin.png"
 import addImage from "./icons/addImage.png"
 import eye from "./icons/eye.png"
 import spotify from "./icons/spotify.png"
+import instagram from "./icons/instagram.png"
 
 import swap from './images/swap.png';
 import logo from './images/logo.png';
@@ -79,6 +80,7 @@ import manAvatar from './images/manAvatar.png';
 import successIllustration from './images/successillustration.png';
 
 export const icons = {
+  instagram,
   spotify,
   eye,
   addImage,

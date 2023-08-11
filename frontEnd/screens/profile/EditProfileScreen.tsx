@@ -176,6 +176,7 @@ const EditProfileScreen = () => {
         <PicturesSection state={state} dispatch={dispatch} />
 
         <SpotifySection state={state} dispatch={dispatch} />
+        <InstagramSection state={state} dispatch={dispatch} />
       </SafeContainer>
     </KeyboardAvoidingViewWrapper>
   );
@@ -862,7 +863,7 @@ const SpotifySection =  ({state, dispatch}: SectionProps) => {
         <Image source={icons.spotify} style={{height:30, width:30, marginRight:10}} resizeMode='contain'/>
         <Text style={{...themeText.bodyMediumFive, color:"white"}}>{state.profile.spotify?.isConnected ? 'Connected to spotify' : 'Connect to spotify'}</Text>
       </View>
-      <Text style={{marginTop:10, color:PALETTE.GRAY300, ...themeText.bodyRegularSeven}}>At FlyLeaf, we use your top 5 artists to connect you with like-minded music enthusiasts, enhancing conversations and personalizing your experience.</Text>
+      <Text style={{marginTop:10, color:PALETTE.GRAY300, ...themeText.bodyRegularSeven}}>At FlyLeaf, we use your top artists to connect you with like-minded music enthusiasts, enhancing conversations and personalizing your experience.</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{marginVertical:10}}>
     {artists.map((artist:any, index:number) => {
       return(
@@ -873,7 +874,83 @@ const SpotifySection =  ({state, dispatch}: SectionProps) => {
     })}
     </ScrollView>
     <Button.LightButton onPress={handleFetchArtists} style={{marginVertical:10}}>{state.profile.spotify?.isConnected ? 'Disconnect' : 'Connect now'}</Button.LightButton>
-    {loading && <View style={{position:"absolute", backgroundColor:"rgba(0,0,0,0.3)", borderWidth:1, top:0, left:0, right:0, bottom:0}}/>}
+    {loading && <View style={{position:"absolute", backgroundColor:"rgba(0,0,0,0.3)", top:0, left:0, right:0, bottom:0}}/>}
+    </View>
+    <OAuth2WebView isVisible={showWebView} onCodeReceived={(code) => handleSpotifyAuth(code)} config={config} onClose={() => setShowWebView(false)}/>
+    </View>
+  );
+}
+
+const InstagramSection =  ({state, dispatch}: SectionProps) => {
+  const [artists, setArtists] = useState<any>(Array(10).fill(null));
+  const authCodeRef = useRef<string>(""); 
+  const [showWebView, setShowWebView] = useState(false)
+  const [loading, setLoading] = useState(false)
+  
+  const handleFetchArtists = async () => {
+    setLoading(true)
+    const controller = new AbortController()
+   
+   if(state.profile.spotify?.isConnected){
+      SpotifyService().disconnectFromSpotify(state.uid,controller.signal).catch(e => console.log(e))
+   }else{
+    setShowWebView(true)
+    await waitForAuthCode();
+    SpotifyService().authenticateAndFetchSpotify(state.uid, authCodeRef.current, controller.signal).then((result) => {
+      //SpotifyService().fetchTopArtists(result.token, state.profile.spotify.spotify_id, controller.signal)
+    })
+    
+   }
+
+   setLoading(false)
+   return controller.abort
+  };
+
+  const config = {
+    clientId: '5f030af89dcf40e6a2f2cd3b5c8f09ef',
+    redirectUrl: 'com.frontend:/callback',
+    authorizationEndpoint: 'https://accounts.spotify.com/authorize',
+  };
+
+  const handleSpotifyAuth = async (code:string) => {
+    authCodeRef.current = code;
+    setShowWebView(false)
+  }
+
+  const waitForAuthCode = (): Promise<void> => {
+    return new Promise<void>((resolve) => {
+      const checkForCode = setInterval(() => {
+        if (authCodeRef.current) {
+          clearInterval(checkForCode);
+          resolve();
+        }
+      }, 500); // Check every half second
+    });
+  };
+  
+  
+  
+  
+
+  return (
+    <View style={{width:"100%", paddingHorizontal:20, marginBottom:20}}>
+    <View style={{backgroundColor:"white",width:"100%", borderRadius:15, flexDirection:'column', padding:15, overflow:"hidden", borderWidth:1, borderColor: PALETTE.LIGHT100}}>
+      <View style={{flexDirection:'row', maxWidth:250, width:"100%", alignItems:'center',}}>
+        <Image source={icons.instagram} style={{height:30, width:30, marginRight:10}} resizeMode='contain'/>
+        <Text style={{...themeText.bodyMediumFive, color:THEME_COLORS.dark}}>{state.profile.spotify?.isConnected ? 'Connected to instagram' : 'Connect to instagram'}</Text>
+      </View>
+      <Text style={{marginTop:10, color:THEME_COLORS.dark, ...themeText.bodyRegularSeven}}>Your latest posts will be visible to others, but your username will not be visible.</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{marginVertical:10}}>
+    {artists.map((artist:any, index:number) => {
+      return(
+        <View key={index} style={{width:60, height:60, backgroundColor:'rgba(1, 1, 1, 0.05)', borderRadius:10, marginRight:10}}>
+
+        </View>
+      )
+    })}
+    </ScrollView>
+    <Button.DarkButton onPress={handleFetchArtists} style={{marginVertical:10}}>{state.profile.spotify?.isConnected ? 'Disconnect' : 'Connect now'}</Button.DarkButton>
+    {loading && <View style={{position:"absolute", backgroundColor:"rgba(0,0,0,0.1)", top:0, left:0, right:0, bottom:0}}/>}
     </View>
     <OAuth2WebView isVisible={showWebView} onCodeReceived={(code) => handleSpotifyAuth(code)} config={config} onClose={() => setShowWebView(false)}/>
     </View>
