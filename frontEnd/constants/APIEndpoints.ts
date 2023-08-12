@@ -11,4 +11,5 @@ export const API_ENDPOINTS = {
   AUTHENTICATE_AND_FETCH_SPOTIFY: `${BASE_URL}/api/spotify/authenticateAndFetchSpotify`,
   DISCONNECT_FROM_SPOTIFY: `${BASE_URL}/api/spotify/disconnectFromSpotify`,
   REFETCH_SPOTIFY: `${BASE_URL}/api/spotify/refetchSpotify`,
+  INIT_USER_PROFILE: `${BASE_URL}/api/users/initUserProfile`,
 }

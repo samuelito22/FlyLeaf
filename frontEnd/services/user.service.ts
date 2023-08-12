@@ -59,7 +59,23 @@ const profileService = () => {
     }
   };
 
-  return {getProfile};
+  const initUserProfile = async (uid: string, signal?: AbortSignal) => {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.INIT_USER_PROFILE}/${uid}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal,     
+      });
+      const data = await response.json();
+      return data;
+    } catch (error:any) {
+      console.log('Error message:', error.message);
+    }
+  };
+
+  return {getProfile, initUserProfile};
 };
 
 export const UserService = {

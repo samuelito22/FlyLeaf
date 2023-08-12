@@ -5,7 +5,6 @@ const LocationSchema = new Schema({
   type: { type: String, enum: ['Point'], default: 'Point' },
   coordinates: { type: [Number] },
   city: { type: String },
-  country: { type: String },
   showLocation: {type: Boolean, default: false},
   showDistance: {type: Boolean, default: true}
 }, { _id : false });
