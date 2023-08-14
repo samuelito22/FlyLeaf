@@ -519,6 +519,7 @@ export type PositionType = {
 };
 
 export type oAuth2WebViewType = {
+  isVisible: boolean, 
   onCodeReceived: (code: string) => void, 
   config: {
     authorizationEndpoint: string, 
@@ -526,6 +527,5 @@ export type oAuth2WebViewType = {
     redirectUrl: string,
     scopes: string[]
   }, 
-  onLoadStart: () => void,
-  onLoadEnd: () => void
+  onClose: () => void
 }

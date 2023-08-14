@@ -2,23 +2,24 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Modal, BackHandler } from 'react-native';
 import WebView from 'react-native-webview';
 import { TYPES } from '../../constants';
+import ThreeDotsLoader from './ThreeDotsLoader';
 
-function OAuth2WebView({ onCodeReceived, config, onLoadStart, onLoadEnd}:TYPES.oAuth2WebViewType) {
+function OAuth2WebView({ isVisible, onCodeReceived, config, onClose }:TYPES.oAuth2WebViewType) {
   const { authorizationEndpoint, clientId, redirectUrl, scopes } = config;
-
+  const [isLoading, setIsLoading] = useState(true)
   const webViewRef = useRef<WebView>(null);
   const [canGoBack, setCanGoBack] = useState(false);
   
   const encodedScopes = encodeURIComponent(scopes.join(' '));
-
   
   const authUrl = `${authorizationEndpoint}?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUrl)}&response_type=code&scope=${encodedScopes}`;
   useEffect(() => {
     const backAction = () => {
       if (canGoBack) {
         webViewRef.current?.goBack();
-      } 
-
+      } else {
+        onClose();
+      }
       return true; 
     };
 
@@ -28,12 +29,13 @@ function OAuth2WebView({ onCodeReceived, config, onLoadStart, onLoadEnd}:TYPES.o
   }, [canGoBack]);
 
   return (
+    <Modal visible={isVisible} animationType="slide">
       <WebView
-        onLoadEnd={onLoadEnd}
-        onLoadStart={onLoadStart}
+        onLoad={() => setIsLoading(true)}
+        onLoadEnd={() => setIsLoading(false)}
         ref={webViewRef}
         source={{ uri: authUrl }}
-        incognito={true}
+        //incognito={true}
         onNavigationStateChange={(navState) => {
           setCanGoBack(navState.canGoBack);
 
@@ -45,6 +47,8 @@ function OAuth2WebView({ onCodeReceived, config, onLoadStart, onLoadEnd}:TYPES.o
           }
         }}
       />
+      {isLoading && <ThreeDotsLoader modalBackground={{backgroundColor:"white"}}/>}
+    </Modal>
   );
 }
 

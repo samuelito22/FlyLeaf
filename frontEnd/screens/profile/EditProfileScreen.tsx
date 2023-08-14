@@ -8,7 +8,7 @@ import {
   Pressable,
   BackHandler,
   Animated,
-  Dimensions
+  Dimensions,
 } from 'react-native';
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {
@@ -32,16 +32,13 @@ import {
 } from '../../constants';
 import {useSelector} from 'react-redux';
 import {icons} from '../../assets';
-import {
-  FlatList,
-  ScrollView,
-} from 'react-native-gesture-handler';
+import {FlatList, ScrollView} from 'react-native-gesture-handler';
 import {TouchableRipple} from 'react-native-paper';
 import {useNavigation, NavigationProp} from '@react-navigation/native';
 import {useDispatch} from '../../utils/hooks';
 import {AppStatusActions, EditProfileActions} from '../../redux';
 import {isEqual} from 'lodash';
-import { InstagramService, SpotifyService } from '../../services';
+import {InstagramService, SpotifyService} from '../../services';
 import auth from '@react-native-firebase/auth';
 
 const styles = StyleSheet.create({
@@ -126,7 +123,7 @@ interface ModalSelectionProps extends SectionProps {
 
 type NavigationProps = {
   navigation?: NavigationProp<TYPES.RootStackParamList>;
-}
+};
 
 const EditProfileScreen: React.FC<NavigationProps> = ({navigation}) => {
   const state = useSelector((state: TYPES.AppState) => state.editUserReducer);
@@ -180,8 +177,16 @@ const EditProfileScreen: React.FC<NavigationProps> = ({navigation}) => {
 
         <PicturesSection state={state} dispatch={dispatch} />
 
-        <SpotifySection state={state} dispatch={dispatch} navigation={navigation}/>
-        <InstagramSection state={state} dispatch={dispatch} navigation={navigation} />
+        <SpotifySection
+          state={state}
+          dispatch={dispatch}
+          navigation={navigation}
+        />
+        <InstagramSection
+          state={state}
+          dispatch={dispatch}
+          navigation={navigation}
+        />
       </SafeContainer>
     </KeyboardAvoidingViewWrapper>
   );
@@ -212,9 +217,10 @@ const BasicInformation = ({state, dispatch}: SectionProps) => {
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
-            marginVertical: 10
+            marginVertical: 10,
           }}>
-          <View style={{flexDirection: 'row', alignItems: 'center', flexGrow: 1}}>
+          <View
+            style={{flexDirection: 'row', alignItems: 'center', flexGrow: 1}}>
             <Image
               source={Number(icon)}
               style={styles.section_withBorder_icon}
@@ -263,7 +269,8 @@ const BasicInformation = ({state, dispatch}: SectionProps) => {
       <CallToAction
         header="Sexual Orientation"
         paragraph={
-          state.preferences.sexualOrientation && state.preferences.sexualOrientation.length !== 0
+          state.preferences.sexualOrientation &&
+          state.preferences.sexualOrientation.length !== 0
             ? state.preferences.sexualOrientation.join(', ')
             : 'Add'
         }
@@ -293,7 +300,7 @@ const AdditionalInformation = ({state, dispatch}: SectionProps) => {
   const onPress = (text: string) => {
     let result = questionsList.find(item => item.question.includes(text));
     setResult(result);
-    dispatch(EditProfileActions.updateUserProfile('modalVisible',true));
+    dispatch(EditProfileActions.updateUserProfile('modalVisible', true));
   };
 
   return (
@@ -302,29 +309,34 @@ const AdditionalInformation = ({state, dispatch}: SectionProps) => {
       <Text style={[styles.section_subHeader, {paddingBottom: 10}]}>
         Make your adjustments here, and let others know more about youself
       </Text>
-      {state.interests.additionalInformation?.map((field:{question:string, icon: string, answer:string}, index:number) => (
-        <TouchableRipple
-          key={index}
-          style={styles.section_withBorder}
-          onPress={() => onPress(field.question)}
-          rippleColor={PALETTE.GHOSTWHITE}>
-          <View style={{flexDirection: 'row', alignItems: 'center'}}>
-            <Image
-              source={Number(field.icon)}
-              style={styles.section_withBorder_icon}
-              resizeMode="contain"
-            />
-            <View>
-              <Text style={styles.section_withBorder_header}>
-                {field.question}
-              </Text>
-              <Text style={styles.section_withBorder_paragraph}>
-                {field.answer}
-              </Text>
+      {state.interests.additionalInformation?.map(
+        (
+          field: {question: string; icon: string; answer: string},
+          index: number,
+        ) => (
+          <TouchableRipple
+            key={index}
+            style={styles.section_withBorder}
+            onPress={() => onPress(field.question)}
+            rippleColor={PALETTE.GHOSTWHITE}>
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+              <Image
+                source={Number(field.icon)}
+                style={styles.section_withBorder_icon}
+                resizeMode="contain"
+              />
+              <View>
+                <Text style={styles.section_withBorder_header}>
+                  {field.question}
+                </Text>
+                <Text style={styles.section_withBorder_paragraph}>
+                  {field.answer}
+                </Text>
+              </View>
             </View>
-          </View>
-        </TouchableRipple>
-      ))}
+          </TouchableRipple>
+        ),
+      )}
       {result && (
         <ModalSelection state={state} dispatch={dispatch} data={result} />
       )}
@@ -375,7 +387,12 @@ const HeightSection = ({state, dispatch}: SectionProps) => {
 
   const handleSave = () => {
     if (!showFeetError && !showInchesError) {
-      dispatch(EditProfileActions.updateUserProfile('height', {feet: Number(feet), inches: Number(inches)}))
+      dispatch(
+        EditProfileActions.updateUserProfile('height', {
+          feet: Number(feet),
+          inches: Number(inches),
+        }),
+      );
     }
   };
 
@@ -439,12 +456,12 @@ const HeightSection = ({state, dispatch}: SectionProps) => {
 };
 
 const PicturesSection = ({state, dispatch}: SectionProps) => {
-  const [pictures, setPictures] = useState<(string)[]>(
+  const [pictures, setPictures] = useState<string[]>(
     state.profile.pictures ? state.profile.pictures : [],
   );
   const [index, setIndex] = useState(0);
   const [sectionWidth, setSectionWidth] = useState(0);
-  const [viewFullPic, setViewFullPic] = useState(false)
+  const [viewFullPic, setViewFullPic] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
   const onLayout = (event: TYPES.LayoutChangeEvent) => {
@@ -452,89 +469,117 @@ const PicturesSection = ({state, dispatch}: SectionProps) => {
     setSectionWidth(width); //section width -40 padding and - 10 space per section hence 20
   };
 
-  const scrollX = useRef(new Animated.Value(0)).current
+  const scrollX = useRef(new Animated.Value(0)).current;
   const handleOnScroll = Animated.event(
     [
       {
         nativeEvent: {
           contentOffset: {
-            x: scrollX
-          }
-        }
-      }
+            x: scrollX,
+          },
+        },
+      },
     ],
     {
-      useNativeDriver: false
-    }
+      useNativeDriver: false,
+    },
   );
 
-  const handleOnViewableItemsChanged = useRef(({viewableItems}: {viewableItems:any}) => {
-    setIndex(viewableItems[viewableItems.length-1].index);
-  }).current;
-
- 
+  const handleOnViewableItemsChanged = useRef(
+    ({viewableItems}: {viewableItems: any}) => {
+      setIndex(viewableItems[viewableItems.length - 1].index);
+    },
+  ).current;
 
   const viewabilityConfig = useRef({
     itemVisiblePercentThreshold: 0,
   }).current;
 
-  
-  
-  const SlideItem = ({ item }: { item: string | null | undefined }) => {
+  const SlideItem = ({item}: {item: string | null | undefined}) => {
     if (!item) return null;
-    
+
     return (
-      <View style={{width:sectionWidth - 40, height:300 }}>
-        <Image 
-          source={{ uri: item }} 
-          resizeMode='cover' 
-          style={{ width:"100%", height:"100%"}} 
+      <View style={{width: sectionWidth - 40, height: 300}}>
+        <Image
+          source={{uri: item}}
+          resizeMode="cover"
+          style={{width: '100%', height: '100%'}}
         />
       </View>
     );
-  }
-  
-  const Pagination = ({ data, scrollX, index }: { data: (string | null | undefined)[], scrollX: Animated.Value, index:number }) => {
+  };
+
+  const Pagination = ({
+    data,
+    scrollX,
+    index,
+  }: {
+    data: (string | null | undefined)[];
+    scrollX: Animated.Value;
+    index: number;
+  }) => {
     return (
-    <View style={{position:"absolute", bottom:10, flexDirection:'row' ,width:"100%", justifyContent:"center", alignItems:"center"}}>
-      {data?.map((_,idx) => {
-        const width = sectionWidth - 40
-        const inputRange = [(idx-1) * width, idx * width, (idx+1)*width]
-        const dotWidth = scrollX.interpolate({
-          inputRange,
-          outputRange: [8,16,8],
-          extrapolate: 'clamp'
-        })
+      <View
+        style={{
+          position: 'absolute',
+          bottom: 10,
+          flexDirection: 'row',
+          width: '100%',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+        {data?.map((_, idx) => {
+          const width = sectionWidth - 40;
+          const inputRange = [
+            (idx - 1) * width,
+            idx * width,
+            (idx + 1) * width,
+          ];
+          const dotWidth = scrollX.interpolate({
+            inputRange,
+            outputRange: [8, 16, 8],
+            extrapolate: 'clamp',
+          });
 
-        const backgroundColor = scrollX.interpolate({
-          inputRange,
-          outputRange: ['white', THEME_COLORS.dark, 'white'],
-          extrapolate: 'clamp',
-        });
+          const backgroundColor = scrollX.interpolate({
+            inputRange,
+            outputRange: ['white', THEME_COLORS.dark, 'white'],
+            extrapolate: 'clamp',
+          });
 
-        return (<Animated.View key={idx} style={{borderRadius: 4, width:dotWidth, height:4, marginHorizontal:3, backgroundColor:backgroundColor}}/>)
-      })}
-    </View>
-    )
-
-  }
+          return (
+            <Animated.View
+              key={idx}
+              style={{
+                borderRadius: 4,
+                width: dotWidth,
+                height: 4,
+                marginHorizontal: 3,
+                backgroundColor: backgroundColor,
+              }}
+            />
+          );
+        })}
+      </View>
+    );
+  };
 
   const DeleteSlide = () => {
-    const ICON_WIDTH = 20
+    const ICON_WIDTH = 20;
 
     const handleDelete = () => {
       let newIndex;
 
-    if (index === pictures.length - 1 && index !== 0) {
+      if (index === pictures.length - 1 && index !== 0) {
         // If deleting the last item but not the only item
         newIndex = index - 1;
-    } else if (index < pictures.length - 1) {
+      } else if (index < pictures.length - 1) {
         // If deleting an item in the middle
         newIndex = index;
-    } else {
+      } else {
         // If there's only one item or deleting the first item
         newIndex = 0;
-    }
+      }
 
       setPictures(prevState => {
         const newState = [...prevState];
@@ -542,66 +587,110 @@ const PicturesSection = ({state, dispatch}: SectionProps) => {
         return newState;
       });
 
-
       if (flatListRef.current) {
-        flatListRef.current.scrollToIndex({ index: newIndex, animated: true });
+        flatListRef.current.scrollToIndex({index: newIndex, animated: true});
       }
-
     };
- 
+
     return (
-      <Button.ButtonImage onPress={handleDelete} height={ICON_WIDTH} width={ICON_WIDTH} tintColor='white' imgUrl={icons.bin} contentContainerStyle={{height:ICON_WIDTH*2, width: ICON_WIDTH*2, borderRadius:BORDER_RADIUS.medium, backgroundColor:"rgba(0, 0, 0, 0.3)", position:"absolute", top: 10, left:10}}/>
-    )
-  }
+      <Button.ButtonImage
+        onPress={handleDelete}
+        height={ICON_WIDTH}
+        width={ICON_WIDTH}
+        tintColor="white"
+        imgUrl={icons.bin}
+        contentContainerStyle={{
+          height: ICON_WIDTH * 2,
+          width: ICON_WIDTH * 2,
+          borderRadius: BORDER_RADIUS.medium,
+          backgroundColor: 'rgba(0, 0, 0, 0.3)',
+          position: 'absolute',
+          top: 10,
+          left: 10,
+        }}
+      />
+    );
+  };
 
   const AddSlide = () => {
-    const ICON_WIDTH = 20
+    const ICON_WIDTH = 20;
 
-    const handleDelete = () => {
-    
-    }
+    const handleDelete = () => {};
     return (
-      <Button.ButtonImage onPress={handleDelete} height={ICON_WIDTH} width={ICON_WIDTH} tintColor='white' imgUrl={icons.addImage} contentContainerStyle={{height:ICON_WIDTH*2, width: ICON_WIDTH*2, borderRadius:BORDER_RADIUS.medium, backgroundColor:"rgba(0, 0, 0, 0.3)", position:"absolute", top: 10, right:10}}/>
-    )
-  }
+      <Button.ButtonImage
+        onPress={handleDelete}
+        height={ICON_WIDTH}
+        width={ICON_WIDTH}
+        tintColor="white"
+        imgUrl={icons.addImage}
+        contentContainerStyle={{
+          height: ICON_WIDTH * 2,
+          width: ICON_WIDTH * 2,
+          borderRadius: BORDER_RADIUS.medium,
+          backgroundColor: 'rgba(0, 0, 0, 0.3)',
+          position: 'absolute',
+          top: 10,
+          right: 10,
+        }}
+      />
+    );
+  };
 
   const ViewSlide = () => {
-    const ICON_WIDTH = 20
+    const ICON_WIDTH = 20;
 
     const handleView = () => {
-      setViewFullPic(true)
-    }
+      setViewFullPic(true);
+    };
     return (
-      <Button.ButtonImage onPress={handleView} height={ICON_WIDTH * 1.3} width={ICON_WIDTH*1.3} tintColor='white' imgUrl={icons.eye} contentContainerStyle={{height:ICON_WIDTH*2, width: ICON_WIDTH*2, borderRadius:BORDER_RADIUS.medium, backgroundColor:"rgba(0, 0, 0, 0.3)", position:"absolute", bottom: 10, left:10}}/>
-    )
-  }
+      <Button.ButtonImage
+        onPress={handleView}
+        height={ICON_WIDTH * 1.3}
+        width={ICON_WIDTH * 1.3}
+        tintColor="white"
+        imgUrl={icons.eye}
+        contentContainerStyle={{
+          height: ICON_WIDTH * 2,
+          width: ICON_WIDTH * 2,
+          borderRadius: BORDER_RADIUS.medium,
+          backgroundColor: 'rgba(0, 0, 0, 0.3)',
+          position: 'absolute',
+          bottom: 10,
+          left: 10,
+        }}
+      />
+    );
+  };
 
   const ViewFullSlide = () => {
-    const height = Dimensions.get('window').width * 1.3
+    const height = Dimensions.get('window').width * 1.3;
     return (
       <Modal
         transparent={true}
         visible={viewFullPic}
         onRequestClose={() => setViewFullPic(false)}>
-        <Pressable
-          style={{flex: 1}}
-          onPress={() => setViewFullPic(false)}>
-          <View style={[modalSelectionStyles.flexEnd, {justifyContent:"center", backgroundColor:"rgba(0, 0, 0, 0.9)"}]}>
+        <Pressable style={{flex: 1}} onPress={() => setViewFullPic(false)}>
+          <View
+            style={[
+              modalSelectionStyles.flexEnd,
+              {justifyContent: 'center', backgroundColor: 'rgba(0, 0, 0, 0.9)'},
+            ]}>
             <Pressable
-              style={{ width:"100%"}}
+              style={{width: '100%'}}
               onPress={e => e.stopPropagation()}>
-                {pictures &&
-                 <Image 
-                  source={{ uri: pictures[index] }} 
-                  resizeMode='contain' 
-                  style={{ width:"100%", height:height}} 
-                />}
-                </Pressable>
-              </View>
+              {pictures && (
+                <Image
+                  source={{uri: pictures[index]}}
+                  resizeMode="contain"
+                  style={{width: '100%', height: height}}
+                />
+              )}
             </Pressable>
-          </Modal>
-    )
-  }
+          </View>
+        </Pressable>
+      </Modal>
+    );
+  };
 
   return (
     <View style={styles.section} onLayout={onLayout}>
@@ -609,25 +698,36 @@ const PicturesSection = ({state, dispatch}: SectionProps) => {
       <Text style={styles.section_subHeader}>
         Pick the best pictures of yourself
       </Text>
-      <View style={{borderRadius: BORDER_RADIUS.large, overflow:"hidden", marginHorizontal:20, marginTop:10, backgroundColor:PALETTE.LIGHT200, width:sectionWidth - 40, height:300}}>
-      <FlatList 
-      ref={flatListRef}
-      data={pictures} 
-      renderItem={({item}) => <SlideItem item={item}/>}
-      horizontal
-      pagingEnabled
-      snapToAlignment='center'
-      overScrollMode='never'
-      showsHorizontalScrollIndicator={false}
-      onScroll={handleOnScroll}
-      onViewableItemsChanged={handleOnViewableItemsChanged}
-        viewabilityConfig={viewabilityConfig}
-      />
-      {sectionWidth > 0 && <Pagination data={pictures} scrollX={scrollX} index={index}/>}
-      {pictures.length > 0 && <DeleteSlide/>}
-      {pictures.length !== 6 && <AddSlide/>}
-      {pictures.length > 0 && <ViewSlide/>}
-      {viewFullPic && <ViewFullSlide/>}
+      <View
+        style={{
+          borderRadius: BORDER_RADIUS.large,
+          overflow: 'hidden',
+          marginHorizontal: 20,
+          marginTop: 10,
+          backgroundColor: PALETTE.LIGHT200,
+          width: sectionWidth - 40,
+          height: 300,
+        }}>
+        <FlatList
+          ref={flatListRef}
+          data={pictures}
+          renderItem={({item}) => <SlideItem item={item} />}
+          horizontal
+          pagingEnabled
+          snapToAlignment="center"
+          overScrollMode="never"
+          showsHorizontalScrollIndicator={false}
+          onScroll={handleOnScroll}
+          onViewableItemsChanged={handleOnViewableItemsChanged}
+          viewabilityConfig={viewabilityConfig}
+        />
+        {sectionWidth > 0 && (
+          <Pagination data={pictures} scrollX={scrollX} index={index} />
+        )}
+        {pictures.length > 0 && <DeleteSlide />}
+        {pictures.length !== 6 && <AddSlide />}
+        {pictures.length > 0 && <ViewSlide />}
+        {viewFullPic && <ViewFullSlide />}
       </View>
     </View>
   );
@@ -647,7 +747,9 @@ const BiographySection = ({state, dispatch}: SectionProps) => {
           styles.section_textInput,
           {borderColor: active ? THEME_COLORS.primary : THEME_COLORS.tertiary},
         ]}
-        onChangeText={text => dispatch(EditProfileActions.updateUserProfile('bio',text))}
+        onChangeText={text =>
+          dispatch(EditProfileActions.updateUserProfile('bio', text))
+        }
         value={state.profile.bio ?? ''}
         placeholder="About me"
         placeholderTextColor={THEME_COLORS.tertiary}
@@ -661,7 +763,7 @@ const BiographySection = ({state, dispatch}: SectionProps) => {
 
 const ModalSelection = ({state, dispatch, data}: ModalSelectionProps) => {
   const field = useMemo(() => {
-    return state.interests.additionalInformation?.find((field:any) =>
+    return state.interests.additionalInformation?.find((field: any) =>
       field.question.includes(data.question),
     );
   }, [data.question, state.interests.additionalInformation]);
@@ -671,7 +773,7 @@ const ModalSelection = ({state, dispatch, data}: ModalSelectionProps) => {
   >(null);
 
   const onPress = () => {
-    const question = state.interests.additionalInformation?.find((field:any) =>
+    const question = state.interests.additionalInformation?.find((field: any) =>
       field.question.includes(data.question),
     );
 
@@ -679,7 +781,7 @@ const ModalSelection = ({state, dispatch, data}: ModalSelectionProps) => {
       question.answer = selectedAnswer;
     }
 
-    dispatch(EditProfileActions.updateUserProfile('modalVisible',false))
+    dispatch(EditProfileActions.updateUserProfile('modalVisible', false));
   };
 
   useEffect(() => {
@@ -694,10 +796,14 @@ const ModalSelection = ({state, dispatch, data}: ModalSelectionProps) => {
     <Modal
       transparent={true}
       visible={state.modalVisible}
-      onRequestClose={() => dispatch(EditProfileActions.updateUserProfile('modalVisible',false))}>
+      onRequestClose={() =>
+        dispatch(EditProfileActions.updateUserProfile('modalVisible', false))
+      }>
       <Pressable
         style={{flex: 1}}
-        onPress={() => dispatch(EditProfileActions.updateUserProfile('modalVisible',false))}>
+        onPress={() =>
+          dispatch(EditProfileActions.updateUserProfile('modalVisible', false))
+        }>
         <View style={modalSelectionStyles.flexEnd}>
           <Pressable
             style={modalSelectionStyles.container}
@@ -705,7 +811,11 @@ const ModalSelection = ({state, dispatch, data}: ModalSelectionProps) => {
             <View style={modalSelectionStyles.iconsContainer}>
               <View
                 onStartShouldSetResponder={() => true}
-                onResponderRelease={() => dispatch(EditProfileActions.updateUserProfile('modalVisible',false))}
+                onResponderRelease={() =>
+                  dispatch(
+                    EditProfileActions.updateUserProfile('modalVisible', false),
+                  )
+                }
                 style={modalSelectionStyles.iconContainer}>
                 <Image
                   source={icons.normalCross}
@@ -810,50 +920,65 @@ const modalSelectionStyles = StyleSheet.create({
   },
 });
 
-const SpotifySection: React.FC<SectionProps & NavigationProps> = ({ state, dispatch, navigation }) => {
-  const [artists, setArtists] = useState<any>(state?.spotify?.artists ? state.spotify.artists : Array(10).fill(null));
-  const authCodeRef = useRef<string>(""); 
-  const [loading, setLoading] = useState(false)
-  const [isConnected,  setIsConnected ] = useState(state.profile.spotify?.isConnected ? true : false)
-  
-  const handleFetchArtists = async () => {
-    setLoading(true)
-    const controller = new AbortController()
-   
-   if(isConnected){
-      await SpotifyService().disconnectFromSpotify(state.uid,controller.signal).catch(e => console.log(e)).then(result => {if(result.type === "success") setIsConnected(false)})
-      setArtists(Array(10).fill(null))
-      authCodeRef.current = ""
-      
-   }else{
-    navigation?.navigate(ROUTES.OAUTH_SCREEN, {
-      config: config,
-      authCodeRef: authCodeRef
-    });
-    await waitForAuthCode();
-    await SpotifyService().authenticateAndFetchSpotify(state.uid, authCodeRef.current, controller.signal).then((result) => {
-      if(result.type === "success"){
-        setIsConnected(true)
-        setArtists(result.artists)
-      }
-      
-    })
-    
-   }
+const SpotifySection: React.FC<SectionProps & NavigationProps> = ({
+  state,
+  dispatch,
+  navigation,
+}) => {
+  const [artists, setArtists] = useState<any>(
+    state?.spotify?.artists ? state.spotify.artists : Array(10).fill(null),
+  );
+  const authCodeRef = useRef<string>('');
+  const [loading, setLoading] = useState(false);
+  const [isConnected, setIsConnected] = useState(
+    state.profile.spotify?.isConnected ? true : false,
+  );
+  const [showWebView, setShowWebView] = useState(false);
 
-   setLoading(false)
-   return controller.abort
+  const handleFetchArtists = async () => {
+    setLoading(true);
+    const controller = new AbortController();
+
+    if (isConnected) {
+      await SpotifyService()
+        .disconnectFromSpotify(state.uid, controller.signal)
+        .catch(e => console.log(e))
+        .then(result => {
+          if (result.type === 'success') setIsConnected(false);
+        });
+      setArtists(Array(10).fill(null));
+      authCodeRef.current = '';
+    } else {
+      setShowWebView(true);
+      await waitForAuthCode();
+      await SpotifyService()
+        .authenticateAndFetchSpotify(
+          state.uid,
+          authCodeRef.current,
+          controller.signal,
+        )
+        .then(result => {
+          if (result.type === 'success') {
+            setIsConnected(true);
+            setArtists(result.artists);
+          }
+        })
+        .catch(e => console.log(e));
+    }
+
+    setLoading(false);
+    return controller.abort;
   };
 
   const config = {
     clientId: '5f030af89dcf40e6a2f2cd3b5c8f09ef',
     redirectUrl: 'com.frontend:/callback',
     authorizationEndpoint: 'https://accounts.spotify.com/authorize',
-    scopes: ['user-top-read']
+    scopes: ['user-top-read'],
   };
 
   const waitForAuthCode = (): Promise<void> => {
-    return new Promise<void>((resolve) => {
+    return new Promise<void>(resolve => {
       const checkForCode = setInterval(() => {
         if (authCodeRef.current) {
           clearInterval(checkForCode);
@@ -862,76 +987,182 @@ const SpotifySection: React.FC<SectionProps & NavigationProps> = ({ state, dispa
       }, 500); // Check every half second
     });
   };
-  
+
+  const handleSpotifyAuth = async (code: string) => {
+    authCodeRef.current = code;
+    setShowWebView(false);
+  };
+
   return (
-    <View style={{width:"100%", paddingHorizontal:20, marginBottom:20}}>
-    <View style={{backgroundColor:"black",width:"100%", borderRadius:15, flexDirection:'column', padding:15, overflow:"hidden"}}>
-      <View style={{flexDirection:'row', maxWidth:250, width:"100%", alignItems:'center',}}>
-        <Image source={icons.spotify} style={{height:30, width:30, marginRight:10}} resizeMode='contain'/>
-        <Text style={{...themeText.bodyMediumFive, color:"white"}}>{isConnected ? 'Connected to spotify' : 'Connect to spotify'}</Text>
+    <View style={{width: '100%', paddingHorizontal: 20, marginBottom: 20}}>
+      {showWebView && (
+        <OAuth2WebView
+          isVisible={showWebView}
+          onClose={() => setShowWebView(false)}
+          config={config}
+          onCodeReceived={code => handleSpotifyAuth(code)}
+        />
+      )}
+
+      <View
+        style={{
+          backgroundColor: 'black',
+          width: '100%',
+          borderRadius: 15,
+          flexDirection: 'column',
+          padding: 15,
+          overflow: 'hidden',
+        }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            maxWidth: 250,
+            width: '100%',
+            alignItems: 'center',
+          }}>
+          <Image
+            source={icons.spotify}
+            style={{height: 30, width: 30, marginRight: 10}}
+            resizeMode="contain"
+          />
+          <Text style={{...themeText.bodyMediumFive, color: 'white'}}>
+            {isConnected ? 'Connected to spotify' : 'Connect to spotify'}
+          </Text>
+        </View>
+        <Text
+          style={{
+            marginTop: 10,
+            color: PALETTE.GRAY300,
+            ...themeText.bodyRegularSeven,
+          }}>
+          At FlyLeaf, we use your top artists to connect you with like-minded
+          music enthusiasts, enhancing conversations and personalizing your
+          experience.
+        </Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{marginVertical: 10}}>
+          {artists.map((artist: any, index: number) => {
+            return (
+              <View
+                key={index}
+                style={{
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  width: 60,
+                  marginRight: 15,
+                  overflow: 'hidden',
+                }}>
+                <View
+                  style={{
+                    width: 60,
+                    height: 60,
+                    backgroundColor: 'rgba(128, 128, 128, 0.5)',
+                    borderRadius: 10,
+                    overflow: 'hidden',
+                  }}>
+                  {artist && (
+                    <Image
+                      source={{uri: artist.images[2].url}}
+                      style={{width: '100%', height: '100%'}}
+                      resizeMode="cover"
+                    />
+                  )}
+                </View>
+                {artist && (
+                  <Text
+                    style={{
+                      color: 'white',
+                      ...themeText.bodyRegularSeven,
+                      textAlign: 'center',
+                      marginTop: 5,
+                    }}>
+                    {artist.name}
+                  </Text>
+                )}
+              </View>
+            );
+          })}
+        </ScrollView>
+        <Button.LightButton
+          onPress={handleFetchArtists}
+          style={{marginVertical: 10}}>
+          {isConnected ? 'Disconnect' : 'Connect now'}
+        </Button.LightButton>
+        {loading && (
+          <View
+            style={{
+              position: 'absolute',
+              backgroundColor: 'rgba(0,0,0,0.3)',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
+          />
+        )}
       </View>
-      <Text style={{marginTop:10, color:PALETTE.GRAY300, ...themeText.bodyRegularSeven}}>At FlyLeaf, we use your top artists to connect you with like-minded music enthusiasts, enhancing conversations and personalizing your experience.</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{marginVertical:10}}>
-    {artists.map((artist:any, index:number) => {
-      return(
-        <View  key={index} style={{flexDirection:"column", alignItems:"center", width:60,  marginRight:15 , overflow:"hidden"}}>
-        <View style={{width:60, height:60, backgroundColor:'rgba(128, 128, 128, 0.5)', borderRadius:10, overflow:'hidden'}}>
-          {artist && <Image source={{uri: artist.images[2].url}} style={{width:"100%", height:"100%"}} resizeMode='cover'/>}
-        </View>
-        {artist && <Text style={{color:"white", ...themeText.bodyRegularSeven, textAlign:"center", marginTop:5}}>{artist.name}</Text>}
-        </View>
-      )
-    })}
-    </ScrollView>
-    <Button.LightButton onPress={handleFetchArtists} style={{marginVertical:10}}>{isConnected ? 'Disconnect' : 'Connect now'}</Button.LightButton>
-    {loading && <View style={{position:"absolute", backgroundColor:"rgba(0,0,0,0.3)", top:0, left:0, right:0, bottom:0}}/>}
-    </View>
     </View>
   );
-}
+};
 
-const InstagramSection: React.FC<SectionProps & NavigationProps> = ({ state, dispatch, navigation }) => {
-  const [images, setImages] = useState<any>(Array(10).fill(null));
-  const authCodeRef = useRef<string>(""); 
-  const [loading, setLoading] = useState(false)
-  const [isConnected,  setIsConnected ] = useState(state.profile.instagram?.isConnected ? true : false)
-  
+const InstagramSection: React.FC<SectionProps & NavigationProps> = ({
+  state,
+  dispatch,
+  navigation,
+}) => {
+  const [images, setImages] = useState<any>(state?.instagram?.images ? state.instagram.images : Array(10).fill(null),);
+  const authCodeRef = useRef<string>('');
+  const [loading, setLoading] = useState(false);
+  const [isConnected, setIsConnected] = useState(
+    state.profile.instagram?.isConnected ? true : false,
+  );
+  const [showWebView, setShowWebView] = useState(false);
+
   const handleFetchImages = async () => {
-    setLoading(true)
-    const controller = new AbortController()
-   
-   if(isConnected){
-      await InstagramService().disconnectFromInstagram(state.uid,controller.signal).catch(e => console.log(e)).then(result => {if(result.type === "success") setIsConnected(false)})
-      setImages(Array(10).fill(null))
-      authCodeRef.current = ""
-   }else{
-    navigation?.navigate(ROUTES.OAUTH_SCREEN, {
-      config: config,
-      authCodeRef: authCodeRef
-    });
+    setLoading(true);
+    const controller = new AbortController();
 
-    await waitForAuthCode();
-    await InstagramService().authenticateAndFetchInstagram(state.uid, authCodeRef.current, controller.signal).then((result) => {
-      if(result.type === "success"){
-        setIsConnected(true)
-        console.log(result)
-        setImages(result.images)
-      }
-      
-    })
-    
-   }}
+    if (isConnected) {
+      await InstagramService()
+        .disconnectFromInstagram(state.uid, controller.signal)
+        .catch(e => console.log(e))
+        .then(result => {
+          if (result.type === 'success') setIsConnected(false);
+        });
+      setImages(Array(10).fill(null));
+      authCodeRef.current = '';
+    } else {
+      setShowWebView(true);
+      await waitForAuthCode();
+      await InstagramService()
+        .authenticateAndFetchInstagram(
+          state.uid,
+          authCodeRef.current,
+          controller.signal,
+        )
+        .then(result => {
+          if (result.type === 'success') {
+            setIsConnected(true);
+            setImages(result.images);
+          }
+        })
+        .catch(e => console.log(e));
+    }
+    setLoading(false);
+    return controller.abort;
+  };
 
   const config = {
     clientId: '614409710852626',
     redirectUrl: 'https://91db-90-242-236-229.ngrok-free.app/instagram/oauth/',
     authorizationEndpoint: 'https://api.instagram.com/oauth/authorize',
-    scopes: ['user_profile', 'user_media']
+    scopes: ['user_profile', 'user_media'],
   };
 
-
   const waitForAuthCode = (): Promise<void> => {
-    return new Promise<void>((resolve) => {
+    return new Promise<void>(resolve => {
       const checkForCode = setInterval(() => {
         if (authCodeRef.current) {
           clearInterval(checkForCode);
@@ -940,32 +1171,113 @@ const InstagramSection: React.FC<SectionProps & NavigationProps> = ({ state, dis
       }, 500); // Check every half second
     });
   };
-  
-  
-  
+
+  const handleInstagramAuth = async (code: string) => {
+    authCodeRef.current = code;
+    setShowWebView(false);
+  };
 
   return (
-    <View style={{width:"100%", paddingHorizontal:20, marginBottom:20}}>
-    <View style={{backgroundColor:"white",width:"100%", borderRadius:15, flexDirection:'column', padding:15, overflow:"hidden", borderWidth:1, borderColor: PALETTE.LIGHT100}}>
-      <View style={{flexDirection:'row', maxWidth:250, width:"100%", alignItems:'center',}}>
-        <Image source={icons.instagram} style={{height:30, width:30, marginRight:10}} resizeMode='contain'/>
-        <Text style={{...themeText.bodyMediumFive, color:THEME_COLORS.dark}}>{isConnected ? 'Connected to instagram' : 'Connect to instagram'}</Text>
-      </View>
-      <Text style={{marginTop:10, color:THEME_COLORS.dark, ...themeText.bodyRegularSeven}}>Your latest posts will be visible to others, but your username will not be visible.</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{marginVertical:10}}>
-    {images.map((artist:any, index:number) => {
-      return(
-        <View key={index} style={{width:60, height:60, backgroundColor:'rgba(1, 1, 1, 0.05)', borderRadius:10, marginRight:10}}>
-
+    <View style={{width: '100%', paddingHorizontal: 20, marginBottom: 20}}>
+      {showWebView && (
+        <OAuth2WebView
+          isVisible={showWebView}
+          onClose={() => setShowWebView(false)}
+          config={config}
+          onCodeReceived={code => handleInstagramAuth(code)}
+        />
+      )}
+      <View
+        style={{
+          backgroundColor: 'white',
+          width: '100%',
+          borderRadius: 15,
+          flexDirection: 'column',
+          padding: 15,
+          overflow: 'hidden',
+          borderWidth: 1,
+          borderColor: PALETTE.LIGHT100,
+        }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            maxWidth: 250,
+            width: '100%',
+            alignItems: 'center',
+          }}>
+          <Image
+            source={icons.instagram}
+            style={{height: 30, width: 30, marginRight: 10}}
+            resizeMode="contain"
+          />
+          <Text style={{...themeText.bodyMediumFive, color: THEME_COLORS.dark}}>
+            {isConnected ? 'Connected to instagram' : 'Connect to instagram'}
+          </Text>
         </View>
-      )
-    })}
-    </ScrollView>
-    <Button.DarkButton onPress={handleFetchImages} style={{marginVertical:10}}>{isConnected ? 'Disconnect' : 'Connect now'}</Button.DarkButton>
-    {loading && <View style={{position:"absolute", backgroundColor:"rgba(0,0,0,0.1)", top:0, left:0, right:0, bottom:0}}/>}
-    </View>
+        <Text
+          style={{
+            marginTop: 10,
+            color: THEME_COLORS.dark,
+            ...themeText.bodyRegularSeven,
+          }}>
+          Your latest posts will be visible to others, but your username will
+          not be visible.
+        </Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{marginVertical: 10}}>
+          {images.map((image: any, index: number) => {
+            return (
+              <View
+                key={index}
+                style={{
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  width: 60,
+                  marginRight: 15,
+                  overflow: 'hidden',
+                }}>
+                <View
+                  style={{
+                    width: 60,
+                    height: 60,
+                    backgroundColor: 'rgba(1, 1, 1, 0.05)',
+                    borderRadius: 10,
+                    overflow: 'hidden',
+                  }}>
+                  {image && (
+                    <Image
+                      source={{uri: image.url}}
+                      style={{width: '100%', height: '100%'}}
+                      resizeMode="cover"
+                    />
+                  )}
+                </View>
+              </View>
+            );
+          })}
+        </ScrollView>
+        <Button.DarkButton
+          onPress={handleFetchImages}
+          style={{marginVertical: 10}}>
+          {isConnected ? 'Disconnect' : 'Connect now'}
+        </Button.DarkButton>
+        {loading && (
+          <View
+            style={{
+              position: 'absolute',
+              backgroundColor: 'rgba(0,0,0,0.1)',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
+          />
+        )}
+      </View>
     </View>
   );
-}
+};
 
 export default EditProfileScreen;

@@ -22,19 +22,20 @@ async function authenticateAndFetchInstagram(req, res) {
   
       if (error) return sendError(res, error.details[0].message, 400);
   
-      const { accessToken, expiryDate , instagram_id} = await InstagramServices.obtainInstagramTokens(code);
+      const resultToken = await InstagramServices.obtainInstagramTokens(code);
+   
       const user = await UserServices.getUserProfile(uid)
 
-      if(user.profile.instagram.instagram_id === instagram_id){
+      if(user.profile.instagram?.instagram_id === resultToken.userId){
         return res.status(304).json({
           type: "error",
           message: "User is already connected to Instagram",
         });
       }
 
-      const userAlreadyConnectedToInstagramId = await InstagramServices.storeUserInstagramData(uid,instagram_id,accessToken,expiryDate)
+      const userAlreadyConnectedToInstagramId = await InstagramServices.storeUserInstagramData(uid,resultToken.userId,resultToken.accessToken,resultToken.expiryDate)
 
-      const images = await InstagramServices.fetchInstagramImages(accessToken,instagram_id)
+      const images = await InstagramServices.fetchInstagramImages(resultToken.accessToken, resultToken.userId)
   
       // Send success status back.
       return res.status(200).json({

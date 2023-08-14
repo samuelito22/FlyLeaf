@@ -9,6 +9,8 @@ import UserServices from "../services/user.services.js";
 import { validateUid } from "../validators/auth.validator.js";
 import { validateLocation } from "../validators/location.validator.js";
 import Spotify from "../models/spotify.model.js";
+import instagramModel from "../models/instagram.model.js";
+import InstagramServices from "../services/instagram.services.js";
 
 
 async function updateUserLocation(req, res) {
@@ -136,6 +138,40 @@ async function initUserProfile(req, res) {
     delete spotifyData.refreshToken;
     
     combinedProfile = { ...combinedProfile, spotify: spotifyData }
+  }
+
+  if(user.profile.instagram.isConnected){
+    const instagram_id = user.profile.instagram.instagram_id
+    let InstagramData = await instagramModel.findOne({_id: instagram_id})
+    if (!InstagramData) return res.status(404).json({ type: "error", message: "Instagram data not found" });
+    let accessToken = InstagramData.accessToken
+    let expiryDate
+
+    const currentDate = new Date();
+    if(currentDate > expiryDate){
+      const result = await InstagramServices.refreshInstagramToken(accessToken)
+      accessToken = result.token
+      expiryDate = result.expiryDate
+    }
+
+    await instagramModel.findOneAndUpdate(
+      { _id: instagram_id },
+      {
+        $set: {
+          accessToken: accessToken,
+          expiryDate: expiryDate,
+        },
+      },
+      { new: true }
+    ).catch(e => console.log(e))
+
+    await InstagramServices.fetchInstagramImages(accessToken, instagram_id).catch(e => console.log(e))
+    
+    InstagramData = await instagramModel.findOne({_id: instagram_id})
+    delete InstagramData.accessToken;
+    delete InstagramData.expiryDate;
+    
+    combinedProfile = { ...combinedProfile, instagram: InstagramData }
   }
   
   combinedProfile = { ...combinedProfile, ...user.toObject() }

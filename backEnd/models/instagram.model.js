@@ -3,9 +3,7 @@ const { Schema } = mongoose;
 
 const ImageSchema = new Schema({
     id: { type: String, required: true }, 
-    url: { type: String, required: true },
-    width: Number,                       
-    height: Number                        
+    url: { type: String, required: true },                      
 }, { _id: false });
 
 const InstagramSchema = new Schema({
