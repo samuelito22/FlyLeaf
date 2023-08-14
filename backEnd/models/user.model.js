@@ -23,13 +23,12 @@ const GenderSchema = new Schema({
 const SpotifySchema = new Schema({
   isConnected: {type: Boolean, default: false},
   spotify_id: {type: String, unique:true, sparse:true},
-  lastUpdated: {type: Date, default: Date.now}
-},{ _id : false })
+},{ _id : false, timestamps:true })
 
 const InstagramSchema = new Schema({
   isConnected: {type: Boolean, default: false},
   instagram_id: {type: String, unique:true, sparse:true}
-})
+}, { _id : false, timestamps:true })
 
 const UserSchema = new Schema({
   _id: { type: String, alias: 'uid' },
@@ -51,8 +50,20 @@ const UserSchema = new Schema({
     sexualOrientation: {type: [String]},
   },
   contact: {
-    phoneNumber: { type: String, trim: true, sparse: true, unique: true },
-    email: { type: String, unique: true, sparse: true },
+    phoneNumber: { type: String, trim: true, sparse: true, unique: true, validate: {
+      validator: function(v) {
+          // Matches (123) 456-7890 or 123-456-7890
+          return /\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/.test(v);
+      },
+      message: props => `${props.value} is not a valid phone number!`
+  } },
+    email: { type: String, unique: true, sparse: true ,validate: {
+      validator: function(v) {
+          // Basic email format validation
+          return /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(v);
+      },
+      message: props => `${props.value} is not a valid email!`
+  }},
   },
   interests: {
     interests: { type: [String], required: true },
@@ -65,7 +76,6 @@ const UserSchema = new Schema({
     distanceFromUsers: { type: Schema.Types.Mixed, default: 10, enum: [5, ...Array(46).fill(null).map((_, i) => i + 5), "local", "global"] },
   },
   appActivity: {
-    createdAt: { type: Date, default: Date.now },
     lastActive: { type: Date, default: Date.now }, 
     likedProfiles: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     blockedUsers: [{ type: Schema.Types.ObjectId, ref: 'User' }], 
@@ -74,6 +84,8 @@ const UserSchema = new Schema({
   },
   visibilityStatus: { type: String, enum: ['Public', 'Private', 'Matches Only'], default: 'Public' }, 
   
+},{
+  timestamps: true
 });
 
 const User = mongoose.models.User || mongoose.model("User", UserSchema);

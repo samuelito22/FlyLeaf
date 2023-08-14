@@ -472,7 +472,16 @@ export type RootStackParamList = {
   EDIT_PROFILE_SCREEN: undefined;
   EDIT_GENDER_SCREEN: undefined;
   EDIT_SEXUAL_ORIENTATION_SCREEN: undefined
-  EDIT_LANGUAGE_SCREEN: undefined
+  EDIT_LANGUAGE_SCREEN: undefined;
+  OAUTH_SCREEN: {
+    config: {
+      authorizationEndpoint: string,
+      clientId: string,
+      redirectUrl: string,
+      scopes: string[]
+  };
+  authCodeRef: React.MutableRefObject<string | null>;
+  }
 };
 
 /**
@@ -503,3 +512,20 @@ export interface UserRegisterParams {
 
 
 
+
+export type PositionType = {
+  latitude: number;
+    longitude: number;
+};
+
+export type oAuth2WebViewType = {
+  onCodeReceived: (code: string) => void, 
+  config: {
+    authorizationEndpoint: string, 
+    clientId: string, 
+    redirectUrl: string,
+    scopes: string[]
+  }, 
+  onLoadStart: () => void,
+  onLoadEnd: () => void
+}

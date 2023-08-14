@@ -5,9 +5,11 @@ import {Store, Persistor, UserActions} from './redux';
 import {StatusBar} from 'react-native';
 import {TYPES} from './constants';
 import {BlockedScreen, LocationScreen} from './screens';
-import {useDispatch, useGetProfile, useLocationService, useRefreshSpotify} from './utils/hooks';
+import {useDispatch} from './utils/hooks';
 import {useEffect}  from "react"
 import auth from "@react-native-firebase/auth"
+import { UserService } from './services';
+import React from "react"
 
 const MainContent = () => {
   const dispatch = useDispatch()
@@ -20,19 +22,26 @@ const MainContent = () => {
     (state: TYPES.AppState) => state.registerReducer,
   );  
 
+  const uid = auth().currentUser?.uid;
+
+  const [locationData, setlocationData] = React.useState<null | TYPES.PositionType>(null)
+
   useEffect(() => {
     if(isLoggedIn){
-      const uid = auth().currentUser?.uid;
       if(uid) dispatch(UserActions.setCurrentUserId(uid))
     }
   },[isLoggedIn])
 
 
-  useLocationService()
+  UserService.getGeoLocation((position) => setlocationData(position))
 
-  useGetProfile();
-  
-  useRefreshSpotify();
+  useEffect(() => {
+    if(uid && locationData){
+      const controler = new AbortController
+      UserService.initUserProfile(uid, locationData, controler.signal).then(result => dispatch(UserActions.setUserProfile(uid, result.profile))).catch(e => console.log(e))
+      return controler.abort
+    }
+  },[locationData])
 
   if(isBlocked) return <BlockedScreen/>
 

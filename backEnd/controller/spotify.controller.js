@@ -1,7 +1,8 @@
 import { SPOTIFY_IN_USE } from "../errors.js";
 import SpotifyServices from "../services/spotify.services.js";
+import UserServices from "../services/user.services.js";
 import { validateUid } from "../validators/auth.validator.js";
-import { validateLocation } from "../validators/location.validator.js";
+import { validateUidAndCode } from "../validators/media.validator.js";
 
 
 const sendError = (res, message, status = 500) => {
@@ -15,21 +16,32 @@ async function authenticateAndFetchSpotify(req, res) {
       const { uid } = req.params;
       const { code } = req.body;
   
-      const { error } = validateLocation({ uid, code });
+      const { error } = validateUidAndCode({ uid, code });
   
       if (error) return sendError(res, error.details[0].message, 400);
   
       const { accessToken, refreshToken } = await SpotifyServices.obtainSpotifyTokens(code);
       const spotifyUserId = await SpotifyServices.getSpotifyUserProfile(accessToken);
-      await SpotifyServices.storeUserSpotifyData(uid, spotifyUserId, refreshToken);
+      const user = await UserServices.getUserProfile(uid)
 
-      await SpotifyServices.fetchTopArtists(accessToken, spotifyUserId);
+      if(user.profile.spotify.spotify_id === spotifyUserId){
+        return res.status(400).json({
+          type: "error",
+          message: "User is already connected to spotify",
+        });
+      }
+
+      const userAlreadyConnectedToSpotifyId = await SpotifyServices.storeUserSpotifyData(uid, spotifyUserId, refreshToken);
+
+
+      const artists = await SpotifyServices.fetchTopArtists(accessToken, spotifyUserId);
   
       // Send success status back.
       return res.status(200).json({
         type: "success",
         message: "Authentication and fetch successful",
         importantMessage: userAlreadyConnectedToSpotifyId && SPOTIFY_IN_USE,
+        artists: artists
       });
     } catch (error) {
       console.error("Error authenticating with Spotify:", error);
@@ -40,12 +52,19 @@ async function authenticateAndFetchSpotify(req, res) {
 async function refetchSpotify(req, res) {
     try {
         const { uid } = req.body;
-        const { error } = validateUid(uid);
+        const { error } = validateUid({uid});
         if (error) return sendError(res, error.details[0].message, 400);
 
         const result = await SpotifyServices.refetchSpotifyData(uid);
 
-        await SpotifyServices.fetchTopArtists(result.accessToken, result.spotifyUserId);
+        const artists = await SpotifyServices.fetchTopArtists(result.accessToken, result.spotify_id);
+
+        if(artists === "access-denied"){
+          const result =  await SpotifyServices.disconnectSpotifyService(uid)
+          if(!result){
+            return sendError(res, "Error in deleting the user's spotify", 404);
+          }
+        }
 
         return res.status(200).json({
             type: "success",
@@ -60,7 +79,7 @@ async function refetchSpotify(req, res) {
 async function disconnectFromSpotify(req, res) {
     try {
         const { uid } = req.params;
-        const { error } = validateUid(uid);
+        const { error } = validateUid({uid});
         if (error) return sendError(res, error.details[0].message, 400);
 
         await SpotifyServices.disconnectSpotifyService(uid);

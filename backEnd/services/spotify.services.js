@@ -47,7 +47,6 @@ async function storeUserSpotifyData(uid, spotifyUserId, refreshToken) {
                 "profile.spotify": {
                     isConnected: false,
                     spotify_id: null,
-                    lastUpdated: null,
                 },
             },
         },
@@ -61,7 +60,6 @@ async function storeUserSpotifyData(uid, spotifyUserId, refreshToken) {
                 "profile.spotify": {
                     isConnected: true,
                     spotify_id: spotifyUserId,
-                    lastUpdated: Date.now,
                 },
             },
         },
@@ -70,7 +68,7 @@ async function storeUserSpotifyData(uid, spotifyUserId, refreshToken) {
 
     if (userAlreadyConnectedToSpotifyId) {
         await Spotify.findOneAndUpdate(
-            { spotify_id: spotifyUserId },
+            { _id: spotifyUserId },
             {
                 $set: {
                     refreshToken: refreshToken,
@@ -81,9 +79,11 @@ async function storeUserSpotifyData(uid, spotifyUserId, refreshToken) {
     } else {
         await new Spotify({
             refreshToken: refreshToken,
-            spotify_id: spotifyUserId,
+            _id: spotifyUserId,
         }).save();
     }
+
+    return userAlreadyConnectedToSpotifyId
 }
 
 async function refetchSpotifyData(uid) {
@@ -127,6 +127,9 @@ async function disconnectSpotifyService(uid) {
     if (!user) throw new Error("User not found.");
 
     const storedSpotifyId = user.profile.spotify.spotify_id;
+
+    if(!storedSpotifyId) throw new Error("User is already disconnected from spotify")
+    
     await Spotify.deleteOne({ _id: storedSpotifyId });
 
     const updatedUser = await User.findOneAndUpdate(
@@ -151,13 +154,36 @@ async function fetchTopArtists(accessToken, spotify_id) {
           headers: { Authorization: `Bearer ${accessToken}` },
         }
       );
-  
-      return response.data.items;
+
+      if (response.data.error && response.data.error.message === "invalid_token") {
+        return "access-denied"
+      }
+
+      // Map over the artists array to extract and format the necessary details
+      const formattedArtists = response.data.items.map(artist => ({
+        id: artist.id,
+        name: artist.name,
+        type: artist.type,
+        images: artist.images,
+        genres: artist.genres
+      }));
+
+      await Spotify.findOneAndUpdate(
+        {_id: spotify_id},
+        {
+            $set: {
+                "artists": formattedArtists
+            }
+        }
+      )
+
+      return response.data.items
     } catch (error) {
       console.error("Error fetching top artists:", error);
-      return error;
+      throw error;
     }
-  }
+}
+
 
 const SpotifyServices = {
     obtainSpotifyTokens,

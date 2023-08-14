@@ -33,8 +33,10 @@ import EditProfileScreen from './profile/EditProfileScreen';
 import EditGenderScreen from './profile/EditGenderScreen';
 import EditSexualOrientationScreen from './profile/EditSexualOrientationScreen';
 import EditLanguageScreen from './profile/EditLanguageScreen';
+import OAuthScreen from './profile/OAuthScreen';
 
 export {
+  OAuthScreen,
   InterestScreen,
   WelcomeScreen,
   EditLanguageScreen,

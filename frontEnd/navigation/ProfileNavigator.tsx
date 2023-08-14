@@ -1,12 +1,13 @@
 import {createStackNavigator} from '@react-navigation/stack';
 import {ROUTES} from '../constants';
 import React from 'react';
-import {UserProfileScreen, PublicProfileScreen, EditProfileScreen, EditGenderScreen, EditSexualOrientationScreen, EditLanguageScreen} from '../screens';
+import {UserProfileScreen, PublicProfileScreen, EditProfileScreen, EditGenderScreen, EditSexualOrientationScreen, EditLanguageScreen, OAuthScreen} from '../screens';
 import {cardSlideLeftAnimation} from '../utils/navigatorSlideAnimation';
 
 const Stack = createStackNavigator();
 
 const ProfileNavigator = () => {
+  
   return (
     <Stack.Navigator
       screenOptions={{
@@ -36,6 +37,10 @@ const ProfileNavigator = () => {
       <Stack.Screen
       name={ROUTES.EDIT_LANGUAGE_SCREEN}
       component={EditLanguageScreen}
+      />
+      <Stack.Screen
+      name={ROUTES.OAUTH_SCREEN}
+      component={OAuthScreen}
       />
     </Stack.Navigator>
   );

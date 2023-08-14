@@ -1,5 +1,10 @@
 import {API_ENDPOINTS} from '../constants';
-
+import Geolocation from '@react-native-community/geolocation';
+import { useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { TYPES } from '../constants';
+import { AppStatusActions } from '../redux';
+import { useDispatch } from '../utils/hooks';
 
 const locationService = () => {
   const updateLocation = async (
@@ -39,7 +44,40 @@ const locationService = () => {
     }
   };
 
-  return {getLocation, updateLocation};
+  const getGeoLocation = (onLocationFetched?: (position: TYPES.PositionType) => void) => {
+    const dispatch = useDispatch();
+  
+    const { currentUserId } = useSelector(
+      (state: TYPES.AppState) => state.usersReducer,
+    );
+  
+    const { locationFetchComplete } = useSelector(
+      (state: TYPES.AppState) => state.appStatusReducer,
+    );
+  
+    const checkLocationEnabled = () => {
+      Geolocation.getCurrentPosition(
+        position => {
+          if (onLocationFetched) {
+            onLocationFetched(position.coords);
+          }
+          dispatch(AppStatusActions.setIsLocationFetchComplete(true));
+        },
+        error => {
+          console.log(error.code, error.message);
+          dispatch(AppStatusActions.setShowLocationScreen(true));
+        },
+        { enableHighAccuracy: true },
+      );
+    };
+  
+    useEffect(() => {
+      if (currentUserId && !locationFetchComplete)
+        checkLocationEnabled();
+    }, [currentUserId, locationFetchComplete]);
+  };
+
+  return {getLocation, updateLocation, getGeoLocation};
 };
 
 const profileService = () => {
@@ -59,14 +97,17 @@ const profileService = () => {
     }
   };
 
-  const initUserProfile = async (uid: string, signal?: AbortSignal) => {
+  
+
+  const initUserProfile = async (uid: string, locationData:TYPES.PositionType, signal?: AbortSignal) => {
     try {
       const response = await fetch(`${API_ENDPOINTS.INIT_USER_PROFILE}/${uid}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        signal,     
+        signal,    
+        body: JSON.stringify({locationData: {coordinates:[locationData.longitude, locationData.latitude]}}) 
       });
       const data = await response.json();
       return data;
@@ -82,3 +123,4 @@ export const UserService = {
   ...locationService(),
   ...profileService(),
 };
+

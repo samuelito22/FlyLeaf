@@ -7,11 +7,14 @@ import {
 import SpotifyServices from "../services/spotify.services.js";
 import UserServices from "../services/user.services.js";
 import { validateUid } from "../validators/auth.validator.js";
+import { validateLocation } from "../validators/location.validator.js";
+import Spotify from "../models/spotify.model.js";
+
 
 async function updateUserLocation(req, res) {
   const { uid, locationData } = req.body;
 
-  const { error } = schema.validate({ uid, locationData });
+  const { error } = validateLocation({ uid, locationData });
   
   if (error) {
     return res.status(400).json({
@@ -37,7 +40,7 @@ async function updateUserLocation(req, res) {
 
 async function getUserLocation(req, res) {
   const { uid } = req.params;
-  const { error } = validateUid(uid);
+  const { error } = validateUid({uid});
   
   if (error) {
     return res.status(400).json({
@@ -63,7 +66,7 @@ async function getUserLocation(req, res) {
 
 async function getUserProfile(req, res) {
   const { uid } = req.params;
-  const { error } = validateUid(uid);
+  const { error } = validateUid({uid});
   
   if (error) {
     return res.status(400).json({
@@ -73,10 +76,20 @@ async function getUserProfile(req, res) {
   }
 
   try {
+    let combinedProfile = {}
+
     const user = await UserServices.getUserProfile(uid);
     if (!user) {
       return res.status(404).json({ type: "error", message: USER_NOT_FOUND_ERR });
     }
+
+    const spotifyData = await Spotify.findOne({_id: user.profile.spotify.spotify_id})
+    delete spotifyData.refreshToken;
+    
+    combinedProfile = { ...combinedProfile, spotify: spotifyData }
+
+    combinedProfile = { ...combinedProfile, ...user.toObject() }
+
     return res.status(200).json({ type: "success", profile: user });
   } catch (error) {
     console.error('Error getting user profile', error);
@@ -91,7 +104,7 @@ async function initUserProfile(req, res) {
   const { uid } = req.params
   const { locationData } = req.body;
 
-  const { error } = schema.validate({ uid, locationData });
+  const { error } = validateLocation({ uid, locationData });
 
   if (error) {
     return res.status(400).json({
@@ -101,6 +114,8 @@ async function initUserProfile(req, res) {
   }
 
   try {
+  let combinedProfile = {}
+
   let user = await UserServices.getUserProfile(uid)
 
   if (!user) {
@@ -114,21 +129,19 @@ async function initUserProfile(req, res) {
 
   // Spotify Update
   if(user.profile.spotify.isConnected){
-    const lastRefreshed = new Date(user.profile.spotify.lastUpdated)
-    const currentDate = new Date();
+    const result = await SpotifyServices.refetchSpotifyData(uid)
+    await SpotifyServices.fetchTopArtists(result.accessToken, result.spotify_id)   
+
+    const spotifyData = await Spotify.findOne({_id: user.profile.spotify.spotify_id})
+    delete spotifyData.refreshToken;
     
-    const diffTime = Math.abs(currentDate.getTime() - lastRefreshed.getTime());
-
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-
-    if(diffDays <= 10) { // Change after
-        const result = await SpotifyServices.refetchSpotifyData(uid)
-        const Artistis = await SpotifyServices.fetchTopArtists(result.accessToken, result.spotify_id)
-        console.log(Artistis)
-    }
+    combinedProfile = { ...combinedProfile, spotify: spotifyData }
   }
+  
+  combinedProfile = { ...combinedProfile, ...user.toObject() }
 
-  return res.status(200).json({ type: "success", profile: user });
+
+  return res.status(200).json({ type: "success", profile: combinedProfile });
 
   } catch (error) {
     console.error(error);

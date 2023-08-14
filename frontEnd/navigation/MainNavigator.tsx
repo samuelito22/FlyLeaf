@@ -33,8 +33,17 @@ const MainNavigator = () => {
     }
   };
 
+  const linking = {
+    prefixes: ['https://91db-90-242-236-229.ngrok-free.app'],
+    config: {
+      screens: {
+        InstagramOAuthScreen: 'instagram/oauth/',
+      },
+    },
+  };
+
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={linking}>
       <Stack.Navigator
         screenOptions={{
           headerShown: false,

@@ -8,8 +8,12 @@ export const API_ENDPOINTS = {
   UPDATE_LOCATION: `${BASE_URL}/api/users/update/location`,
   GET_LOCATION: `${BASE_URL}/api/users/get/location`,
   GET_PROFILE: `${BASE_URL}/api/users/get/profile`,
-  AUTHENTICATE_AND_FETCH_SPOTIFY: `${BASE_URL}/api/spotify/authenticateAndFetchSpotify`,
-  DISCONNECT_FROM_SPOTIFY: `${BASE_URL}/api/spotify/disconnectFromSpotify`,
-  REFETCH_SPOTIFY: `${BASE_URL}/api/spotify/refetchSpotify`,
+  AUTHENTICATE_AND_FETCH_SPOTIFY: `${BASE_URL}/api/spotify/authenticateAndFetch`,
+  DISCONNECT_FROM_SPOTIFY: `${BASE_URL}/api/spotify/disconnect`,
+  REFETCH_SPOTIFY: `${BASE_URL}/api/spotify/refetch`,
   INIT_USER_PROFILE: `${BASE_URL}/api/users/initUserProfile`,
+
+  AUTHENTICATE_AND_FETCH_INSTAGRAM: `${BASE_URL}/api/instagram/authenticateAndFetch`,
+  DISCONNECT_FROM_INSTAGRAM: `${BASE_URL}/api/instagram/disconnect`,
+  REFETCH_INSTAGRAM: `${BASE_URL}/api/instagram/refetch`,
 }

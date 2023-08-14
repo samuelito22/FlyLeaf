@@ -1,3 +1,5 @@
+import Joi from "joi";
+
 const validateLocation = (data) => {
     const schema = Joi.object({
         uid: Joi.string().required(),
