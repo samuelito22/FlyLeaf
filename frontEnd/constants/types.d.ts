@@ -409,17 +409,40 @@ export interface InitialStateUsersType {
 }
 
 export interface InitialStateEditUserType {
-  bio: string | null;
-  height: {feet: number, inches: number} | null;
-  additionalInformation: {question: string, answer: string, icon: string}[] | null;
-  genderInformation: {general: string, specific: string | null} | null;
-  jobTitle: string | null;
-  company: string | null;
-  sexualOrientation: string[] | null;
   modalVisible: boolean;
-  languages: string[] | null;
-  pictures: string[] | null;
-  coordinates: { topLeft: { x: number, y: number }, bottomRight: { x: number, y: number } }[]
+  bio: string;
+  instagram: {
+    isConnected?: boolean;
+    instagram_id?: string;
+    images: any,
+  } | null;
+  spotify: {
+    isConnected?: boolean;
+    spotify_id?: string;
+    artists:any
+  } | null;
+  height: {
+    feet?: number;
+    inches?: number;
+  } | null;
+  interests: string[];
+  additionalInformation: {
+    question: string;
+    answer: string;
+    icon: string;
+  }[];
+  jobTitle: string;
+  company: string;
+  gender: {
+    general: string;
+    specific?: string;
+  } | null;
+  sexualOrientation: string[];
+  pictures: string[];
+  languages: string[];
+  uid: string;
+  covidVaccination: string;
+  ethnicity: string
 }
 
 
@@ -473,15 +496,10 @@ export type RootStackParamList = {
   EDIT_GENDER_SCREEN: undefined;
   EDIT_SEXUAL_ORIENTATION_SCREEN: undefined
   EDIT_LANGUAGE_SCREEN: undefined;
-  OAUTH_SCREEN: {
-    config: {
-      authorizationEndpoint: string,
-      clientId: string,
-      redirectUrl: string,
-      scopes: string[]
-  };
-  authCodeRef: React.MutableRefObject<string | null>;
-  }
+  EDIT_JOB_TITLE_SCREEN: undefined;
+  EDIT_COMPANY_SCREEN: undefined;
+  EDIT_VACCINE_SCREEN: undefined;
+  EDIT_ETHNICITY_SCREEN: undefined
 };
 
 /**

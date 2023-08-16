@@ -107,7 +107,7 @@ const profileService = () => {
           'Content-Type': 'application/json',
         },
         signal,    
-        body: JSON.stringify({locationData: {coordinates:[locationData.longitude, locationData.latitude]}}) 
+        body: JSON.stringify({locationData: {coordinates:locationData}}) 
       });
       const data = await response.json();
       return data;

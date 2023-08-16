@@ -70,6 +70,8 @@ import eye from "./icons/eye.png"
 import spotify from "./icons/spotify.png"
 import instagram from "./icons/instagram.png"
 import dots from "./icons/dots.png"
+import ethnicity from "./icons/ethnicity.png"
+import vaccine from "./icons/vaccine.png"
 
 import swap from './images/swap.png';
 import logo from './images/logo.png';
@@ -81,6 +83,8 @@ import manAvatar from './images/manAvatar.png';
 import successIllustration from './images/successillustration.png';
 
 export const icons = {
+  ethnicity, 
+  vaccine,
   dots,
   instagram,
   spotify,

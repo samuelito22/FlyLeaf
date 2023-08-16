@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
 });
 
 interface SectionProps {
-  state: any;
+  state: TYPES.InitialStateEditUserType;
   dispatch: React.Dispatch<TYPES.AppAction>;
 }
 
@@ -125,12 +125,14 @@ type NavigationProps = {
   navigation?: NavigationProp<TYPES.RootStackParamList>;
 };
 
-const EditProfileScreen: React.FC<NavigationProps> = ({navigation}) => {
+const EdiScreen: React.FC<NavigationProps> = ({navigation}) => {
   const state = useSelector((state: TYPES.AppState) => state.editUserReducer);
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
 
+
   useEffect(() => {
+   
     // Add event listener for hardware back button
     const backAction = () => {
       return false;
@@ -160,12 +162,10 @@ const EditProfileScreen: React.FC<NavigationProps> = ({navigation}) => {
   return (
     <KeyboardAvoidingViewWrapper>
       <SafeContainer>
-        {loading && (
-          <ThreeDotsLoader modalBackground={{backgroundColor: 'white'}} />
-        )}
+   
         <EditProfileHeader
           onBackPress={handleBackPress}
-          leftIconText="Edit Profile"
+          leftIconText="Edit"
         />
 
         <BiographySection state={state} dispatch={dispatch} />
@@ -177,6 +177,9 @@ const EditProfileScreen: React.FC<NavigationProps> = ({navigation}) => {
 
         <PicturesSection state={state} dispatch={dispatch} />
 
+        <View style={styles.section}>
+          <Text style={styles.section_header}>Connected account</Text>
+          <Text style={[styles.section_subHeader, {marginBottom: 15}]}>Showcase your instagram pictures and artists you enjoy listening to.</Text>
         <SpotifySection
           state={state}
           dispatch={dispatch}
@@ -187,6 +190,7 @@ const EditProfileScreen: React.FC<NavigationProps> = ({navigation}) => {
           dispatch={dispatch}
           navigation={navigation}
         />
+        </View>
       </SafeContainer>
     </KeyboardAvoidingViewWrapper>
   );
@@ -249,9 +253,9 @@ const BasicInformation = ({state, dispatch}: SectionProps) => {
       <CallToAction
         header="Gender"
         paragraph={
-          state.profile.gender.specific
-            ? state.profile.gender.specific
-            : state.profile.gender.general
+          state.gender?.specific
+            ? state.gender.specific
+            : state.gender?.general
         }
         icon={icons.gender}
         onPress={() => navigation.navigate(ROUTES.EDIT_GENDER_SCREEN)}
@@ -259,8 +263,8 @@ const BasicInformation = ({state, dispatch}: SectionProps) => {
       <CallToAction
         header="Languages"
         paragraph={
-          state.interests.languages && state.interests.languages.length !== 0
-            ? state.interests.languages.join(', ')
+          state.languages && state.languages.length !== 0
+            ? state.languages.join(', ')
             : 'Add'
         }
         icon={icons.languages}
@@ -269,9 +273,9 @@ const BasicInformation = ({state, dispatch}: SectionProps) => {
       <CallToAction
         header="Sexual Orientation"
         paragraph={
-          state.preferences.sexualOrientation &&
-          state.preferences.sexualOrientation.length !== 0
-            ? state.preferences.sexualOrientation.join(', ')
+          state.sexualOrientation &&
+          state.sexualOrientation.length !== 0
+            ? state.sexualOrientation.join(', ')
             : 'Add'
         }
         icon={icons.sexualOrientation}
@@ -281,15 +285,27 @@ const BasicInformation = ({state, dispatch}: SectionProps) => {
       />
       <CallToAction
         header="Job Title"
-        paragraph={state.profile.jobTitle ? state.profile.jobTitle : 'Add'}
+        paragraph={state.jobTitle ? state.jobTitle : 'Add'}
         icon={icons.job}
-        onPress={() => navigation.navigate(ROUTES.EDIT_LANGUAGE_SCREEN)}
+        onPress={() => navigation.navigate(ROUTES.EDIT_JOB_TITLE_SCREEN)}
       />
       <CallToAction
         header="Company"
-        paragraph={state.profile.company ? state.profile.company : 'Add'}
+        paragraph={state.company ? state.company : 'Add'}
         icon={icons.company}
-        onPress={() => navigation.navigate(ROUTES.EDIT_LANGUAGE_SCREEN)}
+        onPress={() => navigation.navigate(ROUTES.EDIT_COMPANY_SCREEN)}
+      />
+      <CallToAction
+        header="Vaccine"
+        paragraph={state.covidVaccination ? state.covidVaccination : 'Add'}
+        icon={icons.vaccine}
+        onPress={() => navigation.navigate(ROUTES.EDIT_VACCINE_SCREEN)}
+      />
+      <CallToAction
+        header="Ethnicity"
+        paragraph={state.ethnicity ? state.ethnicity : 'Add'}
+        icon={icons.ethnicity}
+        onPress={() => navigation.navigate(ROUTES.EDIT_ETHNICITY_SCREEN)}
       />
     </View>
   );
@@ -309,7 +325,7 @@ const AdditionalInformation = ({state, dispatch}: SectionProps) => {
       <Text style={[styles.section_subHeader, {paddingBottom: 10}]}>
         Make your adjustments here, and let others know more about youself
       </Text>
-      {state.interests.additionalInformation?.map(
+      {state.additionalInformation.map(
         (
           field: {question: string; icon: string; answer: string},
           index: number,
@@ -346,10 +362,10 @@ const AdditionalInformation = ({state, dispatch}: SectionProps) => {
 
 const HeightSection = ({state, dispatch}: SectionProps) => {
   const [feet, setFeet] = useState(
-    state?.height?.feet ? state?.profile.height?.feet.toString : '',
+    state?.height?.feet ? state?.height?.feet.toString : '',
   );
   const [inches, setInches] = useState(
-    state?.height?.inches ? state?.profile.height?.inches.toString : '',
+    state?.height?.inches ? state?.height?.inches.toString : '',
   );
   const [active, setActive] = useState({feet: 0, inches: 0});
 
@@ -457,7 +473,7 @@ const HeightSection = ({state, dispatch}: SectionProps) => {
 
 const PicturesSection = ({state, dispatch}: SectionProps) => {
   const [pictures, setPictures] = useState<string[]>(
-    state.profile.pictures ? state.profile.pictures : [],
+    state.pictures ? state.pictures : [],
   );
   const [index, setIndex] = useState(0);
   const [sectionWidth, setSectionWidth] = useState(0);
@@ -750,7 +766,7 @@ const BiographySection = ({state, dispatch}: SectionProps) => {
         onChangeText={text =>
           dispatch(EditProfileActions.updateUserProfile('bio', text))
         }
-        value={state.profile.bio ?? ''}
+        value={state.bio ?? ''}
         placeholder="About me"
         placeholderTextColor={THEME_COLORS.tertiary}
         multiline={true}
@@ -763,17 +779,17 @@ const BiographySection = ({state, dispatch}: SectionProps) => {
 
 const ModalSelection = ({state, dispatch, data}: ModalSelectionProps) => {
   const field = useMemo(() => {
-    return state.interests.additionalInformation?.find((field: any) =>
+    return state.additionalInformation?.find((field: any) =>
       field.question.includes(data.question),
     );
-  }, [data.question, state.interests.additionalInformation]);
+  }, [data.question, state.additionalInformation]);
 
   const [selectedAnswer, setSelectedAnswer] = useState<
     null | undefined | string
   >(null);
 
   const onPress = () => {
-    const question = state.interests.additionalInformation?.find((field: any) =>
+    const question = state.additionalInformation?.find((field: any) =>
       field.question.includes(data.question),
     );
 
@@ -928,12 +944,14 @@ const SpotifySection: React.FC<SectionProps & NavigationProps> = ({
   const [artists, setArtists] = useState<any>(
     state?.spotify?.artists ? state.spotify.artists : Array(10).fill(null),
   );
+  
   const authCodeRef = useRef<string>('');
   const [loading, setLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(
-    state.profile.spotify?.isConnected ? true : false,
+    state.spotify?.isConnected ? true : false,
   );
-  const [showWebView, setShowWebView] = useState(false);
+
+ const [showWebView, setShowWebView] = useState(false);
 
   const handleFetchArtists = async () => {
     setLoading(true);
@@ -967,7 +985,7 @@ const SpotifySection: React.FC<SectionProps & NavigationProps> = ({
     }
 
     setLoading(false);
-    return controller.abort;
+    return controller.abort();
   };
 
   const config = {
@@ -1116,7 +1134,7 @@ const InstagramSection: React.FC<SectionProps & NavigationProps> = ({
   const authCodeRef = useRef<string>('');
   const [loading, setLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(
-    state.profile.instagram?.isConnected ? true : false,
+    state.instagram?.isConnected ? true : false,
   );
   const [showWebView, setShowWebView] = useState(false);
 
@@ -1151,14 +1169,14 @@ const InstagramSection: React.FC<SectionProps & NavigationProps> = ({
         .catch(e => console.log(e));
     }
     setLoading(false);
-    return controller.abort;
+    return controller.abort();
   };
 
   const config = {
     clientId: '614409710852626',
     redirectUrl: 'https://91db-90-242-236-229.ngrok-free.app/instagram/oauth/',
     authorizationEndpoint: 'https://api.instagram.com/oauth/authorize',
-    scopes: ['user_profile', 'user_media'],
+    scopes: ['user', 'user_media'],
   };
 
   const waitForAuthCode = (): Promise<void> => {
@@ -1280,4 +1298,4 @@ const InstagramSection: React.FC<SectionProps & NavigationProps> = ({
   );
 };
 
-export default EditProfileScreen;
+export default EdiScreen;

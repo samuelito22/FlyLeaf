@@ -121,7 +121,7 @@ const LoginOTPScreen = ({navigation, route}: LoginOTPScreenProps) => {
     }
 
     setShowError(!result?.success);
-    return () => controller.abort
+    return controller.abort()
   };
 
   const sendOTP = async () => {

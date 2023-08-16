@@ -7,42 +7,36 @@ import { useDispatch} from '../../utils/hooks';
 import { verticalScale } from 'react-native-size-matters';
 import { useSelector } from 'react-redux';
 
-const EditSexualOrientationScreen = () => {
+const EditVaccineScreen = () => {
 
 
   const [valid, setValid] = useState(false);
 
-  const sexualOrientation = useSelector(
-    (state: TYPES.AppState) => state.editUserReducer.sexualOrientation,
+  const state = useSelector(
+    (state: TYPES.AppState) => state.editUserReducer,
   );
 
-  const [sexualOrientationTemp, setsexualOrientationTemp] = useState<string[]>(sexualOrientation ? sexualOrientation :
-    [],
+  const [vaccine, setVaccine] = useState<string>(state.covidVaccination ? state.covidVaccination :
+    "",
   );
 
   const dispatch = useDispatch();
 
   const handleBackPress = () => {
-    if(valid) dispatch(EditProfileActions.updateUserProfile("sexualOrientation", sexualOrientationTemp))
+    if(valid) dispatch(EditProfileActions.updateUserProfile("covidVaccination", vaccine))
   }
 
-  const sexualOrientationField = questionsList.find(field => field.id === 13) as {question: string, id: number, answers: string[]}
+  const vaccineField = questionsList.find(field => field.id === 17) as {question: string, id: number, answers: string[]}
 
 
   const ClickableIndicatorPrimaryButtonHandlePress = (name: string) => {
-    if (sexualOrientationTemp.includes(name)) {
-      setsexualOrientationTemp(
-        sexualOrientationTemp.filter((pref: string) => pref !== name),
-      );
-    } else if(sexualOrientationTemp.length < 5) {
-      setsexualOrientationTemp([...sexualOrientationTemp, name]);
-    }
+    setVaccine(name)
   
   };
 
   useEffect(() => {
-    setValid(sexualOrientationTemp.length >= 0 ? true : false);
-  }, [sexualOrientationTemp]);
+    setValid(vaccine ? true : false);
+  }, [vaccine]);
 
   useEffect(() => {
     // Add event listener for hardware back button
@@ -64,25 +58,25 @@ const EditSexualOrientationScreen = () => {
     <SafeContainer>
       <EditProfileHeader onBackPress={handleBackPress} leftIconText='Save'/>
       <View style={styles.container}>
-        <Text style={styles.title}>{sexualOrientationField?.question}</Text>
+        <Text style={styles.title}>{vaccineField?.question}</Text>
         <Text style={styles.paragraph}>
-        You can select up to 5 sexual orientations for your profile.
+        You can either give a yes or a no answer.
         </Text>
         <ScrollView
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           overScrollMode={'never'}
           contentContainerStyle={{flexGrow: 1}}>
-          {sexualOrientationField?.answers.map((sexualOrientation, index) => (
+          {vaccineField?.answers.map((answer, index) => (
             <View
               key={index}
               style={styles.clickableIndicatorPrimaryButton}>
               <Button.ClickableIndicatorPrimaryButton
                 onPress={() =>
-                  ClickableIndicatorPrimaryButtonHandlePress(sexualOrientation)
+                  ClickableIndicatorPrimaryButtonHandlePress(answer)
                 }
-                isActive={sexualOrientationTemp.includes(sexualOrientation)}>
-                {sexualOrientation}
+                isActive={vaccine.includes(answer)}>
+                {answer}
               </Button.ClickableIndicatorPrimaryButton>
             </View>
           ))}
@@ -96,7 +90,7 @@ const EditSexualOrientationScreen = () => {
   );
 };
 
-export default EditSexualOrientationScreen
+export default EditVaccineScreen
 
 
 const styles = StyleSheet.create({

@@ -198,7 +198,19 @@ export const questionsList = [
       'I already have children'
     ],
     icon: icons.babies
-  }
+  },
+  {
+    id: 16,
+    question: "What is your ethnicity?",
+    answers: ['Asian', 'Black', 'Mixed', 'White', 'Other'],
+    icon: icons.ethnicity
+  },
+  {
+    id: 17,
+    question: "Have you received the COVID vaccination?",
+    answers: ['Fully Vaccinated', 'Partially Vaccinated', 'Not Vaccinated'],
+    icon: icons.vaccine
+    }
 ];
 
 export const interestsList = {

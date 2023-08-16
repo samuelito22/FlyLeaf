@@ -7,7 +7,7 @@ import { BORDER_RADIUS, COMPONENT_COLORS, PALETTE, ROUTES, THEME_COLORS, TYPES, 
 import { verticalScale } from 'react-native-size-matters';
 import { useSelector } from 'react-redux';
 import { useDispatch } from '../../utils/hooks';
-import { editSetGenderInformation } from '../../redux';
+import { EditProfileActions } from '../../redux';
 
 const EditGenderScreen = () => {
 
@@ -27,9 +27,10 @@ const EditGenderScreen = () => {
     answers: Answer[];
   };
 
-  const genderInformation = useSelector(
-    (state: TYPES.AppState) => state.editUserReducer.genderInformation,
-  );
+ 
+  const state = useSelector((state: TYPES.AppState) => state.editUserReducer);
+    const genderInformation = state.gender
+
   
   const foundFieldId = (questionsList as Field[]).find(field => field.id === 12)?.answers.find((answer: Answer) => answer.gender === genderInformation.general)?.id;
   
@@ -84,7 +85,7 @@ const EditGenderScreen = () => {
 
 
   const handleBackPress = () => {
-    if(valid) dispatch(editSetGenderInformation({general: genderTemp, specific: extraGenderTemp}))
+    if(valid) dispatch(EditProfileActions.updateUserProfile("gender",{general: genderTemp, specific: extraGenderTemp}))
   }
   return (
     <SafeContainer>
@@ -120,7 +121,7 @@ const EditGenderScreen = () => {
                   style={
                     styles.clickableIndicatorPrimaryButton__extraContainer_text
                   }>
-                  {extraGenderTemp === null
+                  {!extraGenderTemp
                     ? 'More specific?'
                     : extraGenderTemp}
                 </Text>

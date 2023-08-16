@@ -38,8 +38,9 @@ const MainContent = () => {
   useEffect(() => {
     if(uid && locationData){
       const controler = new AbortController
-      UserService.initUserProfile(uid, locationData, controler.signal).then(result => dispatch(UserActions.setUserProfile(uid, result.profile))).catch(e => console.log(e))
-      return controler.abort
+      const formattedLocData = {longitude: locationData.longitude, latitude: locationData.latitude}
+      UserService.initUserProfile(uid, formattedLocData, controler.signal).then(result => dispatch(UserActions.setUserProfile(uid, result.profile))).catch(e => console.log(e))
+      return controler.abort()
     }
   },[locationData])
 

@@ -2,12 +2,12 @@ import {Text, View, ScrollView, StyleSheet, BackHandler, Image} from 'react-nati
 import React, {useEffect, useState, useCallback, useMemo} from 'react';
 import {SafeContainer, Button, questionsList, EditProfileHeader, LoadingSpinner} from '../../components';
 import {THEME_COLORS, TYPES, COMPONENT_COLORS, BORDER_RADIUS, themeText, PALETTE} from '../../constants';
-import { editSetLanguages } from '../../redux';
 import { useDispatch} from '../../utils/hooks';
 import { verticalScale } from 'react-native-size-matters';
 import { useSelector } from 'react-redux';
 import { TextInput } from 'react-native-gesture-handler';
 import { icons } from '../../assets';
+import { EditProfileActions} from "../../redux"
 
 const EditLanguageScreen = () => {
   const [isLanguagesValid, setIsLanguagesValid] = useState(false);
@@ -28,7 +28,7 @@ const EditLanguageScreen = () => {
   }, [languagesTemp]);
 
   const handleBackPress = useCallback(() => {
-    if(isLanguagesValid) dispatch(editSetLanguages(Array.from(languagesTemp)))
+    if(isLanguagesValid) dispatch(EditProfileActions.updateUserProfile("languages", Array.from(languagesTemp)))
   }, [isLanguagesValid, languagesTemp, dispatch]);
 
   const languagesField = useMemo(() => {

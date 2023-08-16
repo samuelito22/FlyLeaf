@@ -7,42 +7,36 @@ import { useDispatch} from '../../utils/hooks';
 import { verticalScale } from 'react-native-size-matters';
 import { useSelector } from 'react-redux';
 
-const EditSexualOrientationScreen = () => {
+const EditEthnicityScreen = () => {
 
 
   const [valid, setValid] = useState(false);
 
-  const sexualOrientation = useSelector(
-    (state: TYPES.AppState) => state.editUserReducer.sexualOrientation,
+  const state = useSelector(
+    (state: TYPES.AppState) => state.editUserReducer,
   );
 
-  const [sexualOrientationTemp, setsexualOrientationTemp] = useState<string[]>(sexualOrientation ? sexualOrientation :
-    [],
+  const [ethnicity, setEthnicity] = useState<string>(state.ethnicity ? state.ethnicity :
+    "",
   );
 
   const dispatch = useDispatch();
 
   const handleBackPress = () => {
-    if(valid) dispatch(EditProfileActions.updateUserProfile("sexualOrientation", sexualOrientationTemp))
+    if(valid) dispatch(EditProfileActions.updateUserProfile("ethnicity", ethnicity))
   }
 
-  const sexualOrientationField = questionsList.find(field => field.id === 13) as {question: string, id: number, answers: string[]}
+  const ethnicityField = questionsList.find(field => field.id === 16) as {question: string, id: number, answers: string[]}
 
 
   const ClickableIndicatorPrimaryButtonHandlePress = (name: string) => {
-    if (sexualOrientationTemp.includes(name)) {
-      setsexualOrientationTemp(
-        sexualOrientationTemp.filter((pref: string) => pref !== name),
-      );
-    } else if(sexualOrientationTemp.length < 5) {
-      setsexualOrientationTemp([...sexualOrientationTemp, name]);
-    }
+    setEthnicity(name)
   
   };
 
   useEffect(() => {
-    setValid(sexualOrientationTemp.length >= 0 ? true : false);
-  }, [sexualOrientationTemp]);
+    setValid(ethnicity ? true : false);
+  }, [ethnicity]);
 
   useEffect(() => {
     // Add event listener for hardware back button
@@ -64,25 +58,25 @@ const EditSexualOrientationScreen = () => {
     <SafeContainer>
       <EditProfileHeader onBackPress={handleBackPress} leftIconText='Save'/>
       <View style={styles.container}>
-        <Text style={styles.title}>{sexualOrientationField?.question}</Text>
+        <Text style={styles.title}>{ethnicityField?.question}</Text>
         <Text style={styles.paragraph}>
-        You can select up to 5 sexual orientations for your profile.
+        You can only select one ethnicity you belong to for your profile.
         </Text>
         <ScrollView
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           overScrollMode={'never'}
           contentContainerStyle={{flexGrow: 1}}>
-          {sexualOrientationField?.answers.map((sexualOrientation, index) => (
+          {ethnicityField?.answers.map((answer, index) => (
             <View
               key={index}
               style={styles.clickableIndicatorPrimaryButton}>
               <Button.ClickableIndicatorPrimaryButton
                 onPress={() =>
-                  ClickableIndicatorPrimaryButtonHandlePress(sexualOrientation)
+                  ClickableIndicatorPrimaryButtonHandlePress(answer)
                 }
-                isActive={sexualOrientationTemp.includes(sexualOrientation)}>
-                {sexualOrientation}
+                isActive={ethnicity.includes(answer)}>
+                {answer}
               </Button.ClickableIndicatorPrimaryButton>
             </View>
           ))}
@@ -96,7 +90,7 @@ const EditSexualOrientationScreen = () => {
   );
 };
 
-export default EditSexualOrientationScreen
+export default EditEthnicityScreen
 
 
 const styles = StyleSheet.create({

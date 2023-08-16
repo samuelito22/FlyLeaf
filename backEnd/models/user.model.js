@@ -3,7 +3,7 @@ const { Schema } = mongoose;
 
 const LocationSchema = new Schema({
   type: { type: String, enum: ['Point'], default: 'Point' },
-  coordinates: { type: [Number] },
+  coordinates: { type: {longitude: {type: Number, required: true}, latitude: {type: Number, required: true}} },
   city: { type: String },
   showLocation: {type: Boolean, default: false},
   showDistance: {type: Boolean, default: true}
@@ -50,26 +50,16 @@ const UserSchema = new Schema({
     sexualOrientation: {type: [String]},
   },
   contact: {
-    phoneNumber: { type: String, trim: true, sparse: true, unique: true, validate: {
-      validator: function(v) {
-          // Matches (123) 456-7890 or 123-456-7890
-          return /\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/.test(v);
-      },
-      message: props => `${props.value} is not a valid phone number!`
-  } },
-    email: { type: String, unique: true, sparse: true ,validate: {
-      validator: function(v) {
-          // Basic email format validation
-          return /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(v);
-      },
-      message: props => `${props.value} is not a valid email!`
-  }},
+    phoneNumber: { type: String, trim: true, sparse: true, unique: true},
+    email: { type: String, unique: true, sparse: true },
   },
   interests: {
     interests: { type: [String], required: true },
     languages: {type: [String]},
     additionalInformation: { type: [AdditionalInformationSchema], required: true },
-    dailyThoughts:{ type: String }
+    dailyThoughts:{ type: String },
+    covidVaccination: { type: String, enum: ['Fully Vaccinated', 'Partially Vaccinated', 'Not Vaccinated'] },
+    ethnicity: { type: String, enum: ['Asian', 'Black', 'Mixed', 'White', 'Other'] }
   },
   location: {
     lastLocation: { type: LocationSchema },

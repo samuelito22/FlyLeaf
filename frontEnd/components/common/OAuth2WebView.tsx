@@ -3,6 +3,8 @@ import { Modal, BackHandler } from 'react-native';
 import WebView from 'react-native-webview';
 import { TYPES } from '../../constants';
 import ThreeDotsLoader from './ThreeDotsLoader';
+import { ButtonImage } from './Button';
+import { icons } from '../../assets';
 
 function OAuth2WebView({ isVisible, onCodeReceived, config, onClose }:TYPES.oAuth2WebViewType) {
   const { authorizationEndpoint, clientId, redirectUrl, scopes } = config;
@@ -13,20 +15,6 @@ function OAuth2WebView({ isVisible, onCodeReceived, config, onClose }:TYPES.oAut
   const encodedScopes = encodeURIComponent(scopes.join(' '));
   
   const authUrl = `${authorizationEndpoint}?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUrl)}&response_type=code&scope=${encodedScopes}`;
-  useEffect(() => {
-    const backAction = () => {
-      if (canGoBack) {
-        webViewRef.current?.goBack();
-      } else {
-        onClose();
-      }
-      return true; 
-    };
-
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
-
-    return () => backHandler.remove();
-  }, [canGoBack]);
 
   return (
     <Modal visible={isVisible} animationType="slide">
@@ -35,7 +23,7 @@ function OAuth2WebView({ isVisible, onCodeReceived, config, onClose }:TYPES.oAut
         onLoadEnd={() => setIsLoading(false)}
         ref={webViewRef}
         source={{ uri: authUrl }}
-        //incognito={true}
+        incognito={true}
         onNavigationStateChange={(navState) => {
           setCanGoBack(navState.canGoBack);
 

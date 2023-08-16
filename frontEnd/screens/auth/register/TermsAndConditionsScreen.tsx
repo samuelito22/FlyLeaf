@@ -82,7 +82,7 @@ const TermsAndConditionsScreen = ({
           console.error('Error during registration', error);
         }
   
-        return () => controller.abort(); 
+        return controller.abort(); 
       }
     }
   };

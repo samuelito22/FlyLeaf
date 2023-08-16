@@ -107,7 +107,6 @@ async function initUserProfile(req, res) {
   const { locationData } = req.body;
 
   const { error } = validateLocation({ uid, locationData });
-
   if (error) {
     return res.status(400).json({
       type: "error",
@@ -125,7 +124,7 @@ async function initUserProfile(req, res) {
   }
 
   // Location updated
-  if(Math.abs(locationData.coordinates[0] - user.location.lastLocation.coordinates[0]) > 0.01 || Math.abs(locationData.coordinates[1] - user.location.lastLocation.coordinates[1]) > 0.01){
+  if(!user.location.lastLocation.coordinates || Math.abs(locationData.coordinates.longitude - user.location.lastLocation.coordinates.latitude) > 0.01 || Math.abs(locationData.coordinates.longitude - user.location.lastLocation.coordinates.latitude) > 0.01){
     user = await UserServices.updateUserLocation(uid, locationData);
   }
 
@@ -137,7 +136,7 @@ async function initUserProfile(req, res) {
     const spotifyData = await Spotify.findOne({_id: user.profile.spotify.spotify_id})
     delete spotifyData.refreshToken;
     
-    combinedProfile = { ...combinedProfile, spotify: spotifyData }
+    combinedProfile = { ...combinedProfile, spotify: spotifyData.artists }
   }
 
   if(user.profile.instagram.isConnected){
@@ -165,13 +164,15 @@ async function initUserProfile(req, res) {
       { new: true }
     ).catch(e => console.log(e))
 
-    await InstagramServices.fetchInstagramImages(accessToken, instagram_id).catch(e => console.log(e))
+    await InstagramServices.fetchInstagramImages(accessToken, instagram_id).catch(e => 
+      console.log(e)
+      )
     
     InstagramData = await instagramModel.findOne({_id: instagram_id})
     delete InstagramData.accessToken;
     delete InstagramData.expiryDate;
     
-    combinedProfile = { ...combinedProfile, instagram: InstagramData }
+    combinedProfile = { ...combinedProfile, instagram: InstagramData.images }
   }
   
   combinedProfile = { ...combinedProfile, ...user.toObject() }

@@ -1,9 +1,10 @@
 import User from "../models/user.model.js";
 
 async function updateUserLocation(uid, locationData) {
-    const updateObj = {
+
+  const updateObj = {
         'location.lastLocation': {
-          ...locationData.coordinates && { type: 'Point', coordinates: locationData.coordinates },
+          ...locationData.coordinates && { type: 'Point', coordinates:{longitude: locationData.coordinates.longitude, latitude: locationData.coordinates.latitude} },
           ...locationData.city && {city: locationData.city}
         }
       };

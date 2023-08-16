@@ -22,7 +22,7 @@ import {
   setIsRegisterCompleted,
 } from '../../../redux';
 import { AuthService } from '../../../services';
-import { setIsBlocked } from '../../../redux';
+import { AppStatusActions } from '../../../redux';
 import auth from "@react-native-firebase/auth"
 
 const DateOfBirthScreen = ({
@@ -89,14 +89,13 @@ const DateOfBirthScreen = ({
     try {
       setAlertVisible(false);
       if (moment().year() - moment(dateOfBirthTemp, 'DDMMYYYY').year() < 18) {
-        const controller = new AbortController()
+        
         const uid = auth().currentUser?.uid
         if(uid)
         {
-          dispatch(setIsBlocked(true))
+          dispatch(AppStatusActions.setIsBlocked(true))
         }
         setIsLoading(false)
-        return () => controller.abort()
       } 
       // Dispatch the action to update the birthday in Redux
       dispatch(setDateOfBirth(moment(dateOfBirthTemp, 'DD/MM/YYYY').toDate()));

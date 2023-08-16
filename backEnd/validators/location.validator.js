@@ -4,7 +4,7 @@ const validateLocation = (data) => {
     const schema = Joi.object({
         uid: Joi.string().required(),
         locationData: Joi.object({
-          coordinates: Joi.array().items(Joi.number()).length(2).required(),
+          coordinates: Joi.object({longitude: Joi.number().required(), latitude: Joi.number().required()}),
           city: Joi.string(),
         }).required()
       });
