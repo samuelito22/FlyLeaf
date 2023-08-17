@@ -85,45 +85,52 @@ const LoginOTPScreen = ({navigation, route}: LoginOTPScreenProps) => {
   }, [phoneNumber]);
 
   const confirmOTPCode = async () => {
-    setIsLoading(true);
-    const controller = new AbortController(); 
-
-    if (!confirmation) return;
-
-    const result = await AuthService.confirmVerificationCode(confirmation, OTP);
-
-    setIsLoading(false);
-
-    if (result?.success) {
-      if (
-        result.userCredential &&
-        result.userCredential.user.uid &&
-        phoneNumber
-      ) {
-        
-        try {
-          const userUidExistResult = await AuthService.userUidExist(
-            result.userCredential.user.uid,
-            controller.signal
-          );
-          if (userUidExistResult.type === 'success') {
-            dispatch(setIsLoggedIn(true))
-            navigation?.navigate(ROUTES.BOTTOM_TAB_NAVIGATOR);
-          } else if (userUidExistResult.type === 'error') {
-            navigation?.navigate(ROUTES.REGISTER_NAVIGATOR);
-            dispatch(setPhoneNumber(phoneNumber));
-          }
-        } catch (error) {
-          console.error(error);
-          // Handle error here
-        }
+    try {
+      setIsLoading(true);
+      const controller = new AbortController(); 
+  
+      if (!confirmation) {
+        setIsLoading(false);
+        return;
       }
+  
+      const result = await AuthService.confirmVerificationCode(confirmation, OTP);
+  
+      setIsLoading(false);
+  
+      if (result?.success) {
+        if (
+          result.userCredential &&
+          result.userCredential.user.uid &&
+          phoneNumber
+        ) {
+          try {
+            const userUidExistResult = await AuthService.userUidExist(
+              result.userCredential.user.uid,
+              controller.signal
+            );
+            
+            if (userUidExistResult.type === 'success') {
+              dispatch(setIsLoggedIn(true));
+              navigation?.navigate(ROUTES.BOTTOM_TAB_NAVIGATOR);
+            } else if (userUidExistResult.type === 'error') {
+              navigation?.navigate(ROUTES.REGISTER_NAVIGATOR);
+              dispatch(setPhoneNumber(phoneNumber));
+            }
+          } catch (error) {
+            console.error(error);
+            // Handle error here
+          }
+        }
+      } else {
+        setShowError(true);
+      }
+    } catch (error) {
+      console.error(error);
+      // Handle error here
     }
-
-    setShowError(!result?.success);
-    return controller.abort()
   };
-
+  
   const sendOTP = async () => {
     if (!phoneNumber) return;
 

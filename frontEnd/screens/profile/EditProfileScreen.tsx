@@ -19,6 +19,7 @@ import {
   OAuth2WebView,
   SafeContainer,
   ThreeDotsLoader,
+  UploadSelectionAlert,
   questionsList,
 } from '../../components';
 import {
@@ -32,10 +33,10 @@ import {
 } from '../../constants';
 import {useSelector} from 'react-redux';
 import {icons} from '../../assets';
-import {FlatList, ScrollView} from 'react-native-gesture-handler';
+import {FlatList, LongPressGestureHandler, ScrollView} from 'react-native-gesture-handler';
 import {TouchableRipple} from 'react-native-paper';
 import {useNavigation, NavigationProp} from '@react-navigation/native';
-import {useDispatch} from '../../utils/hooks';
+import {useDispatch, useImagePicker} from '../../utils/hooks';
 import {AppStatusActions, EditProfileActions} from '../../redux';
 import {isEqual} from 'lodash';
 import {InstagramService, SpotifyService} from '../../services';
@@ -130,6 +131,11 @@ const EdiScreen: React.FC<NavigationProps> = ({navigation}) => {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    setTimeout(() => {
+      setLoading(false);
+    }, 300); // adjust the time as per your requirement
+  }, []);
 
   useEffect(() => {
    
@@ -162,7 +168,7 @@ const EdiScreen: React.FC<NavigationProps> = ({navigation}) => {
   return (
     <KeyboardAvoidingViewWrapper>
       <SafeContainer>
-   
+        {loading && <ThreeDotsLoader modalBackground={{backgroundColor:"white"}}/>}
         <EditProfileHeader
           onBackPress={handleBackPress}
           leftIconText="Edit"
@@ -472,240 +478,130 @@ const HeightSection = ({state, dispatch}: SectionProps) => {
 };
 
 const PicturesSection = ({state, dispatch}: SectionProps) => {
-  const [pictures, setPictures] = useState<string[]>(
+  const [sectionWidth, setSectionWidth] = useState(0);
+  const [pictures, setPictures] = useState<(string | null | undefined)[]>(
     state.pictures ? state.pictures : [],
   );
-  const [index, setIndex] = useState(0);
-  const [sectionWidth, setSectionWidth] = useState(0);
-  const [viewFullPic, setViewFullPic] = useState(false);
-  const flatListRef = useRef<FlatList>(null);
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [isAlertVisible, setAlertVisible] = useState(false);
+  const {handleCameraButtonPress, handleGalleryButtonPress} = useImagePicker();
+  const imageToBeChangedRef = useRef<number>()
+
+  const picturesWidth = [
+    (sectionWidth / 3) * 2,
+    ...Array(5).fill(sectionWidth / 3),
+  ];
+
+  const handleImageSelection = async (getImage: () => Promise<string | undefined>) => {
+    setIsLoading(true);
+    const result = await getImage();
+    setIsLoading(false);
+
+    setAlertVisible(false);
+
+    if (result) {
+      setPictures(prevState => {
+        const newState = [...prevState]
+        if(imageToBeChangedRef.current) newState[imageToBeChangedRef.current] = result
+        return newState
+      })
+    }
+  }
+  
+const handleAlertClose = () => {
+setAlertVisible(false);
+};
+
+
+  const PictureField = ({
+    picture,
+    idx,
+  }: {
+    picture?: string | null;
+    idx: number;
+  }) => {
+
+    return (
+      <LongPressGestureHandler
+        minDurationMs={100}
+        onActivated={() => {
+          setAlertVisible(true)
+          imageToBeChangedRef.current = idx
+          }}>
+        <View
+          style={ {justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: PALETTE.LIGHT200,
+          borderRadius: BORDER_RADIUS.large,
+          width: picturesWidth[idx],
+          height: picturesWidth[idx],
+          marginBottom: 5,
+          marginRight:
+            idx === 3 || idx === 4
+              ? 5
+              : idx === 0
+              ? 10
+              : 0,}}>
+              { picture ? (
+                <React.Fragment>
+                  <Animated.Image
+                    source={{uri: picture}}
+                    resizeMode="cover"
+                    style={{
+                      height: '100%',
+                      width: '100%',
+                      borderRadius: BORDER_RADIUS.large,
+                    }}
+                  />
+                  <View
+                    style={{
+                      position: 'absolute',
+                      borderRadius: BORDER_RADIUS.circle,
+                      top: 5,
+                      left: 5,
+                      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                      height: 20,
+                      minWidth: 20,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}>
+                    <Text
+                      style={{
+                        textAlign: 'center',
+                        ...themeText.bodyRegularSeven,
+                        flex: 1,
+                        paddingHorizontal:
+                          idx === 0 ? 10 : 0,
+                      }}>
+                      {idx === 0
+                        ? 'main'
+                        : idx + 1}
+                    </Text>
+                  </View>
+                </React.Fragment>
+              ) : (
+                <Image
+                  source={icons.plus}
+                  style={{
+                    tintColor: PALETTE.GRAY500,
+                    height: '50%',
+                    width: '50%',
+                  }}
+                  resizeMode="cover"
+                />
+              )}
+               
+        </View>
+       
+      </LongPressGestureHandler>
+    );
+  };
+
 
   const onLayout = (event: TYPES.LayoutChangeEvent) => {
     const {width} = event.nativeEvent.layout;
-    setSectionWidth(width); //section width -40 padding and - 10 space per section hence 20
-  };
-
-  const scrollX = useRef(new Animated.Value(0)).current;
-  const handleOnScroll = Animated.event(
-    [
-      {
-        nativeEvent: {
-          contentOffset: {
-            x: scrollX,
-          },
-        },
-      },
-    ],
-    {
-      useNativeDriver: false,
-    },
-  );
-
-  const handleOnViewableItemsChanged = useRef(
-    ({viewableItems}: {viewableItems: any}) => {
-      setIndex(viewableItems[viewableItems.length - 1].index);
-    },
-  ).current;
-
-  const viewabilityConfig = useRef({
-    itemVisiblePercentThreshold: 0,
-  }).current;
-
-  const SlideItem = ({item}: {item: string | null | undefined}) => {
-    if (!item) return null;
-
-    return (
-      <View style={{width: sectionWidth - 40, height: 300}}>
-        <Image
-          source={{uri: item}}
-          resizeMode="cover"
-          style={{width: '100%', height: '100%'}}
-        />
-      </View>
-    );
-  };
-
-  const Pagination = ({
-    data,
-    scrollX,
-    index,
-  }: {
-    data: (string | null | undefined)[];
-    scrollX: Animated.Value;
-    index: number;
-  }) => {
-    return (
-      <View
-        style={{
-          position: 'absolute',
-          bottom: 10,
-          flexDirection: 'row',
-          width: '100%',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}>
-        {data?.map((_, idx) => {
-          const width = sectionWidth - 40;
-          const inputRange = [
-            (idx - 1) * width,
-            idx * width,
-            (idx + 1) * width,
-          ];
-          const dotWidth = scrollX.interpolate({
-            inputRange,
-            outputRange: [8, 16, 8],
-            extrapolate: 'clamp',
-          });
-
-          const backgroundColor = scrollX.interpolate({
-            inputRange,
-            outputRange: ['white', THEME_COLORS.dark, 'white'],
-            extrapolate: 'clamp',
-          });
-
-          return (
-            <Animated.View
-              key={idx}
-              style={{
-                borderRadius: 4,
-                width: dotWidth,
-                height: 4,
-                marginHorizontal: 3,
-                backgroundColor: backgroundColor,
-              }}
-            />
-          );
-        })}
-      </View>
-    );
-  };
-
-  const DeleteSlide = () => {
-    const ICON_WIDTH = 20;
-
-    const handleDelete = () => {
-      let newIndex;
-
-      if (index === pictures.length - 1 && index !== 0) {
-        // If deleting the last item but not the only item
-        newIndex = index - 1;
-      } else if (index < pictures.length - 1) {
-        // If deleting an item in the middle
-        newIndex = index;
-      } else {
-        // If there's only one item or deleting the first item
-        newIndex = 0;
-      }
-
-      setPictures(prevState => {
-        const newState = [...prevState];
-        newState.splice(index, 1);
-        return newState;
-      });
-
-      if (flatListRef.current) {
-        flatListRef.current.scrollToIndex({index: newIndex, animated: true});
-      }
-    };
-
-    return (
-      <Button.ButtonImage
-        onPress={handleDelete}
-        height={ICON_WIDTH}
-        width={ICON_WIDTH}
-        tintColor="white"
-        imgUrl={icons.bin}
-        contentContainerStyle={{
-          height: ICON_WIDTH * 2,
-          width: ICON_WIDTH * 2,
-          borderRadius: BORDER_RADIUS.medium,
-          backgroundColor: 'rgba(0, 0, 0, 0.3)',
-          position: 'absolute',
-          top: 10,
-          left: 10,
-        }}
-      />
-    );
-  };
-
-  const AddSlide = () => {
-    const ICON_WIDTH = 20;
-
-    const handleDelete = () => {};
-    return (
-      <Button.ButtonImage
-        onPress={handleDelete}
-        height={ICON_WIDTH}
-        width={ICON_WIDTH}
-        tintColor="white"
-        imgUrl={icons.addImage}
-        contentContainerStyle={{
-          height: ICON_WIDTH * 2,
-          width: ICON_WIDTH * 2,
-          borderRadius: BORDER_RADIUS.medium,
-          backgroundColor: 'rgba(0, 0, 0, 0.3)',
-          position: 'absolute',
-          top: 10,
-          right: 10,
-        }}
-      />
-    );
-  };
-
-  const ViewSlide = () => {
-    const ICON_WIDTH = 20;
-
-    const handleView = () => {
-      setViewFullPic(true);
-    };
-    return (
-      <Button.ButtonImage
-        onPress={handleView}
-        height={ICON_WIDTH * 1.3}
-        width={ICON_WIDTH * 1.3}
-        tintColor="white"
-        imgUrl={icons.eye}
-        contentContainerStyle={{
-          height: ICON_WIDTH * 2,
-          width: ICON_WIDTH * 2,
-          borderRadius: BORDER_RADIUS.medium,
-          backgroundColor: 'rgba(0, 0, 0, 0.3)',
-          position: 'absolute',
-          bottom: 10,
-          left: 10,
-        }}
-      />
-    );
-  };
-
-  const ViewFullSlide = () => {
-    const height = Dimensions.get('window').width * 1.3;
-    return (
-      <Modal
-        transparent={true}
-        visible={viewFullPic}
-        onRequestClose={() => setViewFullPic(false)}>
-        <Pressable style={{flex: 1}} onPress={() => setViewFullPic(false)}>
-          <View
-            style={[
-              modalSelectionStyles.flexEnd,
-              {justifyContent: 'center', backgroundColor: 'rgba(0, 0, 0, 0.9)'},
-            ]}>
-            <Pressable
-              style={{width: '100%'}}
-              onPress={e => e.stopPropagation()}>
-              {pictures && (
-                <Image
-                  source={{uri: pictures[index]}}
-                  resizeMode="contain"
-                  style={{width: '100%', height: height}}
-                />
-              )}
-            </Pressable>
-          </View>
-        </Pressable>
-      </Modal>
-    );
+    setSectionWidth(width - 40 - 20); //section width -40 padding and - 10 space per section hence 20
   };
 
   return (
@@ -716,38 +612,47 @@ const PicturesSection = ({state, dispatch}: SectionProps) => {
       </Text>
       <View
         style={{
-          borderRadius: BORDER_RADIUS.large,
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          paddingHorizontal: 20,
+          paddingTop: 10,
           overflow: 'hidden',
-          marginHorizontal: 20,
-          marginTop: 10,
-          backgroundColor: PALETTE.LIGHT200,
-          width: sectionWidth - 40,
-          height: 300,
         }}>
-        <FlatList
-          ref={flatListRef}
-          data={pictures}
-          renderItem={({item}) => <SlideItem item={item} />}
-          horizontal
-          pagingEnabled
-          snapToAlignment="center"
-          overScrollMode="never"
-          showsHorizontalScrollIndicator={false}
-          onScroll={handleOnScroll}
-          onViewableItemsChanged={handleOnViewableItemsChanged}
-          viewabilityConfig={viewabilityConfig}
+        <PictureField
+          picture={pictures[0]}
+          idx={0}
         />
-        {sectionWidth > 0 && (
-          <Pagination data={pictures} scrollX={scrollX} index={index} />
-        )}
-        {pictures.length > 0 && <DeleteSlide />}
-        {pictures.length !== 6 && <AddSlide />}
-        {pictures.length > 0 && <ViewSlide />}
-        {viewFullPic && <ViewFullSlide />}
+        <View style={{flexDirection: 'column'}}>
+          <PictureField
+            picture={pictures[1]}
+            idx={1}
+          />
+          <PictureField
+            picture={pictures[2]}
+            idx={2}
+          />
+        </View>
+        <View style={{flexDirection: 'row', flexWrap: 'wrap'}}>
+          {[...Array(3)].map((_, index) => (
+            <React.Fragment key={index + 3}>
+              <PictureField
+                picture={pictures[index + 3]}
+                idx={index + 3}
+              />
+            </React.Fragment>
+          ))}
+        </View>
       </View>
+      <UploadSelectionAlert
+          visible={isAlertVisible}
+          onClose={handleAlertClose}
+          onGalleryPress={() => handleImageSelection(handleGalleryButtonPress)}
+          onTakePhotoPress={() => handleImageSelection(handleCameraButtonPress)}
+        />
     </View>
   );
 };
+
 
 const BiographySection = ({state, dispatch}: SectionProps) => {
   const [active, setActive] = useState(0);
@@ -955,11 +860,10 @@ const SpotifySection: React.FC<SectionProps & NavigationProps> = ({
 
   const handleFetchArtists = async () => {
     setLoading(true);
-    const controller = new AbortController();
 
     if (isConnected) {
       await SpotifyService()
-        .disconnectFromSpotify(state.uid, controller.signal)
+        .disconnectFromSpotify(state.uid)
         .catch(e => console.log(e))
         .then(result => {
           if (result.type === 'success') setIsConnected(false);
@@ -973,7 +877,6 @@ const SpotifySection: React.FC<SectionProps & NavigationProps> = ({
         .authenticateAndFetchSpotify(
           state.uid,
           authCodeRef.current,
-          controller.signal,
         )
         .then(result => {
           if (result.type === 'success') {
@@ -985,7 +888,6 @@ const SpotifySection: React.FC<SectionProps & NavigationProps> = ({
     }
 
     setLoading(false);
-    return controller.abort();
   };
 
   const config = {
@@ -1140,11 +1042,10 @@ const InstagramSection: React.FC<SectionProps & NavigationProps> = ({
 
   const handleFetchImages = async () => {
     setLoading(true);
-    const controller = new AbortController();
 
     if (isConnected) {
       await InstagramService()
-        .disconnectFromInstagram(state.uid, controller.signal)
+        .disconnectFromInstagram(state.uid)
         .catch(e => console.log(e))
         .then(result => {
           if (result.type === 'success') setIsConnected(false);
@@ -1158,7 +1059,6 @@ const InstagramSection: React.FC<SectionProps & NavigationProps> = ({
         .authenticateAndFetchInstagram(
           state.uid,
           authCodeRef.current,
-          controller.signal,
         )
         .then(result => {
           if (result.type === 'success') {
@@ -1169,14 +1069,13 @@ const InstagramSection: React.FC<SectionProps & NavigationProps> = ({
         .catch(e => console.log(e));
     }
     setLoading(false);
-    return controller.abort();
   };
 
   const config = {
     clientId: '614409710852626',
     redirectUrl: 'https://91db-90-242-236-229.ngrok-free.app/instagram/oauth/',
     authorizationEndpoint: 'https://api.instagram.com/oauth/authorize',
-    scopes: ['user', 'user_media'],
+    scopes: ['user_profile', 'user_media'],
   };
 
   const waitForAuthCode = (): Promise<void> => {

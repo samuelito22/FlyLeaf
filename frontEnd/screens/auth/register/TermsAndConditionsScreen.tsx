@@ -68,9 +68,8 @@ const TermsAndConditionsScreen = ({
           userRegisterParams.profile.pictures = pictures;
         }
   
-        const controller = new AbortController(); 
         try {
-          await AuthService.userRegister(userRegisterParams, controller.signal).then(result => {
+          await AuthService.userRegister(userRegisterParams).then(result => {
             if (result.type === 'error') {
               console.log(result.message);
             } else {
@@ -82,7 +81,6 @@ const TermsAndConditionsScreen = ({
           console.error('Error during registration', error);
         }
   
-        return controller.abort(); 
       }
     }
   };

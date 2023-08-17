@@ -48,7 +48,6 @@ async function fetchInstagramImages(accessToken, userId) {
     `https://graph.instagram.com/${userId}/media?fields=id,caption,media_url&access_token=${accessToken}`
   );
 
-  console.log(mediaResponse)
   const formattedImages = mediaResponse.data.data.map(images => ({
     id: images.id,
     url: images.media_url
@@ -67,7 +66,6 @@ async function fetchInstagramImages(accessToken, userId) {
 }
 
 async function refreshInstagramToken(accessToken) {
-    console.log(accessToken)
   try {
     const response = await axios.get(
       "https://graph.instagram.com/refresh_access_token",

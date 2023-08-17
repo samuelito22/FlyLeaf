@@ -12,7 +12,7 @@ function OAuth2WebView({ isVisible, onCodeReceived, config, onClose }:TYPES.oAut
   const webViewRef = useRef<WebView>(null);
   const [canGoBack, setCanGoBack] = useState(false);
   
-  const encodedScopes = encodeURIComponent(scopes.join(' '));
+  const encodedScopes = encodeURIComponent(scopes.join(','));
   
   const authUrl = `${authorizationEndpoint}?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUrl)}&response_type=code&scope=${encodedScopes}`;
 

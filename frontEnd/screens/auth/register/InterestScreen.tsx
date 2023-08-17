@@ -109,12 +109,10 @@ const InterestScreen = ({
         userRegisterParams.profile.gender = {general: userRegisterParams.profile.gender.general}
       }
 
-      const controller = new AbortController();
       try {
         setIsLoading(true);
         await AuthService.userRegister(
           userRegisterParams,
-          controller.signal,
         ).then(result => {
           if (result.type === 'error') {
             console.log(result.message);
@@ -129,7 +127,6 @@ const InterestScreen = ({
       }
       setIsLoading(false);
 
-      return () => controller.abort();
     }
   };
 

@@ -36,13 +36,24 @@ const MainContent = () => {
   UserService.getGeoLocation((position) => setlocationData(position))
 
   useEffect(() => {
-    if(uid && locationData){
-      const controler = new AbortController
-      const formattedLocData = {longitude: locationData.longitude, latitude: locationData.latitude}
-      UserService.initUserProfile(uid, formattedLocData, controler.signal).then(result => dispatch(UserActions.setUserProfile(uid, result.profile))).catch(e => console.log(e))
-      return controler.abort()
+    let controller: AbortController;
+  
+    if (uid && locationData) {
+      controller = new AbortController();
+      const formattedLocData = { longitude: locationData.longitude, latitude: locationData.latitude };
+  
+      UserService.initUserProfile(uid, formattedLocData, controller.signal)
+        .then(result => dispatch(UserActions.setUserProfile(uid, result.profile)))
+        .catch(e => console.log(e));
     }
-  },[locationData])
+  
+    return () => {
+      if (controller) {
+        controller.abort();
+      }
+    };
+  }, [uid, locationData]);
+  
 
   if(isBlocked) return <BlockedScreen/>
 
