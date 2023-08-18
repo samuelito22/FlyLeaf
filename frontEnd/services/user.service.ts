@@ -97,6 +97,24 @@ const profileService = () => {
     }
   };
 
+  const updateProfile = async (data: TYPES.InitialStateEditUserType, signal?: AbortSignal) => {
+    const { uid, height, jobTitle, company, bio, sexualOrientation, languages,  additionalInformation, covidVaccination, ethnicity, interests, gender, pictures } = data
+    try {
+      const response = await fetch(`${API_ENDPOINTS.UPDATE_PROFILE}/${uid}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal,  
+        body: JSON.stringify({uid, height, jobTitle, company, bio, sexualOrientation, languages,  additionalInformation, covidVaccination, ethnicity, interests, gender, pictures})    
+      });
+      const data = await response.json();
+      return data;
+    } catch (error:any) {
+      console.log('Error message:', error.message);
+    }
+  };
+
   
 
   const initUserProfile = async (uid: string, locationData:TYPES.PositionType, signal?: AbortSignal) => {
@@ -116,7 +134,7 @@ const profileService = () => {
     }
   };
 
-  return {getProfile, initUserProfile};
+  return {getProfile, initUserProfile, updateProfile};
 };
 
 export const UserService = {

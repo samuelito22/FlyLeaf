@@ -1,10 +1,12 @@
 import express from "express";
 
-import userController from "../controller/user.controller.js";
+import userController from "../controller/user.controller";
 
 const router = express.Router();
 
 router.post("/update/location", userController.updateUserLocation);
+
+router.put("/update/profile/:uid", userController.updateUserProfile);
 
 router.get("/get/location/:uid", userController.getUserLocation);
 

@@ -422,7 +422,7 @@ export interface InitialStateEditUserType {
     artists:any
   } | null;
   height: {
-    feet?: number;
+    feets?: number;
     inches?: number;
   } | null;
   interests: string[];

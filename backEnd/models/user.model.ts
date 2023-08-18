@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 const { Schema } = mongoose;
+import UserDocument from "../../UserDocument"
 
 const LocationSchema = new Schema({
   type: { type: String, enum: ['Point'], default: 'Point' },
@@ -39,7 +40,7 @@ const UserSchema = new Schema({
     jobTitle: {type: String},
     company: {type: String},
     bio: { type: String, default: "Hello! I'm new here and haven't written my bio yet. Check my profile!" },
-    height: {type: {feet: Number, inches: Number}},
+    height: {type: {feets: Number, inches: Number}},
     pictures: [{ type: String }],
     spotify: {type:SpotifySchema},
     instagram: {type:InstagramSchema}
@@ -78,6 +79,6 @@ const UserSchema = new Schema({
   timestamps: true
 });
 
-const User = mongoose.models.User || mongoose.model("User", UserSchema);
+const User = mongoose.models.User || mongoose.model<UserDocument>("User", UserSchema);
 
 export default User;

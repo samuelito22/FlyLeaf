@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
-import app from "./app.js";
-import { DB_URI, PORT } from "./config/config.js";
+import app from "./app";
+import { DB_URI, PORT } from "./config/config";
 
 export async function main() {
   try {
+    if(DB_URI)
     await mongoose
       .connect(DB_URI)
       .then(() => console.log("🍃 MongoDB successfully connected!"))

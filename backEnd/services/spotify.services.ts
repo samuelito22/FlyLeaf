@@ -1,12 +1,13 @@
-import User from "../models/user.model.js";
-import Spotify from "../models/spotify.model.js";
+import User from "../models/user.model";
+import Spotify from "../models/spotify.model";
 import axios from "axios";
+import { USER_NOT_FOUND_ERR } from "../errors";
 
 const REDIRECT_URI = process.env.SPOTIFY_REDIRECT_URI;
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
 
-async function obtainSpotifyTokens(code) {
+async function obtainSpotifyTokens(code:string) {
     const tokenResponse = await axios.post(
         "https://accounts.spotify.com/api/token",
         null,
@@ -27,7 +28,7 @@ async function obtainSpotifyTokens(code) {
     };
 }
 
-async function getSpotifyUserProfile(accessToken) {
+async function getSpotifyUserProfile(accessToken:string) {
     const userProfileResponse = await axios.get(
         "https://api.spotify.com/v1/me",
         {
@@ -39,9 +40,9 @@ async function getSpotifyUserProfile(accessToken) {
     return userProfileResponse.data.id;
 }
 
-async function storeUserSpotifyData(uid, spotifyUserId, refreshToken) {
+async function storeUserSpotifyData(uid:string, spotifyUserId:string, refreshToken:string) {
     const userAlreadyConnectedToSpotifyId = await User.findOneAndUpdate(
-        { "profile.spotify.spotify_id": spotifyUserId, uid: { $ne: uid } },
+        { "profile.spotify.spotify_id": spotifyUserId, _id: { $ne: uid } },
         {
             $set: {
                 "profile.spotify": {
@@ -54,7 +55,7 @@ async function storeUserSpotifyData(uid, spotifyUserId, refreshToken) {
     );
 
     await User.findOneAndUpdate(
-        { uid },
+        { _id: uid },
         {
             $set: {
                 "profile.spotify": {
@@ -86,8 +87,8 @@ async function storeUserSpotifyData(uid, spotifyUserId, refreshToken) {
     return userAlreadyConnectedToSpotifyId
 }
 
-async function refetchSpotifyData(uid) {
-    const user = await User.findOne({ uid });
+async function refetchSpotifyData(uid:string) {
+    const user = await User.findOne({ _id: uid });
 
     if (!user) throw new Error(USER_NOT_FOUND_ERR);
 
@@ -122,8 +123,8 @@ async function refetchSpotifyData(uid) {
     return {accessToken, spotify_id};
 }
 
-async function disconnectSpotifyService(uid) {
-    const user = await User.findOne({ uid });
+async function disconnectSpotifyService(uid:string) {
+    const user = await User.findOne({ _id: uid });
     if (!user) throw new Error("User not found.");
 
     const storedSpotifyId = user.profile.spotify.spotify_id;
@@ -133,7 +134,7 @@ async function disconnectSpotifyService(uid) {
     await Spotify.deleteOne({ _id: storedSpotifyId });
 
     const updatedUser = await User.findOneAndUpdate(
-        { uid },
+        { _id: uid },
         {
             $set: {
                 "profile.spotify.isConnected": false,
@@ -146,7 +147,7 @@ async function disconnectSpotifyService(uid) {
     return updatedUser;
 }
 
-async function fetchTopArtists(accessToken, spotify_id) {
+async function fetchTopArtists(accessToken:string, spotify_id:string) {
     try {
       const response = await axios.get(
         "https://api.spotify.com/v1/me/top/artists?limit=10",
@@ -160,7 +161,7 @@ async function fetchTopArtists(accessToken, spotify_id) {
       }
 
       // Map over the artists array to extract and format the necessary details
-      const formattedArtists = response.data.items.map(artist => ({
+      const formattedArtists = response.data.items.map((artist : {id:string, name:string, type:string, images:any, genres: [string]}) => ({
         id: artist.id,
         name: artist.name,
         type: artist.type,

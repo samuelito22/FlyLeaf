@@ -1,6 +1,6 @@
 import express from "express";
 
-import spotifyController from "../controller/spotify.controller.js";
+import spotifyController from "../controller/spotify.controller";
 
 const router = express.Router();
 

@@ -1,6 +1,6 @@
-import User from "../models/user.model.js";
+import User from "../models/user.model";
 
-async function updateUserLocation(uid, locationData) {
+async function updateUserLocation(uid:string, locationData:{coordinates: {longitude: number, latitude:number}, city: string}) {
 
   const updateObj = {
         'location.lastLocation': {
@@ -10,7 +10,7 @@ async function updateUserLocation(uid, locationData) {
       };
 
   return await User.findOneAndUpdate(
-    { uid },
+    { _id: uid },
     {
       $set: updateObj
     },
@@ -18,12 +18,12 @@ async function updateUserLocation(uid, locationData) {
   );
 }
 
-async function getUserLocation(uid) {
-  return await User.findOne({ uid });
+async function getUserLocation(uid:string) {
+  return await User.findOne({_id: uid });
 }
 
-async function getUserProfile(uid) {
-  return await User.findOne({ uid });
+async function getUserProfile(uid:string) {
+  return await User.findOne({ _id: uid });
 }
 
 const UserServices = {updateUserLocation, getUserLocation, getUserProfile}

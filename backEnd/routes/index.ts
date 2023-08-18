@@ -1,7 +1,7 @@
-import usersRoutes from "./users.route.js"
-import authRoutes from "./auth.route.js"
-import spotifyRoutes from "./spotify.route.js"
-import instagramRoutes from "./instagram.route.js"
+import usersRoutes from "./users.route"
+import authRoutes from "./auth.route"
+import spotifyRoutes from "./spotify.route"
+import instagramRoutes from "./instagram.route"
 import express from "express"
 
 const routes = express.Router()

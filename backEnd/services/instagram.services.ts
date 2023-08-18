@@ -1,6 +1,6 @@
-import User from "../models/user.model.js";
+import User from "../models/user.model";
 import axios from "axios";
-import instagramModel from "../models/instagram.model.js";
+import instagramModel from "../models/instagram.model";
 import qs from "qs"
 
 const REDIRECT_URI = process.env.INSTAGRAM_REDIRECT_URI;
@@ -9,7 +9,7 @@ const CLIENT_SECRET = process.env.INSTAGRAM_CLIENT_SECRET;
 const sixtyDaysInMilliseconds = 58 * 24 * 60 * 60 * 1000;
 
 
-async function obtainInstagramTokens(code) {
+async function obtainInstagramTokens(code:string) {
   const data = {
     client_id: CLIENT_ID,
     client_secret: CLIENT_SECRET,
@@ -43,12 +43,12 @@ async function obtainInstagramTokens(code) {
   }
 }
 
-async function fetchInstagramImages(accessToken, userId) {
+async function fetchInstagramImages(accessToken:string, userId:string) {
   const mediaResponse = await axios.get(
     `https://graph.instagram.com/${userId}/media?fields=id,caption,media_url&access_token=${accessToken}`
   );
 
-  const formattedImages = mediaResponse.data.data.map(images => ({
+  const formattedImages = mediaResponse.data.data.map((images: {id:string, media_url:string}) => ({
     id: images.id,
     url: images.media_url
   }));
@@ -65,7 +65,7 @@ async function fetchInstagramImages(accessToken, userId) {
   return formattedImages;
 }
 
-async function refreshInstagramToken(accessToken) {
+async function refreshInstagramToken(accessToken:string) {
   try {
     const response = await axios.get(
       "https://graph.instagram.com/refresh_access_token",
@@ -87,13 +87,13 @@ async function refreshInstagramToken(accessToken) {
 }
 
 async function storeUserInstagramData(
-  uid,
-  instagram_id,
-  accessToken,
-  expiryDate
+  uid:string,
+  instagram_id:string,
+  accessToken:string,
+  expiryDate:Date
 ) {
   const userAlreadyConnectedToInstagramId = await User.findOneAndUpdate(
-    { "profile.instagram.instagram_id": instagram_id, uid: { $ne: uid } },
+    { "profile.instagram.instagram_id": instagram_id, _id: { $ne: uid } },
     {
       $set: {
         "profile.instagram": {
@@ -106,7 +106,7 @@ async function storeUserInstagramData(
   );
 
   await User.findOneAndUpdate(
-    { uid },
+    { _id: uid },
     {
       $set: {
         "profile.instagram": {
@@ -140,8 +140,8 @@ async function storeUserInstagramData(
   return userAlreadyConnectedToInstagramId;
 }
 
-async function disconnectInstagram(uid) {
-  const user = await User.findOne({ uid });
+async function disconnectInstagram(uid:string) {
+  const user = await User.findOne({ _id: uid });
   if (!user) throw new Error("User not found.");
 
   const instagram_id = user.profile.instagram.instagram_id;
@@ -152,7 +152,7 @@ async function disconnectInstagram(uid) {
   await instagramModel.deleteOne({ _id: instagram_id });
 
   const updatedUser = await User.findOneAndUpdate(
-    { uid },
+    { _id: uid },
     {
       $set: {
         "profile.instagram.isConnected": false,
@@ -165,17 +165,6 @@ async function disconnectInstagram(uid) {
   return updatedUser;
 }
 
-async function getAccessTokenFromDB (uid) {
-    const user = await User.findOne({ uid });
-    if (!user) throw new Error("User not found.");
-
-    instagram_id = user.profile.instagram.instagram_id
-    const InstagramData = instagramModel.findOne({_id: instagram_id})
-    if (!InstagramData) throw new Error("Instagram Data not found");
-
-    return InstagramData.accessToken
-
-}
 
 const InstagramServices = {
   obtainInstagramTokens,
@@ -183,6 +172,5 @@ const InstagramServices = {
   refreshInstagramToken,
   storeUserInstagramData,
   disconnectInstagram,
-  getAccessTokenFromDB
 };
 export default InstagramServices;

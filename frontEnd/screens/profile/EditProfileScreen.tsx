@@ -37,9 +37,9 @@ import {FlatList, LongPressGestureHandler, ScrollView} from 'react-native-gestur
 import {TouchableRipple} from 'react-native-paper';
 import {useNavigation, NavigationProp} from '@react-navigation/native';
 import {useDispatch, useImagePicker} from '../../utils/hooks';
-import {AppStatusActions, EditProfileActions} from '../../redux';
+import {AppStatusActions, EditProfileActions, UserActions} from '../../redux';
 import {isEqual} from 'lodash';
-import {InstagramService, SpotifyService} from '../../services';
+import {InstagramService, SpotifyService, UserService} from '../../services';
 import auth from '@react-native-firebase/auth';
 
 const styles = StyleSheet.create({
@@ -162,7 +162,16 @@ const EdiScreen: React.FC<NavigationProps> = ({navigation}) => {
   }, []);
 
   const handleBackPress = async () => {
-    console.log('Updating database');
+    try{
+      setLoading(true)
+      const result = await UserService.updateProfile(state)
+      setLoading(false)
+      console.log(result)
+      //dispatch(UserActions.setUserProfile(state.uid, result))
+
+    } catch(error) {
+      console.log(error)
+    }
   };
 
   return (
@@ -367,8 +376,8 @@ const AdditionalInformation = ({state, dispatch}: SectionProps) => {
 };
 
 const HeightSection = ({state, dispatch}: SectionProps) => {
-  const [feet, setFeet] = useState(
-    state?.height?.feet ? state?.height?.feet.toString : '',
+  const [feets, setFeets] = useState(
+    state?.height?.feets ? state?.height?.feets.toString : '',
   );
   const [inches, setInches] = useState(
     state?.height?.inches ? state?.height?.inches.toString : '',
@@ -381,10 +390,17 @@ const HeightSection = ({state, dispatch}: SectionProps) => {
   const onFeetBlur = () => {
     setActive(prevState => ({...prevState, feet: 0}));
     try {
-      if (!feet) return;
-      const feetToInt = parseInt(feet);
+      if (!feets) return;
+      const feetToInt = parseInt(feets);
       if (feetToInt < 3 || feetToInt > 7 || !feetToInt) {
         setShowFeetError(true);
+      }else{
+        dispatch(
+          EditProfileActions.updateUserProfile('height', {
+            feets: Number(feets),
+            inches: state?.height?.inches,
+          }),
+        );
       }
     } catch {
       setShowFeetError(true);
@@ -398,25 +414,36 @@ const HeightSection = ({state, dispatch}: SectionProps) => {
       const inchesToInt = parseInt(inches);
       if (inchesToInt < 0 || inchesToInt > 11 || !inchesToInt) {
         setShowInchesError(true);
+      }else{
+        dispatch(
+          EditProfileActions.updateUserProfile('height', {
+            feets: state?.height?.feets,
+            inches: Number(inches),
+          }),
+        );
       }
     } catch {
       setShowInchesError(true);
     }
   };
 
-  useEffect(() => setShowFeetError(false), [feet]);
+  useEffect(() => setShowFeetError(false), [feets]);
   useEffect(() => setShowInchesError(false), [inches]);
 
   const handleSave = () => {
     if (!showFeetError && !showInchesError) {
       dispatch(
         EditProfileActions.updateUserProfile('height', {
-          feet: Number(feet),
+          feets: Number(feets),
           inches: Number(inches),
         }),
       );
     }
   };
+
+  useEffect(() => {
+
+  }, [showFeetError, ])
 
   return (
     <View style={styles.section}>
@@ -435,8 +462,8 @@ const HeightSection = ({state, dispatch}: SectionProps) => {
                   : THEME_COLORS.tertiary,
               },
             ]}
-            value={feet}
-            onChangeText={text => setFeet(text)}
+            value={feets}
+            onChangeText={text => setFeets(text)}
             placeholder="ft"
             placeholderTextColor={THEME_COLORS.tertiary}
             keyboardType="number-pad"
@@ -483,7 +510,6 @@ const PicturesSection = ({state, dispatch}: SectionProps) => {
     state.pictures ? state.pictures : [],
   );
 
-  const [isLoading, setIsLoading] = useState(false);
   const [isAlertVisible, setAlertVisible] = useState(false);
   const {handleCameraButtonPress, handleGalleryButtonPress} = useImagePicker();
   const imageToBeChangedRef = useRef<number>()
@@ -494,16 +520,14 @@ const PicturesSection = ({state, dispatch}: SectionProps) => {
   ];
 
   const handleImageSelection = async (getImage: () => Promise<string | undefined>) => {
-    setIsLoading(true);
-    const result = await getImage();
-    setIsLoading(false);
-
     setAlertVisible(false);
+    const result = await getImage();
+
 
     if (result) {
       setPictures(prevState => {
         const newState = [...prevState]
-        if(imageToBeChangedRef.current) newState[imageToBeChangedRef.current] = result
+        if(imageToBeChangedRef.current != null) newState[imageToBeChangedRef.current] = result
         return newState
       })
     }

@@ -8,6 +8,7 @@ export const API_ENDPOINTS = {
   UPDATE_LOCATION: `${BASE_URL}/api/users/update/location`,
   GET_LOCATION: `${BASE_URL}/api/users/get/location`,
   GET_PROFILE: `${BASE_URL}/api/users/get/profile`,
+  UPDATE_PROFILE: `${BASE_URL}/api/users/update/profile`,
   AUTHENTICATE_AND_FETCH_SPOTIFY: `${BASE_URL}/api/spotify/authenticateAndFetch`,
   DISCONNECT_FROM_SPOTIFY: `${BASE_URL}/api/spotify/disconnect`,
   REFETCH_SPOTIFY: `${BASE_URL}/api/spotify/refetch`,

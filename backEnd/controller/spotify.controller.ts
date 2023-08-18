@@ -1,17 +1,18 @@
-import { SPOTIFY_IN_USE } from "../errors.js";
-import SpotifyServices from "../services/spotify.services.js";
-import UserServices from "../services/user.services.js";
-import { validateUid } from "../validators/auth.validator.js";
-import { validateUidAndCode } from "../validators/media.validator.js";
+import { SPOTIFY_IN_USE } from "../errors";
+import SpotifyServices from "../services/spotify.services";
+import UserServices from "../services/user.services";
+import { expressParams } from "../types";
+import { validateUid } from "../validators/auth.validator";
+import { validateUidAndCode } from "../validators/media.validator";
+import express from 'express';
 
-
-const sendError = (res, message, status = 500) => {
+const sendError = (res:express.Response, message:string, status = 500) => {
   return res.status(status).json({ type: "error", message });
 };
 
 // Controller Functions
 
-async function authenticateAndFetchSpotify(req, res) {
+async function authenticateAndFetchSpotify({req, res}:expressParams) {
     try {
       const { uid } = req.params;
       const { code } = req.body;
@@ -49,7 +50,7 @@ async function authenticateAndFetchSpotify(req, res) {
     }
   }
 
-async function refetchSpotify(req, res) {
+async function refetchSpotify({req, res}:expressParams) {
     try {
         const { uid } = req.body;
         const { error } = validateUid({uid});
@@ -72,11 +73,11 @@ async function refetchSpotify(req, res) {
         });
     } catch (error) {
         console.error("Error refreshing access token:", error);
-        return sendError(res, error.message || "Internal Server Error");
+        return sendError(res, "Internal Server Error");
     }
 }
 
-async function disconnectFromSpotify(req, res) {
+async function disconnectFromSpotify({req, res}:expressParams) {
     try {
         const { uid } = req.params;
         const { error } = validateUid({uid});
@@ -89,7 +90,7 @@ async function disconnectFromSpotify(req, res) {
         });
     } catch (error) {
         console.error("Error disconnecting from Spotify:", error);
-        return sendError(res, error.message || "Internal Server Error");
+        return sendError(res, "Internal Server Error");
     }
 }
 

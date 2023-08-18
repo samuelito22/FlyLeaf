@@ -2,11 +2,9 @@
   "name": "flyleaf-app",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
-  "type": "module",
+  "main": "server.ts",
   "scripts": {
-    "start": "node index.js",
-    "server": "nodemon server.js",
+    "server": "nodemon --exec ts-node server.ts",
     "test": "cross-env NODE_ENV=test jest --testTimeout=5000 --detectOpenHandles"
   },
   "author": "github.com/mgeovany",
@@ -46,6 +44,7 @@
     "@types/passport-google-oauth20": "^2.0.11",
     "@types/passport-jwt": "^3.0.9",
     "nodemon": "^2.0.21",
+    "ts-loader": "^9.4.4",
     "ts-node": "^10.9.1",
     "typescript": "^5.1.6"
   }

@@ -1,6 +1,7 @@
 import Joi from 'joi';
+import UserDocument from "../../UserDocument"
 
-const validateUser = (data) => {
+const validateUser = (data:UserDocument) => {
     const schema = Joi.object({
         uid: Joi.string().required(),
         contact: Joi.object({
@@ -32,21 +33,21 @@ const validateUser = (data) => {
     return schema.validate(data);
 };
 
-const validateEmail = (data) => {
+const validateEmail = (data:{email:string}) => {
     const schema = Joi.object({
         email: Joi.string().required(),
     });
     return schema.validate(data);
 };
 
-const validatePhoneNumber = (data) => {
+const validatePhoneNumber = (data:{phoneNumber:string}) => {
     const schema = Joi.object({
         phoneNumber: Joi.string().required(),
     });
     return schema.validate(data);
 };
 
-const validateUid = (data) => {
+const validateUid = (data: {uid:string}) => {
     const schema = Joi.object({
         uid: Joi.string().required(),
     });
