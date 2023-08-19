@@ -30,7 +30,7 @@ import {TYPES} from '../../constants';
       case registerActions.SET_GENDER:
         return {
           ...state,
-          gender: action.payload as {general: string; specific: string | null},
+          gender: action.payload as { general: string; specific?: string },
         };
       case registerActions.SET_PICTURES:
         return {...state, pictures: action.payload as string[]};

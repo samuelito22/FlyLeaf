@@ -1,3 +1,4 @@
+import { icons } from "../../assets";
 import { languagesList } from "./languagesList";
 
 export const questionsList = [
@@ -10,7 +11,7 @@ export const questionsList = [
       'I enjoy a drink now and then',
       'I drink regularly',
     ],
-    icon: 'drink'
+    icon: icons.drink
   },  
   {
     id: 2,
@@ -21,7 +22,7 @@ export const questionsList = [
       'I can adapt to both',
       'Neither, I love my sleep',
     ],
-    icon: 'sleep'
+    icon: icons.sleep
   },
   {
     id: 3,
@@ -32,7 +33,7 @@ export const questionsList = [
       'The colors of Fall',
       'The chill of Winter',
     ],
-    icon: 'season'
+    icon: icons.season
   },
   {
     id: 4,
@@ -43,7 +44,7 @@ export const questionsList = [
       'Sampling all the food',
       'At home, I prefer quiet evenings',
     ],
-    icon: 'party'
+    icon: icons.party
   },
   {
     id: 5,
@@ -62,7 +63,7 @@ export const questionsList = [
       'Aquarius',
       'Pisces',
     ],
-    icon: 'zodiac'
+    icon: icons.zodiac
   },
   {
     id: 6,
@@ -74,7 +75,7 @@ export const questionsList = [
       'I am an occasional smoker',
       'I do not smoke',
     ],
-    icon: 'smoking'
+    icon: icons.smoking
   },  
   {
     id: 7,
@@ -85,7 +86,7 @@ export const questionsList = [
       'Classic and elegant',
       'Sporty and functional',
     ],
-    icon: 'fashion'
+    icon: icons.fashion
   },
   {
     id: 8,
@@ -96,7 +97,7 @@ export const questionsList = [
       'No, but I exercise in other ways',
       'No, I do not exercise',
     ],
-    icon: 'gym'
+    icon: icons.gym
   },
   {
     id: 9,
@@ -110,7 +111,7 @@ export const questionsList = [
       'Master degree',
       'Trade school'
     ],
-    icon: 'education'
+    icon: icons.education
   },
   {
     id: 10,
@@ -196,8 +197,20 @@ export const questionsList = [
       'No, I do not want children',
       'I already have children'
     ],
-    icon: 'babies'
-  }
+    icon: icons.babies
+  },
+  {
+    id: 16,
+    question: "What is your ethnicity?",
+    answers: ['Asian', 'Black', 'Mixed', 'White', 'Other'],
+    icon: icons.ethnicity
+  },
+  {
+    id: 17,
+    question: "Have you received the COVID vaccination?",
+    answers: ['Fully Vaccinated', 'Partially Vaccinated', 'Not Vaccinated'],
+    icon: icons.vaccine
+    }
 ];
 
 export const interestsList = {

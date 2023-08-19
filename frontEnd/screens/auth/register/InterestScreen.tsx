@@ -6,12 +6,14 @@ import {
   Button,
   LoadingSpinner,
   interestsList,
+  ThreeDotsLoader,
 } from '../../../components';
 import {
   setInterests,
   setIsRegisterCompleted,
   resetRegister,
-  setCurrentUserId,
+  AppStatusActions,
+  UserActions
 } from '../../../redux';
 import {
   THEME_COLORS,
@@ -25,6 +27,7 @@ import {usePreventBackHandler, useDispatch} from '../../../utils/hooks';
 import {useSelector} from 'react-redux';
 import {AuthService} from '../../../services';
 import auth from '@react-native-firebase/auth';
+import editUserReducer from '../../../redux/reducers/editUserReducer';
 
 const styles = StyleSheet.create({
   interest_title: {
@@ -74,6 +77,11 @@ const InterestScreen = ({
 
 
   const registration = async () => {
+    if (!firstName || !dateOfBirth || !genderPreferences || !gender || !pictures || !relationshipGoal || !phoneNumber || !additionalInformation || !interests) {
+      // Handle missing data
+      console.error("Missing data for registration");
+      return;
+  }
     const currentUser = auth().currentUser;
     if (currentUser) {
       const uid = currentUser.uid;
@@ -92,7 +100,7 @@ const InterestScreen = ({
           phoneNumber,
         },
         interests: {
-          interests,
+          interests: interests || answer,
           additionalInformation,
         },
       };
@@ -109,17 +117,16 @@ const InterestScreen = ({
         userRegisterParams.profile.gender = {general: userRegisterParams.profile.gender.general}
       }
 
-      const controller = new AbortController();
       try {
         setIsLoading(true);
         await AuthService.userRegister(
           userRegisterParams,
-          controller.signal,
         ).then(result => {
           if (result.type === 'error') {
             console.log(result.message);
           } else {
-            dispatch(setCurrentUserId(uid));
+            dispatch(AppStatusActions.setIsLoggedIn(true));
+            dispatch(UserActions.setCurrentUserId(uid))
             dispatch(resetRegister());
             navigation.navigate(ROUTES.BOTTOM_TAB_NAVIGATOR);
           }
@@ -129,7 +136,6 @@ const InterestScreen = ({
       }
       setIsLoading(false);
 
-      return () => controller.abort();
     }
   };
 
@@ -169,7 +175,7 @@ const InterestScreen = ({
 
   return (
     <SafeContainer>
-      {isLoading && <LoadingSpinner />}
+      {isLoading && <ThreeDotsLoader />}
         <View style={generalStyles.container}>
           <Text style={generalStyles.title}>
             {interestsList.question}

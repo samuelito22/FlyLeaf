@@ -29,3 +29,6 @@ export const GOOGLE_ACCESS_DENIED_ERR = "Google Login Failed";
 export const GOOGLE_ACCESS_NOT_AUTHORIZED_ERR = "Not authorized";
 
 export const DATABASE_UPDATED = "Database updated successfully"
+
+export const SPOTIFY_IN_USE = "Your Spotify account has been linked to a different profile in FlyLeaf. If this was intentional, no action is needed. If you did not request this, please contact our support team immediately."
+export const INSTAGRAM_IN_USE = "Your Instagram account has been linked to a different profile in FlyLeaf. If this was intentional, no action is needed. If you did not request this, please contact our support team immediately."

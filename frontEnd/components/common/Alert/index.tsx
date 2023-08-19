@@ -18,14 +18,12 @@ const CustomAlert: FC<TYPES.AlertProps> = ({
           <Text style={styles.centeredView__modalView__message}>{message}</Text>
           <View style={styles.centeredView__modalView__buttonContainer}>
             <Pressable
-              style={styles.centeredView__modalView__button}
               onPress={onClose}>
               <Text style={styles.centeredView__modalView__textStyle}>
                 Cancel
               </Text>
             </Pressable>
             <Pressable
-              style={styles.centeredView__modalView__button}
               onPress={onConfirm}>
               <Text style={styles.centeredView__modalView__textStyle}>
                 Confirm

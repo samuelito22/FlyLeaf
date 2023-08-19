@@ -59,7 +59,7 @@ const EmailVerificationScreen: React.FC<EmailVerificationProps> = ({
       });
     }
 
-    return () => {controller.abort}
+    return () => {controller.abort()}
   }, [email]);
 
   return (

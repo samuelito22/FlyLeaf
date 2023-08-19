@@ -70,10 +70,10 @@ export const ProfilePrivateHeader = () => {
   );
 };
 
-export const EditProfileHeader = ({ onBackPress, leftIconText } : {onBackPress: () => void, leftIconText?: string}) => {
+export const EditProfileHeader = ({ onBackPress, leftIconText } : {onBackPress?: () => void, leftIconText?: string}) => {
   const navigation = useNavigation<NavigationProp<TYPES.RootStackParamList>>();
   const handleBackPress = async () => {
-    onBackPress()
+    if(onBackPress) onBackPress()
     navigation.goBack()
   };
 

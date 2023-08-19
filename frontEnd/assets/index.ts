@@ -58,6 +58,20 @@ import normalCross from "./icons/normalCross.png"
 import search from "./icons/search.png"
 import plus from "./icons/plus.png"
 import warning from "./icons/warning.png"
+import babies from "./icons/babies.png"
+import company from "./icons/company.png"
+import job from "./icons/job.png"
+import sexualOrientation from "./icons/sexual-orientation.png"
+import languages from "./icons/language.png"
+import gender from "./icons/gender.png"
+import bin from "./icons/bin.png"
+import addImage from "./icons/addImage.png"
+import eye from "./icons/eye.png"
+import spotify from "./icons/spotify.png"
+import instagram from "./icons/instagram.png"
+import dots from "./icons/dots.png"
+import ethnicity from "./icons/ethnicity.png"
+import vaccine from "./icons/vaccine.png"
 
 import swap from './images/swap.png';
 import logo from './images/logo.png';
@@ -68,7 +82,21 @@ import flyleaf from './images/FlyLeaf.png';
 import manAvatar from './images/manAvatar.png';
 import successIllustration from './images/successillustration.png';
 
-export const icons: { [key: string]: any } = {
+export const icons = {
+  ethnicity, 
+  vaccine,
+  dots,
+  instagram,
+  spotify,
+  eye,
+  addImage,
+  bin,
+  company,
+  job,
+  sexualOrientation,
+  languages,
+  gender,
+  babies,
   warning,
   plus,
   search,

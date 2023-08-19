@@ -1,17 +1,17 @@
 // Define the action types
-export const SET_PHONE_NUMBER = 'SET_PHONE_NUMBER';
-export const SET_DATE_OF_BIRTH = 'SET_DATE_OF_BIRTH';
-export const SET_FIRST_NAME = 'SET_FIRST_NAME';
-export const SET_GENDER_PREFERENCES = 'SET_GENDER_PREFERENCES';
-export const SET_GENDER = 'SET_GENDER';
-export const SET_PICTURES = 'SET_PICTURES';
-export const SET_EMAIL = 'SET_EMAIL';
-export const SET_RELATIONSHIP_GOAL = 'SET_RELATIONSHIP_GOAL';
-export const SET_IS_REGISTER_COMPLETED = 'SET_IS_REGISTER_COMPLETED';
-export const SET_PROGRESS_BAR_VALUE = 'SET_PROGRESS_BAR_VALUE';
-export const SET_ADDITIONAL_INFORMATION = 'SET_ADDITIONAL_INFORMATION';
-export const SET_INTERESTS = 'SET_INTERESTS';
-export const RESET_REGISTER = 'RESET_REGISTER';
+export const SET_PHONE_NUMBER = 'SET_PHONE_NUMBER' as const;
+export const SET_DATE_OF_BIRTH = 'SET_DATE_OF_BIRTH' as const;
+export const SET_FIRST_NAME = 'SET_FIRST_NAME' as const;
+export const SET_GENDER_PREFERENCES = 'SET_GENDER_PREFERENCES' as const;
+export const SET_GENDER = 'SET_GENDER' as const;
+export const SET_PICTURES = 'SET_PICTURES' as const;
+export const SET_EMAIL = 'SET_EMAIL' as const;
+export const SET_RELATIONSHIP_GOAL = 'SET_RELATIONSHIP_GOAL' as const;
+export const SET_IS_REGISTER_COMPLETED = 'SET_IS_REGISTER_COMPLETED' as const;
+export const SET_PROGRESS_BAR_VALUE = 'SET_PROGRESS_BAR_VALUE' as const;
+export const SET_ADDITIONAL_INFORMATION = 'SET_ADDITIONAL_INFORMATION' as const;
+export const SET_INTERESTS = 'SET_INTERESTS' as const;
+export const RESET_REGISTER = 'RESET_REGISTER' as const;
 
 
 import {TYPES} from '../../constants';
@@ -51,7 +51,7 @@ export const setGenderPreferences =
   };
 
 export const setGender =
-  (gender: {general: string; specific: string | null}) =>
+  (gender: { general: string; specific?: string | undefined; }) =>
   (dispatch: (action: TYPES.AppAction) => void) => {
     dispatch({
       type: SET_GENDER,

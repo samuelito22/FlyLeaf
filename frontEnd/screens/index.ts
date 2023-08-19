@@ -33,8 +33,16 @@ import EditProfileScreen from './profile/EditProfileScreen';
 import EditGenderScreen from './profile/EditGenderScreen';
 import EditSexualOrientationScreen from './profile/EditSexualOrientationScreen';
 import EditLanguageScreen from './profile/EditLanguageScreen';
+import EditCompanyScreen from './profile/EditCompanyScreen';
+import EditJobTitleScreen from './profile/EditJobTitleScreen';
+import EditVaccineScreen from './profile/EditVaccineScreen';
+import EditEthnicityScreen from './profile/EditEthnicityScreen';
 
 export {
+  EditEthnicityScreen,
+  EditVaccineScreen,
+  EditCompanyScreen,
+  EditJobTitleScreen,
   InterestScreen,
   WelcomeScreen,
   EditLanguageScreen,

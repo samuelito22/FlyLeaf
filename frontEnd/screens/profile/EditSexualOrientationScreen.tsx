@@ -2,7 +2,7 @@ import {Text, View, ScrollView, StyleSheet, BackHandler} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {SafeContainer, Button, questionsList, EditProfileHeader} from '../../components';
 import {THEME_COLORS,  TYPES, COMPONENT_COLORS, BORDER_RADIUS, themeText, PALETTE} from '../../constants';
-import { editSetSexualOrientation } from '../../redux';
+import { EditProfileActions } from '../../redux';
 import { useDispatch} from '../../utils/hooks';
 import { verticalScale } from 'react-native-size-matters';
 import { useSelector } from 'react-redux';
@@ -23,7 +23,7 @@ const EditSexualOrientationScreen = () => {
   const dispatch = useDispatch();
 
   const handleBackPress = () => {
-    if(valid) dispatch(editSetSexualOrientation(sexualOrientationTemp))
+    if(valid) dispatch(EditProfileActions.updateUserProfile("sexualOrientation", sexualOrientationTemp))
   }
 
   const sexualOrientationField = questionsList.find(field => field.id === 13) as {question: string, id: number, answers: string[]}
@@ -89,7 +89,7 @@ const EditSexualOrientationScreen = () => {
         </ScrollView>
         <Text style={styles.extraInformation}>
           Your preferences are used to tailor your matches. Your selections
-          aren't shared publicly
+          are shared publicly
         </Text>
       </View>
     </SafeContainer>

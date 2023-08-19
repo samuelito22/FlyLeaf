@@ -12,12 +12,16 @@ import ProfileNavigator from './ProfileNavigator';
 const Stack = createStackNavigator();
 
 const MainNavigator = () => {
+  const isLoggedIn = useSelector(
+    (state: TYPES.AppState) => state.appStatusReducer.isLoggedIn,
+  );
+
   const isRegisterCompleted = useSelector(
     (state: TYPES.AppState) => state.registerReducer.isRegisterCompleted,
   );
 
   const initialRouteNameDecider = () => {
-    if (firebase.auth().currentUser?.uid && isRegisterCompleted.status) {
+    if (isLoggedIn) {
       //suppose to be without the exlamation mark
       return ROUTES.BOTTOM_TAB_NAVIGATOR;
     } else {
@@ -29,8 +33,17 @@ const MainNavigator = () => {
     }
   };
 
+  const linking = {
+    prefixes: ['https://91db-90-242-236-229.ngrok-free.app'],
+    config: {
+      screens: {
+        InstagramOAuthScreen: 'instagram/oauth/',
+      },
+    },
+  };
+
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={linking}>
       <Stack.Navigator
         screenOptions={{
           headerShown: false,

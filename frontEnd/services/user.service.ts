@@ -1,6 +1,10 @@
-import {getApiEndpoints} from '../constants';
-
-const API_ENDPOINTS = getApiEndpoints()
+import {API_ENDPOINTS} from '../constants';
+import Geolocation from '@react-native-community/geolocation';
+import { useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { TYPES } from '../constants';
+import { AppStatusActions } from '../redux';
+import { useDispatch } from '../utils/hooks';
 
 const locationService = () => {
   const updateLocation = async (
@@ -40,7 +44,40 @@ const locationService = () => {
     }
   };
 
-  return {getLocation, updateLocation};
+  const getGeoLocation = (onLocationFetched?: (position: TYPES.PositionType) => void) => {
+    const dispatch = useDispatch();
+  
+    const { currentUserId } = useSelector(
+      (state: TYPES.AppState) => state.usersReducer,
+    );
+  
+    const { isLocationFetchComplete} = useSelector(
+      (state: TYPES.AppState) => state.appStatusReducer,
+    );
+  
+    const checkLocationEnabled = () => {
+      Geolocation.getCurrentPosition(
+        position => {
+          if (onLocationFetched) {
+            onLocationFetched(position.coords);
+          }
+          dispatch(AppStatusActions.setIsLocationFetchComplete(true));
+        },
+        error => {
+          console.log(error.code, error.message);
+          dispatch(AppStatusActions.setShowLocationScreen(true));
+        },
+        { enableHighAccuracy: true },
+      );
+    };
+  
+    useEffect(() => {
+      if (currentUserId && !isLocationFetchComplete)
+        checkLocationEnabled();
+    }, [currentUserId, isLocationFetchComplete]);
+  };
+
+  return {getLocation, updateLocation, getGeoLocation};
 };
 
 const profileService = () => {
@@ -60,10 +97,48 @@ const profileService = () => {
     }
   };
 
-  return {getProfile};
+  const updateProfile = async (uid:string, data: TYPES.InitialStateEditUserType, signal?: AbortSignal) => {
+    const { height, jobTitle, company, bio, sexualOrientation, languages,  additionalInformation, covidVaccination, ethnicity, interests, gender, pictures } = data
+    try {
+      const response = await fetch(`${API_ENDPOINTS.UPDATE_PROFILE}/${uid}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal,  
+        body: JSON.stringify({ height, jobTitle, company, bio, sexualOrientation, languages,  additionalInformation, covidVaccination, ethnicity, interests, gender, pictures})    
+      });
+      const data = await response.json();
+      return data;
+    } catch (error:any) {
+      console.log('Error message:', error.message);
+    }
+  };
+
+  
+
+  const initUserProfile = async (uid: string, locationData:TYPES.PositionType, signal?: AbortSignal) => {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.INIT_USER_PROFILE}/${uid}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal,    
+        body: JSON.stringify({locationData: {coordinates:locationData}}) 
+      });
+      const data = await response.json();
+      return data;
+    } catch (error:any) {
+      console.log('Error message:', error.message);
+    }
+  };
+
+  return {getProfile, initUserProfile, updateProfile};
 };
 
 export const UserService = {
   ...locationService(),
   ...profileService(),
 };
+

@@ -117,6 +117,7 @@ const FirstNameEntryScreen = ({
               borderBottomColor: valid
                 ? THEME_COLORS.primary
                 : THEME_COLORS.tertiary,
+                maxHeight:45
             }}
           />
           <View style={styles.alignNextButtonContainer}>

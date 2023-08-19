@@ -58,19 +58,20 @@ export const styles = StyleSheet.create({
   },
   galleryButtonContainer: {
     borderRadius: BORDER_RADIUS.medium,
-    width: 150,
-    height: 190,
+    backgroundColor:PALETTE.LIGHT200,
+    width: "50%",
+    aspectRatio: 1,
     position: 'relative',
-    borderWidth: 1,
-    borderColor: PALETTE.LIGHT400,
     overflow: 'hidden',
     marginRight: 15,
+    justifyContent:"center",
+    alignItems:"center"
   },
   galleryButtonImage: {
-    height: '100%',
-    width: '100%',
-    backgroundColor: 'transparent',
-    padding: 23,
+    height: '50%',
+    width: '50%',
+    tintColor:PALETTE.GRAY500
+
     
   },
   extraGenderModal_button: {

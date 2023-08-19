@@ -14,7 +14,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import {icons} from '../../../../assets';
-import Ripple from '../../../common/Ripple';
 
 const UserProfileCard = ({
   about,
