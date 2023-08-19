@@ -4,7 +4,6 @@ import { validateUid } from "../validators/auth.validator";
 import { validateUidAndCode } from "../validators/media.validator";
 import User from "../models/user.model";
 import instagramModel from "../models/instagram.model";
-import { expressParams } from "../types";
 import express from 'express';
 
 
@@ -14,7 +13,7 @@ const sendError = (res:express.Response, message:string, status = 500) => {
 
 // Controller Functions
 
-async function authenticateAndFetchInstagram({req, res}:expressParams) {
+async function authenticateAndFetchInstagram(req:express.Request, res: express.Response) {
     try {
       const { uid } = req.params;
       const { code } = req.body;
@@ -47,7 +46,7 @@ async function authenticateAndFetchInstagram({req, res}:expressParams) {
     }
   }
 
-async function refetchInstagram({req, res}:expressParams) {
+async function refetchInstagram(req:express.Request, res: express.Response) {
     try {
         const { uid } = req.body;
         const { error } = validateUid({uid});
@@ -94,7 +93,7 @@ async function refetchInstagram({req, res}:expressParams) {
     }
 }
 
-async function disconnectFromInstagram({req, res}:expressParams) {
+async function disconnectFromInstagram(req:express.Request, res: express.Response) {
     try {
         const { uid } = req.body;
         const { error } = validateUid({uid});

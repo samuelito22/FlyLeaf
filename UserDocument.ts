@@ -36,7 +36,7 @@ export interface GenderSchema {
       jobTitle?: string;
       company?: string;
       bio: string;
-      height?: { feets: number; inches: number };
+      height?: { feets: string; inches: string };
       pictures: string[];
       spotify?: SpotifySchema;
       instagram?: InstagramSchema;

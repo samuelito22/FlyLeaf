@@ -1,5 +1,5 @@
 import {ROUTES} from './routeConstants';
-import * as TYPES from './types.d';
+import * as TYPES from './types';
 import {THEME_COLORS, COMPONENT_COLORS, PALETTE} from './colors';
 import {FONTS} from './Fonts';
 import {themeText} from './textMixim';

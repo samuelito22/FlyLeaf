@@ -19,6 +19,7 @@ async function registerUserService(userData:UserDocument) {
     if (userExist) {
         throw new Error(USER_ALREADY_EXIST);
     }
+    console.log(value)
     
     const newUser = new User(value);
     await newUser.save();

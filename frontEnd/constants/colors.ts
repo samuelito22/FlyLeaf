@@ -42,7 +42,7 @@ export const PALETTE = {
 };
 
 export const THEME_COLORS = {
-  primary: PALETTE.INDIGO600,
+  primary: "#00755E",
   secondary: PALETTE.LIGHT100,
   tertiary: PALETTE.GRAY300,
   background: PALETTE.WHITE,

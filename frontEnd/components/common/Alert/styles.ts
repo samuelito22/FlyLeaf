@@ -10,28 +10,25 @@ export const styles = StyleSheet.create({
   },
   centeredView__modalView: {
     margin: 20,
-    backgroundColor: 'white',
+    backgroundColor: '#424242',
     padding: 25,
     width: '90%',
     maxWidth: 400,
-    borderRadius: BORDER_RADIUS.small,
-  },
-  centeredView__modalView__button: {
-    marginLeft: 20,
   },
   centeredView__modalView__buttonContainer: {
     flexDirection: 'row',
     marginTop: 35,
-    justifyContent: 'flex-end',
+    width:"100%",
+    justifyContent: 'space-between',
   },
   centeredView__modalView__title: {
     marginBottom: 15,
-    ...themeText.headingTwo,
-    color: THEME_COLORS.dark,
+    ...themeText.bodyRegularFive,
+    color: "white",
   },
   centeredView__modalView__message: {
     ...themeText.bodyRegularFive,
-    color: THEME_COLORS.dark,
+    color: "white",
   },
   centeredView__modalView__textStyle: {
     color: THEME_COLORS.primary,

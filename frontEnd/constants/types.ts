@@ -1,6 +1,9 @@
-import {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import {ImageSourcePropType, ViewStyle} from 'react-native';
-import {NavigationProp} from '@react-navigation/native';
+import React, { ReactNode } from 'react';
+import { ImageSourcePropType, ViewStyle, TextStyle, TextInputProps, StyleProp } from 'react-native';
+import {UserDocument} from "../../UserDocument"
+import {SpotifyDocument} from "../../SpotifyDocument"
+import {InstagramDocument } from "../../InstagramDocument"
+import { rootReducer } from '../redux/store';
 
 export interface LayoutChangeEvent {
   nativeEvent: {
@@ -30,7 +33,7 @@ export interface InterestsButtonProps extends ButtonProps{
 }
 
 export interface ButtonImageProps extends ButtonProps {
-  imgUrl: Image;
+  imgUrl: ImageSourcePropType;
   tintColor?: string;
   contentContainerStyle?: ViewStyle,
   iconHeaderLeft?: boolean,
@@ -142,7 +145,7 @@ export interface UserProfileCardProps {
   about: string;
   firstName: string;
   age: string;
-  city: string;
+  city: string | undefined;
   statusText: string;
   interests: string[];
   movementActive?: boolean;
@@ -188,9 +191,14 @@ interface SetGenderPreferencesAction {
   payload: string[];
 }
 
+interface setAdditionalInformation {
+  type: 'SET_ADDITIONAL_INFORMATION';
+  payload: {question: string, answer: string, icon: string}[] | null;
+}
+
 interface SetGenderAction {
   type: 'SET_GENDER';
-  payload: {general: string; specific: string | null};
+  payload: { general: string; specific?: string | undefined; }
 }
 
 interface SetPicturesAction {
@@ -217,7 +225,7 @@ interface SetIsRegisterCompletedAction {
   type: 'SET_IS_REGISTER_COMPLETED';
   payload: {
     status: boolean;
-    currentScreen: keyof TYPES.RootStackParamList | null;
+    currentScreen: keyof RootStackParamList | null;
   };
 }
 
@@ -255,62 +263,6 @@ interface RemoveUserProfileAction {
   payload: string;
 }
 
-// Edit Profile
-interface EditSetBioAction {
-  type: 'EDIT_SET_BIO';
-  payload: string | null;
-}
-
-interface editSetPicture { 
-  type: 'EDIT_SET_PICTURES';
-  payload: string[]
-}
-
-interface EditSetHeightAction {
-  type: 'EDIT_SET_HEIGHT';
-  payload: {feet: number, inches: number} | null;
-}
-
-interface EditSetAdditionalInformationAction {
-  type: 'EDIT_SET_ADDITIONAL_INFORMATION';
-  payload: {question: string, answer: string, icon: string}[] | null;
-}
-
-interface EditSetGenderInformationAction {
-  type: 'EDIT_SET_GENDER_INFORMATION';
-  payload: {general: string, specific: string | null} | null;
-}
-
-interface EditSetJobTitleAction {
-  type: 'EDIT_SET_JOB_TITLE';
-  payload: string | null;
-}
-
-interface EditSetCompanyAction {
-  type: 'EDIT_SET_COMPANY';
-  payload: string | null;
-}
-
-interface EditSetSexualOrientationAction {
-  type: 'EDIT_SET_SEXUAL_ORIENTATION';
-  payload: string[] | null;
-}
-
-interface EditSetModalVisibleAction {
-  type: 'EDIT_SET_MODAL_VISIBLE';
-  payload: boolean;
-}
-
-interface EditSetLanguagesAction {
-  type: 'EDIT_SET_LANGUAGES';
-  payload: string[] | null;
-}
-
-interface EditInitUserProfileAction {
-  type: 'EDIT_INIT_USER_PROFILE';
-  payload: any;
-}
-
 interface setIsBlocked { 
   type: 'SET_IS_BLOCKED';
   payload: boolean
@@ -331,17 +283,26 @@ interface setIsLoggedIn {
   payload: boolean
 }
 
-interface editSetCoordinates {
-  type: 'EDIT_SET_COORDINATES';
-  payload: { topLeft: { x: number, y: number }, bottomRight: { x: number, y: number } }[]
-}
 
 interface setIsRefreshSpotifyComplete {
   type: 'SET_IS_REFRESH_SPOTIFY_COMPLETE';
   payload: boolean
 }
 
+interface updateUserProfile {
+  type: 'UPDATE_USER_PROFILE';
+  payload: {field: string, value: any};
+}
+
+interface initUserProfile {
+  type: 'INIT_USER_PROFILE';
+  payload: userProfileDataStructure
+}
+
 export type AppAction =
+|updateUserProfile
+|initUserProfile
+| setAdditionalInformation
   | SetPhoneNumberAction
   | SetDateOfBirthAction
   | SetFirstNameAction
@@ -354,33 +315,22 @@ export type AppAction =
   | SetIsRegisterCompletedAction
   | SetProgressBarValueAction
   | SetQuestionAndAnswerAction
-  | SetInterestsActionAction
+  | SetInterestsAction
   | resetRegisterAction
-  | setUserProfileAction
+  | SetUserProfileAction
   | SetCurrentUserIdAction
   | RemoveUserProfileAction
-  | EditSetBioAction
-  | EditSetHeightAction
-  | EditSetAdditionalInformationAction
-  | EditSetGenderInformationAction
-  | EditSetJobTitleAction
-  | EditSetCompanyAction
-  | EditSetSexualOrientationAction
-  | EditSetModalVisibleAction
-  | EditSetLanguagesAction
   | setIsBlocked
-  | EditInitUserProfileAction
   | setIsLocationFetchComplete
   | setIsProfileFetchComplete
   | setIsLoggedIn
-  |editSetCoordinates
   | setIsRefreshSpotifyComplete
 
 export interface InitialStateRegisterType {
   dateOfBirth: Date | null;
   firstName: string | null;
   genderPreferences: string[] | null;
-  gender: {general: string; specific: string | null} | null;
+  gender: { general: string; specific?: string | undefined; } | null;
   pictures: string[] | null;
   email: string | null;
   relationshipGoal: string | null;
@@ -403,10 +353,18 @@ export interface InitialStateAppStatusType {
   isRefreshSpotifyComplete: boolean
 }
 
-export interface InitialStateUsersType {
-  [key: string]: any;
-  currentUserId: string | null
+
+export interface userProfileDataStructure {
+  user: UserDocument;
+  spotify?: SpotifyDocument;
+  instagram?: InstagramDocument;
 }
+
+export interface InitialStateUsersType {
+  byId: Record<string, userProfileDataStructure>;
+  currentUserId: string | null;
+}
+
 
 export interface InitialStateEditUserType {
   modalVisible: boolean;
@@ -421,30 +379,25 @@ export interface InitialStateEditUserType {
     spotify_id?: string;
     artists:any
   } | null;
-  height: {
-    feets?: number;
-    inches?: number;
-  } | null;
+  height:{ feets: string; inches: string; } | undefined
   interests: string[];
   additionalInformation: {
     question: string;
     answer: string;
-    icon: string;
+    icon: number;
   }[];
-  jobTitle: string;
-  company: string;
+  jobTitle: string | undefined;
+  company: string | undefined;
   gender: {
     general: string;
     specific?: string;
   } | null;
-  sexualOrientation: string[];
+  sexualOrientation: string[] | undefined;
   pictures: string[];
-  languages: string[];
-  uid: string;
-  covidVaccination: string;
-  ethnicity: string
+  languages: string[] | undefined;
+  covidVaccination: string | undefined;
+  ethnicity: string | undefined
 }
-
 
 /**
  * Redux stor - App State
@@ -487,9 +440,7 @@ export type RootStackParamList = {
   BOTTOM_TAB_NAVIGATOR: undefined;
 
   // Profile
-  PROFILE_NAVIGATOR: {
-    screen: USER_PROFILE_SCREEN | PUBLIC_PROFILE_SCREEN;
-  };
+  
   USER_PROFILE_SCREEN: undefined;
   PUBLIC_PROFILE_SCREEN: undefined;
   EDIT_PROFILE_SCREEN: undefined;
@@ -499,7 +450,8 @@ export type RootStackParamList = {
   EDIT_JOB_TITLE_SCREEN: undefined;
   EDIT_COMPANY_SCREEN: undefined;
   EDIT_VACCINE_SCREEN: undefined;
-  EDIT_ETHNICITY_SCREEN: undefined
+  EDIT_ETHNICITY_SCREEN: undefined;
+  PROFILE_NAVIGATOR: undefined
 };
 
 /**
@@ -511,7 +463,7 @@ export interface UserRegisterParams {
   profile: {
     firstName: string;
     dateOfBirth: Date;
-    gender: { general: string; specific?: string };
+    gender: { general: string; specific?: string | undefined; }
     pictures?: string[];
   };
   preferences: {

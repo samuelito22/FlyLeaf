@@ -2,14 +2,13 @@ import {
   SERVER_ERR,
 } from "../errors";
 import AuthServices from "../services/auth.services";
-import { expressParams } from "../types";
-
+import express from "express"
 
 
 // @route POST auth/users/register
 // @desc Register user
 // @access Public
-async function registerUser({req, res}:expressParams) {
+async function registerUser(req:express.Request, res: express.Response) {
   try {
       const response = await AuthServices.registerUserService(req.body);
       res.status(200).json({
@@ -28,7 +27,7 @@ async function registerUser({req, res}:expressParams) {
 // @route GET auth/users/emailExist
 // @desc Get if the email exists
 // @access Public
-async function emailExist({req, res}:expressParams) {
+async function emailExist(req:express.Request, res: express.Response) {
   try {
       const response = await AuthServices.emailExistService(req.body);
       return res
@@ -46,7 +45,7 @@ async function emailExist({req, res}:expressParams) {
 // @route GET auth/users/phoneExist
 // @desc Get if the phone exists
 // @access Public
-async function phoneExist({req, res}:expressParams) {
+async function phoneExist(req:express.Request, res: express.Response) {
   try {
       const response = await AuthServices.phoneExistService(req.body);
       return res
@@ -64,7 +63,7 @@ async function phoneExist({req, res}:expressParams) {
 // @route GET auth/users/uidExist
 // @desc Get if the user uid exists
 // @access Public
-async function uidExist({req, res}:expressParams) {
+async function uidExist(req:express.Request, res: express.Response) {
   try {
       const response = await AuthServices.uidExistService(req.body);
       return res

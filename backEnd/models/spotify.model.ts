@@ -1,24 +1,5 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
-
-export interface Image {
-    height: number;
-    width: number;
-    url: string;
-}
-
-export interface Artist {
-    id: string;
-    name: string;
-    type: string;
-    images: Image[];
-    genres: string[];
-}
-
-export interface SpotifyDocument extends Document {
-    refreshToken?: string;
-    _id: string;
-    artists: Artist[];
-}
+import {Artist, SpotifyDocument} from "../../SpotifyDocument"
 
 interface SpotifyModel extends Model<SpotifyDocument> {}
 

@@ -6,18 +6,18 @@ const initialStateEditUser: TYPES.InitialStateEditUserType = {
     bio: "",
     instagram: null,
     spotify: null,
-    height: null,
     interests: [],
     additionalInformation: [],
-    jobTitle: "",
-    company: "",
     gender: null,
-    sexualOrientation: [],
     pictures: [],
-    languages: [],
-    uid: "",
-    covidVaccination: "",
-    ethnicity: ""
+    height: undefined,
+    jobTitle: undefined,
+    company: undefined,
+    ethnicity: undefined,
+    covidVaccination: undefined,
+    sexualOrientation: undefined,
+    languages: undefined
+
 };
 
 const editUserReducer = (
@@ -28,21 +28,20 @@ const editUserReducer = (
         case editUserAction.INIT_USER_PROFILE:
             return {
                 ...state,
-                bio: action.payload.profile?.bio,
-                instagram: {...action.payload.profile?.instagram, images: action.payload.instagram},
-                spotify: {...action.payload.profile?.spotify, artists: action.payload.spotify},
-                height: action.payload.profile?.height,
-                interests: action.payload.interests?.interests,
-                additionalInformation: action.payload.interests?.additionalInformation,
-                jobTitle: action.payload.profile?.jobTitle,
-                company: action.payload.profile?.company,
-                gender: action.payload.profile?.gender,
-                sexualOrientation: action.payload.preferences?.sexualOrientation,
-                pictures: action.payload.profile?.pictures,
-                languages: action.payload.interests?.languages,
-                uid: action.payload.uid,
-                covidVaccination: action.payload.interests?.covidVaccination,
-                ethnicity: action.payload.interests?.ethnicity,
+                bio: action.payload.user.profile?.bio,
+                instagram: {...action.payload.user.profile?.instagram, images: action.payload.instagram?.images},
+                spotify: {...action.payload.user.profile?.spotify, artists: action.payload.spotify?.artists},
+                height: action.payload.user.profile?.height,
+                interests: action.payload.user.interests?.interests,
+                additionalInformation: action.payload.user.interests?.additionalInformation,
+                jobTitle: action.payload.user.profile?.jobTitle,
+                company: action.payload.user.profile?.company,
+                gender: action.payload.user.profile?.gender,
+                sexualOrientation: action.payload.user.preferences?.sexualOrientation,
+                pictures: action.payload.user.profile?.pictures,
+                languages: action.payload.user.interests?.languages,
+                covidVaccination: action.payload.user.interests?.covidVaccination,
+                ethnicity: action.payload.user.interests?.ethnicity,
             };
         case editUserAction.UPDATE_USER_PROFILE:
             const { field, value } = action.payload;

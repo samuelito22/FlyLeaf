@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
 const { Schema } = mongoose;
-import UserDocument from "../../UserDocument"
+import { UserDocument, LocationSchema, AdditionalInformationSchema, GenderSchema, SpotifySchema, InstagramSchema} from "../../UserDocument"
 
-const LocationSchema = new Schema({
+const LocationSchema = new Schema<LocationSchema>({
   type: { type: String, enum: ['Point'], default: 'Point' },
   coordinates: { type: {longitude: {type: Number, required: true}, latitude: {type: Number, required: true}} },
   city: { type: String },
@@ -10,28 +10,28 @@ const LocationSchema = new Schema({
   showDistance: {type: Boolean, default: true}
 }, { _id : false });
 
-const AdditionalInformationSchema = new Schema({
+const AdditionalInformationSchema = new Schema<AdditionalInformationSchema>({
   question: { type: String, required: true },
   answer: { type: String, required: true },
   icon: {type: Number, required: true}
 }, { _id : false });
 
-const GenderSchema = new Schema({
+const GenderSchema = new Schema<GenderSchema>({
   general: { type: String, required: true, enum: ['Male', 'Female', 'Non-Binary'] },
   specific: { type: String }
 }, { _id : false });
 
-const SpotifySchema = new Schema({
+const SpotifySchema = new Schema<SpotifySchema>({
   isConnected: {type: Boolean, default: false},
   spotify_id: {type: String, unique:true, sparse:true},
 },{ _id : false, timestamps:true })
 
-const InstagramSchema = new Schema({
+const InstagramSchema = new Schema<InstagramSchema>({
   isConnected: {type: Boolean, default: false},
   instagram_id: {type: String, unique:true, sparse:true}
 }, { _id : false, timestamps:true })
 
-const UserSchema = new Schema({
+const UserSchema = new Schema<UserDocument>({
   _id: { type: String, alias: 'uid' },
   profile: {
     firstName: { type: String, required: true },
@@ -40,7 +40,7 @@ const UserSchema = new Schema({
     jobTitle: {type: String},
     company: {type: String},
     bio: { type: String, default: "Hello! I'm new here and haven't written my bio yet. Check my profile!" },
-    height: {type: {feets: Number, inches: Number}},
+    height: {type: {feets: String, inches: String}},
     pictures: [{ type: String }],
     spotify: {type:SpotifySchema},
     instagram: {type:InstagramSchema}

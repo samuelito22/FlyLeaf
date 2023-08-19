@@ -13,11 +13,15 @@ import instagramModel from "../models/instagram.model";
 import InstagramServices from "../services/instagram.services";
 import { validateUserUpdateParams } from "../validators/user.validator";
 import User from "../models/user.model";
-import { expressParams } from "../types";
 import SpotifyModel from "../models/spotify.model";
+import express from "express"
 
+type expressParams = {
+  req: express.Request;
+  res: express.Response;
+}
 
-async function updateUserLocation({req, res}:expressParams) {
+async function updateUserLocation(req:express.Request, res: express.Response) {
   const { uid, locationData } = req.body;
 
   const { error } = validateLocation({ uid, locationData });
@@ -44,7 +48,7 @@ async function updateUserLocation({req, res}:expressParams) {
   }
 }
 
-async function getUserLocation({req, res}:expressParams) {
+async function getUserLocation(req:express.Request, res: express.Response) {
   const { uid } = req.params;
   const { error } = validateUid({uid});
   
@@ -70,7 +74,7 @@ async function getUserLocation({req, res}:expressParams) {
   }
 }
 
-async function getUserProfile({req, res}:expressParams) {
+async function getUserProfile(req:express.Request, res: express.Response) {
   const { uid } = req.params;
   const { error } = validateUid({uid});
   
@@ -107,94 +111,150 @@ async function getUserProfile({req, res}:expressParams) {
   }
 }
 
-async function updateUserProfile({req, res}:expressParams) {
-  const { uid } = req.params
-  const {  bio, gender, languages, sexualOrientation, jobTitle, company, covidVaccination, ethnicity, height, additionalInformation, pictures} = req.body
+async function updateUserProfile(req: express.Request, res: express.Response) {
+  const { uid } = req.params;
+  const {
+    bio,
+    gender,
+    languages,
+    sexualOrientation,
+    jobTitle,
+    company,
+    covidVaccination,
+    ethnicity,
+    height,
+    additionalInformation,
+    pictures
+  } = req.body;
 
-  
-
-  const {error} = validateUserUpdateParams({uid,bio, gender, languages, sexualOrientation, jobTitle, company, covidVaccination, ethnicity, height, additionalInformation, pictures})
-
-  const updatedUserData = {
+  const { error } = validateUserUpdateParams({
     uid,
-    profile: {
-      bio,
-      gender,
-      jobTitle,
-      company,
-      ...(height && {
-        height: {
-          feet: Number(height.feet),
-          inches: Number(height.inches)
-        }
-      }),
-      pictures
-    },
-    interests: {
-      languages,
-      covidVaccination,
-      ethnicity,
-      additionalInformation
-    },
-    preferences:{
-      sexualOrientation
-    }
-  }
+    bio,
+    gender,
+    languages,
+    sexualOrientation,
+    jobTitle,
+    company,
+    covidVaccination,
+    ethnicity,
+    height,
+    additionalInformation,
+    pictures
+  });
+  console.log(error)
 
   if (error) {
     return res.status(400).json({
       type: "error",
-      message: error.details[0].message,
+      message: error.details[0].message
     });
   }
 
   try {
     let combinedProfile = {}
+    // Fetch the existing user data from the database
+    const user = await User.findOne({ _id: uid });
 
-    const user = await User.findOneAndUpdate(
-      {_id: uid},
-      { $set: updatedUserData },
-  { new: true }
-
-    )
-
-    if(!user){
+    if (!user) {
       return res.status(404).json({
         type: "error",
         message: USER_NOT_FOUND_ERR
       });
-    } 
+    }
 
-    combinedProfile = {...combinedProfile, ...user.toObject()}
+    console.log(pictures)
 
-    const InstagramData = await instagramModel.findOne({_id: user.profile.instagram.instagram_id})
+    const updatedProfile = {
+      bio: bio || undefined,
+      gender: gender || undefined,
+      jobTitle: jobTitle || undefined,
+      company: company || undefined,
+      height: height
+        ? {
+            feet: Number(height.feet),
+            inches: Number(height.inches)
+          }
+        : undefined,
+      pictures: pictures || undefined
+    };
+    
+    const updatedInterests = {
+      languages: languages || undefined,
+      covidVaccination: covidVaccination || undefined,
+      ethnicity: ethnicity || undefined,
+      additionalInformation: additionalInformation || undefined
+    };
+    
+    const updatedPreferences = {
+      sexualOrientation: sexualOrientation || undefined
+    };
+    
+    // Update the user data with the new object
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: uid },
+      {
+        $set: {
+          "profile.bio": updatedProfile.bio,
+          "profile.gender": updatedProfile.gender,
+          "profile.jobTitle": updatedProfile.jobTitle,
+          "profile.company": updatedProfile.company,
+          "profile.height": updatedProfile.height,
+          "profile.pictures": updatedProfile.pictures,
+          "interests.languages": updatedInterests.languages,
+          "interests.covidVaccination": updatedInterests.covidVaccination,
+          "interests.ethnicity": updatedInterests.ethnicity,
+          "interests.additionalInformation": updatedInterests.additionalInformation,
+          "preferences.sexualOrientation": updatedPreferences.sexualOrientation
+        }
+      },
+      { new: true }
+    );
+    
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        type: "error",
+        message: USER_NOT_FOUND_ERR
+      });
+    }
+    combinedProfile = {...combinedProfile, ...updatedUser.toObject()}
+
+    if(user.profile.instagram?.isConnected){
+      const InstagramData = await instagramModel.findOne({_id: user.profile.instagram.instagram_id})
 
     delete InstagramData?.accessToken;
     delete InstagramData?.expiryDate;
 
     combinedProfile = {...combinedProfile, instagram: InstagramData?.images}
+    }
 
-    const spotifyData = await SpotifyModel.findOne({_id: user.profile.spotify.spotify_id})
-    delete spotifyData?.refreshToken;
+    if(user.profile.spotify?.isConnected){
+      const spotifyData = await SpotifyModel.findOne({_id: user.profile.spotify.spotify_id})
+      delete spotifyData?.refreshToken;
+  
+      combinedProfile = {...combinedProfile, spotify: spotifyData?.artists}
+    }
 
-    combinedProfile = {...combinedProfile, spotify: spotifyData?.artists}
-
-    return res.status(200).json({ type: "success", profile: combinedProfile });
-    
+    return res.status(200).json({
+      type: "success",
+      profile: combinedProfile
+    });
   } catch (error) {
-    console.error('Error updating user profile', error);
+    console.error("Error updating user profile", error);
     return res.status(500).json({
       type: "error",
-      message: 'Error updating user profile'
+      message: "Error updating user profile"
     });
   }
 }
 
-async function initUserProfile({req, res}:expressParams) {
+
+async function initUserProfile(req:express.Request, res: express.Response) {
   const { uid } = req.params
   const { locationData } = req.body;
 
   const { error } = validateLocation({ uid, locationData });
+
   if (error) {
     return res.status(400).json({
       type: "error",
@@ -212,12 +272,17 @@ async function initUserProfile({req, res}:expressParams) {
   }
 
   // Location updated
-  if(!user.location.lastLocation.coordinates || Math.abs(locationData.coordinates.longitude - user.location.lastLocation.coordinates.latitude) > 0.01 || Math.abs(locationData.coordinates.longitude - user.location.lastLocation.coordinates.latitude) > 0.01){
+  if (
+    !user.location?.lastLocation?.coordinates ||
+    Math.abs(locationData.coordinates.longitude - user.location.lastLocation.coordinates.latitude) > 0.01 ||
+    Math.abs(locationData.coordinates.longitude - user.location.lastLocation.coordinates.latitude) > 0.01
+  ) {
     user = await UserServices.updateUserLocation(uid, locationData);
   }
 
+
   // Spotify Update
-  if(user.profile.spotify.isConnected){
+  if(user.profile.spotify?.isConnected){
     const result = await SpotifyServices.refetchSpotifyData(uid)
     await SpotifyServices.fetchTopArtists(result.accessToken, result.spotify_id)   
 
@@ -227,7 +292,7 @@ async function initUserProfile({req, res}:expressParams) {
     combinedProfile = { ...combinedProfile, spotify: spotifyData?.artists }
   }
 
-  if(user.profile.instagram.isConnected){
+  if(user.profile.instagram?.isConnected){
     const instagram_id = user.profile.instagram.instagram_id
     let InstagramData = await instagramModel.findOne({_id: instagram_id})
     if (!InstagramData) return res.status(404).json({ type: "error", message: "Instagram data not found" });

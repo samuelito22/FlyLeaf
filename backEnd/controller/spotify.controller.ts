@@ -1,7 +1,6 @@
 import { SPOTIFY_IN_USE } from "../errors";
 import SpotifyServices from "../services/spotify.services";
 import UserServices from "../services/user.services";
-import { expressParams } from "../types";
 import { validateUid } from "../validators/auth.validator";
 import { validateUidAndCode } from "../validators/media.validator";
 import express from 'express';
@@ -12,7 +11,7 @@ const sendError = (res:express.Response, message:string, status = 500) => {
 
 // Controller Functions
 
-async function authenticateAndFetchSpotify({req, res}:expressParams) {
+async function authenticateAndFetchSpotify(req:express.Request, res: express.Response) {
     try {
       const { uid } = req.params;
       const { code } = req.body;
@@ -50,7 +49,7 @@ async function authenticateAndFetchSpotify({req, res}:expressParams) {
     }
   }
 
-async function refetchSpotify({req, res}:expressParams) {
+async function refetchSpotify(req:express.Request, res: express.Response) {
     try {
         const { uid } = req.body;
         const { error } = validateUid({uid});
@@ -77,7 +76,7 @@ async function refetchSpotify({req, res}:expressParams) {
     }
 }
 
-async function disconnectFromSpotify({req, res}:expressParams) {
+async function disconnectFromSpotify(req:express.Request, res: express.Response) {
     try {
         const { uid } = req.params;
         const { error } = validateUid({uid});

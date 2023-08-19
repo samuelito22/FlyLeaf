@@ -51,7 +51,7 @@ const locationService = () => {
       (state: TYPES.AppState) => state.usersReducer,
     );
   
-    const { locationFetchComplete } = useSelector(
+    const { isLocationFetchComplete} = useSelector(
       (state: TYPES.AppState) => state.appStatusReducer,
     );
   
@@ -72,9 +72,9 @@ const locationService = () => {
     };
   
     useEffect(() => {
-      if (currentUserId && !locationFetchComplete)
+      if (currentUserId && !isLocationFetchComplete)
         checkLocationEnabled();
-    }, [currentUserId, locationFetchComplete]);
+    }, [currentUserId, isLocationFetchComplete]);
   };
 
   return {getLocation, updateLocation, getGeoLocation};
@@ -97,8 +97,8 @@ const profileService = () => {
     }
   };
 
-  const updateProfile = async (data: TYPES.InitialStateEditUserType, signal?: AbortSignal) => {
-    const { uid, height, jobTitle, company, bio, sexualOrientation, languages,  additionalInformation, covidVaccination, ethnicity, interests, gender, pictures } = data
+  const updateProfile = async (uid:string, data: TYPES.InitialStateEditUserType, signal?: AbortSignal) => {
+    const { height, jobTitle, company, bio, sexualOrientation, languages,  additionalInformation, covidVaccination, ethnicity, interests, gender, pictures } = data
     try {
       const response = await fetch(`${API_ENDPOINTS.UPDATE_PROFILE}/${uid}`, {
         method: 'PUT',
@@ -106,7 +106,7 @@ const profileService = () => {
           'Content-Type': 'application/json',
         },
         signal,  
-        body: JSON.stringify({uid, height, jobTitle, company, bio, sexualOrientation, languages,  additionalInformation, covidVaccination, ethnicity, interests, gender, pictures})    
+        body: JSON.stringify({ height, jobTitle, company, bio, sexualOrientation, languages,  additionalInformation, covidVaccination, ethnicity, interests, gender, pictures})    
       });
       const data = await response.json();
       return data;

@@ -26,12 +26,15 @@ const UserProfileScreen = () => {
   const dispatch = useDispatch()
 
   const currentUserId = useSelector((state: TYPES.AppState) => state.usersReducer.currentUserId);
-  const userProfile = useSelector((state: TYPES.AppState) => state.usersReducer.byId[currentUserId]);
+  const userProfile:TYPES.userProfileDataStructure = currentUserId 
+  ? useSelector((state: TYPES.AppState) => state.usersReducer.byId[currentUserId])
+  : null;
+
 
 
   const navigation = useNavigation<NavigationProp<TYPES.RootStackParamList>>();
 
-  const dateOfBirth = new Date(userProfile.profile.dateOfBirth);
+  const dateOfBirth = new Date(userProfile.user.profile.dateOfBirth);
 
   const currentDate = new Date();
 
@@ -47,8 +50,12 @@ const UserProfileScreen = () => {
   }
 
   const onEditPress = () => {
-    dispatch(EditProfileActions.initUserProfile(userProfile))
+    if(userProfile){
+      dispatch(EditProfileActions.initUserProfile(userProfile));
+
     navigation.navigate(ROUTES.EDIT_PROFILE_SCREEN)
+    }
+    
   }
 
   return (
@@ -57,12 +64,12 @@ const UserProfileScreen = () => {
       <View style={GeneralStyles.container}>
         <ScrollView contentContainerStyle={{alignItems: 'center'}}>
           <UserProfileCard
-            about={userProfile.profile.bio}
-            firstName={userProfile.profile.firstName}
+            about={userProfile.user.profile.bio}
+            firstName={userProfile.user.profile.firstName}
             age={age.toString()}
-            city={userProfile.location.lastLocation.city}
-            statusText={userProfile.preferences.relationshipGoal}
-            interests={userProfile.interests.interests}
+            city={userProfile.user.location.lastLocation?.city}
+            statusText={userProfile.user.preferences?.relationshipGoal}
+            interests={userProfile.user.interests.interests}
             movementActive={false}
           />
           <View style={{flexDirection: 'row', marginTop: 15}}>
@@ -77,10 +84,10 @@ const UserProfileScreen = () => {
           <View style={styles.planContainer}>
             <View style={styles.creditAndPlainInformation}>
               <Text style={styles.creditAndPlainInformation_text}>
-                Current connects: {userProfile.appActivity.connects}
+                Current connects: {userProfile.user.appActivity.connects}
               </Text>
               <Text style={styles.creditAndPlainInformation_text}>
-                Active plan: {userProfile.isPremiumUser ? 'On' : 'Off'}
+                Active plan: {userProfile.user.appActivity.isPremiumUser ? 'On' : 'Off'}
               </Text>
             </View>
 

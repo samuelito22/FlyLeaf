@@ -1,16 +1,5 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
-
-export interface Image {
-    id: string;
-    url: string;
-}
-
-export interface InstagramDocument extends Document {
-    accessToken?: string;
-    _id: string;
-    images: Image[];
-    expiryDate?: Date;
-}
+import { Image, InstagramDocument } from "../../InstagramDocument"
 
 interface InstagramModel extends Model<InstagramDocument> {}
 

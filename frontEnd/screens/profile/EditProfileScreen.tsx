@@ -128,6 +128,7 @@ type NavigationProps = {
 
 const EdiScreen: React.FC<NavigationProps> = ({navigation}) => {
   const state = useSelector((state: TYPES.AppState) => state.editUserReducer);
+  const uid = useSelector((state: TYPES.AppState) => state.usersReducer.currentUserId);
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
 
@@ -163,11 +164,13 @@ const EdiScreen: React.FC<NavigationProps> = ({navigation}) => {
 
   const handleBackPress = async () => {
     try{
-      setLoading(true)
-      const result = await UserService.updateProfile(state)
-      setLoading(false)
-      console.log(result)
-      //dispatch(UserActions.setUserProfile(state.uid, result))
+      if(uid){
+        setLoading(true)
+        const result = await UserService.updateProfile(uid,state)
+        dispatch(UserActions.setUserProfile(uid , result))
+        setLoading(false)
+      }
+     
 
     } catch(error) {
       console.log(error)
@@ -342,8 +345,8 @@ const AdditionalInformation = ({state, dispatch}: SectionProps) => {
       </Text>
       {state.additionalInformation.map(
         (
-          field: {question: string; icon: string; answer: string},
-          index: number,
+          field,
+          index,
         ) => (
           <TouchableRipple
             key={index}
@@ -394,13 +397,6 @@ const HeightSection = ({state, dispatch}: SectionProps) => {
       const feetToInt = parseInt(feets);
       if (feetToInt < 3 || feetToInt > 7 || !feetToInt) {
         setShowFeetError(true);
-      }else{
-        dispatch(
-          EditProfileActions.updateUserProfile('height', {
-            feets: Number(feets),
-            inches: state?.height?.inches,
-          }),
-        );
       }
     } catch {
       setShowFeetError(true);
@@ -414,13 +410,6 @@ const HeightSection = ({state, dispatch}: SectionProps) => {
       const inchesToInt = parseInt(inches);
       if (inchesToInt < 0 || inchesToInt > 11 || !inchesToInt) {
         setShowInchesError(true);
-      }else{
-        dispatch(
-          EditProfileActions.updateUserProfile('height', {
-            feets: state?.height?.feets,
-            inches: Number(inches),
-          }),
-        );
       }
     } catch {
       setShowInchesError(true);
@@ -430,20 +419,18 @@ const HeightSection = ({state, dispatch}: SectionProps) => {
   useEffect(() => setShowFeetError(false), [feets]);
   useEffect(() => setShowInchesError(false), [inches]);
 
-  const handleSave = () => {
-    if (!showFeetError && !showInchesError) {
+
+  useEffect(() => {
+    if((feets && inches) || (feets && inches == '')){
       dispatch(
         EditProfileActions.updateUserProfile('height', {
-          feets: Number(feets),
-          inches: Number(inches),
+          feets: feets,
+          inches: inches || '00',
         }),
       );
     }
-  };
 
-  useEffect(() => {
-
-  }, [showFeetError, ])
+  }, [feets, inches])
 
   return (
     <View style={styles.section}>
@@ -881,13 +868,14 @@ const SpotifySection: React.FC<SectionProps & NavigationProps> = ({
   );
 
  const [showWebView, setShowWebView] = useState(false);
+ const uid = useSelector((state: TYPES.AppState) => state.usersReducer.currentUserId);
 
   const handleFetchArtists = async () => {
     setLoading(true);
 
     if (isConnected) {
-      await SpotifyService()
-        .disconnectFromSpotify(state.uid)
+      if(uid) await SpotifyService()
+        .disconnectFromSpotify(uid)
         .catch(e => console.log(e))
         .then(result => {
           if (result.type === 'success') setIsConnected(false);
@@ -895,11 +883,12 @@ const SpotifySection: React.FC<SectionProps & NavigationProps> = ({
       setArtists(Array(10).fill(null));
       authCodeRef.current = '';
     } else {
+      if(uid){
       setShowWebView(true);
       await waitForAuthCode();
       await SpotifyService()
         .authenticateAndFetchSpotify(
-          state.uid,
+          uid,
           authCodeRef.current,
         )
         .then(result => {
@@ -909,6 +898,7 @@ const SpotifySection: React.FC<SectionProps & NavigationProps> = ({
           }
         })
         .catch(e => console.log(e));
+      }
     }
 
     setLoading(false);
@@ -1063,13 +1053,14 @@ const InstagramSection: React.FC<SectionProps & NavigationProps> = ({
     state.instagram?.isConnected ? true : false,
   );
   const [showWebView, setShowWebView] = useState(false);
+  const uid = useSelector((state: TYPES.AppState) => state.usersReducer.currentUserId);
 
   const handleFetchImages = async () => {
     setLoading(true);
 
     if (isConnected) {
-      await InstagramService()
-        .disconnectFromInstagram(state.uid)
+      if(uid) await InstagramService()
+        .disconnectFromInstagram(uid)
         .catch(e => console.log(e))
         .then(result => {
           if (result.type === 'success') setIsConnected(false);
@@ -1077,12 +1068,13 @@ const InstagramSection: React.FC<SectionProps & NavigationProps> = ({
       setImages(Array(10).fill(null));
       authCodeRef.current = '';
     } else {
+      if(uid){
       setShowWebView(true);
       await waitForAuthCode();
       await InstagramService()
         .authenticateAndFetchInstagram(
-          state.uid,
-          authCodeRef.current,
+          uid,
+          authCodeRef.current
         )
         .then(result => {
           if (result.type === 'success') {
@@ -1091,6 +1083,7 @@ const InstagramSection: React.FC<SectionProps & NavigationProps> = ({
           }
         })
         .catch(e => console.log(e));
+      }
     }
     setLoading(false);
   };

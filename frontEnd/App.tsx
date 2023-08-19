@@ -17,6 +17,7 @@ const MainContent = () => {
   const {showLocationScreen, isBlocked, isLoggedIn} = useSelector(
     (state: TYPES.AppState) => state.appStatusReducer,
   );
+  const boo = useSelector((state: TYPES.AppState) => state.usersReducer.currentUserId);
 
   const {isRegisterCompleted} = useSelector(
     (state: TYPES.AppState) => state.registerReducer,
@@ -27,10 +28,10 @@ const MainContent = () => {
   const [locationData, setlocationData] = React.useState<null | TYPES.PositionType>(null)
 
   useEffect(() => {
-    if(isLoggedIn){
-      if(uid) dispatch(UserActions.setCurrentUserId(uid))
+    if(isLoggedIn && uid){
+      dispatch(UserActions.setCurrentUserId(uid))
     }
-  },[isLoggedIn])
+  },[isLoggedIn, uid])
 
 
   UserService.getGeoLocation((position) => setlocationData(position))
