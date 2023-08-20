@@ -10,7 +10,6 @@ import { useSelector } from 'react-redux';
 const EditEthnicityScreen = () => {
 
 
-  const [valid, setValid] = useState(false);
 
   const state = useSelector(
     (state: TYPES.AppState) => state.editUserReducer,
@@ -22,41 +21,24 @@ const EditEthnicityScreen = () => {
 
   const dispatch = useDispatch();
 
-  const handleBackPress = () => {
-    if(valid) dispatch(EditProfileActions.updateUserProfile("ethnicity", ethnicity))
-  }
-
   const ethnicityField = questionsList.find(field => field.id === 16) as {question: string, id: number, answers: string[]}
 
 
   const ClickableIndicatorPrimaryButtonHandlePress = (name: string) => {
-    setEthnicity(name)
+    if(ethnicity == name){
+      setEthnicity("")
+    }else{
+      setEthnicity(name)
+    }
   
   };
 
-  useEffect(() => {
-    setValid(ethnicity ? true : false);
-  }, [ethnicity]);
-
-  useEffect(() => {
-    // Add event listener for hardware back button
-    const backAction = () => {
-      handleBackPress()
-      return false;
-    };
-
-    const backHandler = BackHandler.addEventListener("hardwareBackPress", backAction);
-
-    return () => {
-      // Remove event listener when the component is unmounted
-      backHandler.remove();
-    };
-  }, [valid]);
+  useEffect(() => {ethnicity != "" ? dispatch(EditProfileActions.updateUserProfile("ethnicity", ethnicity)) : dispatch(EditProfileActions.updateUserProfile("ethnicity", undefined))}, [ethnicity])
 
 
   return (
     <SafeContainer>
-      <EditProfileHeader onBackPress={handleBackPress} leftIconText='Save'/>
+      <EditProfileHeader leftIconText='Save'/>
       <View style={styles.container}>
         <Text style={styles.title}>{ethnicityField?.question}</Text>
         <Text style={styles.paragraph}>

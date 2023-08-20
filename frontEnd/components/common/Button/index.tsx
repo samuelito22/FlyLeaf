@@ -79,7 +79,7 @@ export const LightButton = ({
   };
 
   if (height) buttonStyle.height = height;
-  if (width) buttonStyle.width = width;
+  if (width) buttonStyle.width = width ;
 
   return (
     <View style={buttonStyle}>

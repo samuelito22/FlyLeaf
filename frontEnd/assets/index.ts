@@ -41,6 +41,13 @@ import sidebar from "./icons/sidebar.png"
 import coins from "./icons/coin.png"
 import coinsColoured from "./icons/coinColoured.png"
 
+import menu from "./icons/menu.png"
+import arrowRight from "./icons/arrowRight.png"
+import subscription from "./icons/subscription.png"
+import profile from "./icons/profile.png"
+import information from "./icons/information.png"
+import support from "./icons/support.png"
+
 import edit from "./icons/edit.png"
 import settings from "./icons/settings.png"
 import premium from "./icons/premium.png"
@@ -72,7 +79,8 @@ import instagram from "./icons/instagram.png"
 import dots from "./icons/dots.png"
 import ethnicity from "./icons/ethnicity.png"
 import vaccine from "./icons/vaccine.png"
-
+import stars from "./icons/stars.png"
+import nature from "./icons/nature.png"
 import swap from './images/swap.png';
 import logo from './images/logo.png';
 import googleBar from './images/googleBar.png';
@@ -83,7 +91,12 @@ import manAvatar from './images/manAvatar.png';
 import successIllustration from './images/successillustration.png';
 
 export const icons = {
+  subscription, profile, information, support,
+  arrowRight,
+  nature,
+  stars,
   ethnicity, 
+  menu,
   vaccine,
   dots,
   instagram,
@@ -145,6 +158,7 @@ export const icons = {
   birthday,
   pin,
 };
+
 
 export const images = {
   swap,

@@ -8,9 +8,9 @@ import { useSelector } from 'react-redux';
 import { TextInput } from 'react-native-gesture-handler';
 import { icons } from '../../assets';
 import { EditProfileActions} from "../../redux"
+import { useFocusEffect } from '@react-navigation/native';
 
 const EditLanguageScreen = () => {
-  const [isLanguagesValid, setIsLanguagesValid] = useState(false);
   const [filter, setFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const languages = useSelector((state: TYPES.AppState) => state.editUserReducer.languages);
@@ -23,13 +23,6 @@ const EditLanguageScreen = () => {
     }, 200); // adjust the time as per your requirement
   }, []);
 
-  useEffect(() => {
-    setIsLanguagesValid(languagesTemp.length >= 0 ? true : false);
-  }, [languagesTemp]);
-
-  const handleBackPress = useCallback(() => {
-    if(isLanguagesValid) dispatch(EditProfileActions.updateUserProfile("languages", Array.from(languagesTemp)))
-  }, [isLanguagesValid, languagesTemp, dispatch]);
 
   const languagesField = useMemo(() => {
     return questionsList.find(field => field.id === 14) as {question: string, id: number, answers: {code:string, name:string}[]}
@@ -43,26 +36,14 @@ const EditLanguageScreen = () => {
     } else if (languagesTemp.length < 5) {
         setLanguagesTemp([...languagesTemp, name]);
     }
+
+    languagesTemp.length != 0 ? dispatch(EditProfileActions.updateUserProfile("languages", Array.from(languagesTemp))) : dispatch(EditProfileActions.updateUserProfile("languages", undefined)) 
 }, [languagesTemp]);
 
-  useEffect(() => {
-    // Add event listener for hardware back button
-    const backAction = () => {
-      handleBackPress()
-      return false;
-    };
-
-    const backHandler = BackHandler.addEventListener("hardwareBackPress", backAction);
-
-    return () => {
-      // Remove event listener when the component is unmounted
-      backHandler.remove();
-    };
-  }, [handleBackPress]);
 
   return (
     <SafeContainer>
-      <EditProfileHeader onBackPress={handleBackPress} leftIconText='Save'/>
+      <EditProfileHeader leftIconText='Save'/>
       {loading ? <LoadingSpinner modalBackground={{backgroundColor:"white"}}/> :
       <View style={styles.container}>
         <Text style={styles.title}>{languagesField?.question}</Text>

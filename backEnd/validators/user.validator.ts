@@ -31,8 +31,8 @@ const validateUserUpdateParams = (data: UserUpdateParams) => {
     covidVaccination: Joi.string().valid('Fully Vaccinated', 'Partially Vaccinated', 'Not Vaccinated').optional(),
     ethnicity: Joi.string().valid('Asian', 'Black', 'Mixed', 'White', 'Other').optional(),
     height: Joi.object({
-      feet: Joi.number().positive().optional(),
-      inches: Joi.number().optional(),
+      feets: Joi.string(),
+      inches: Joi.string(),
     }).optional(),
     additionalInformation: Joi.array().items(Joi.object({
       question: Joi.string().required(),

@@ -5,10 +5,8 @@ export const style = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'white',
-    alignItems:'center',
-    maxWidth: 400,
-    width: '100%',
-    paddingHorizontal: 10,
+    width:"100%",
+    maxWidth: 420
   },
   profileCard:{
     position: 'relative',
@@ -34,5 +32,6 @@ export const style = StyleSheet.create({
   icon: {
     width: 30,
     height: 30
-  }
+  },
+
 });

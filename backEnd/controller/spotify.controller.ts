@@ -22,14 +22,6 @@ async function authenticateAndFetchSpotify(req:express.Request, res: express.Res
   
       const { accessToken, refreshToken } = await SpotifyServices.obtainSpotifyTokens(code);
       const spotifyUserId = await SpotifyServices.getSpotifyUserProfile(accessToken);
-      const user = await UserServices.getUserProfile(uid)
-
-      if(user.profile.spotify.spotify_id === spotifyUserId){
-        return res.status(400).json({
-          type: "error",
-          message: "User is already connected to spotify",
-        });
-      }
 
       const userAlreadyConnectedToSpotifyId = await SpotifyServices.storeUserSpotifyData(uid, spotifyUserId, refreshToken);
 

@@ -1,4 +1,11 @@
-import {View, ScrollView, Image, Text, StyleSheet} from 'react-native';
+import {
+  View,
+  ScrollView,
+  Image,
+  Text,
+  StyleSheet,
+  ImageSourcePropType,
+} from 'react-native';
 import React from 'react';
 import {useNavigation, NavigationProp} from '@react-navigation/native';
 import {
@@ -19,132 +26,157 @@ import {
 } from '../../components';
 import {style as GeneralStyles} from './styles';
 import {icons} from '../../assets';
-import { useDispatch } from '../../utils/hooks';
-import { EditProfileActions } from '../../redux';
+import {useDispatch} from '../../utils/hooks';
+import {EditProfileActions} from '../../redux';
+import {TouchableRipple} from 'react-native-paper';
 
 const UserProfileScreen = () => {
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
 
-  const currentUserId = useSelector((state: TYPES.AppState) => state.usersReducer.currentUserId);
-  const userProfile:TYPES.userProfileDataStructure = currentUserId 
-  ? useSelector((state: TYPES.AppState) => state.usersReducer.byId[currentUserId])
-  : null;
-
-
+  const currentUserId = useSelector(
+    (state: TYPES.AppState) => state.usersReducer.currentUserId,
+  );
+  const userProfile: TYPES.userProfileDataStructure = currentUserId
+    ? useSelector(
+        (state: TYPES.AppState) => state.usersReducer.byId[currentUserId],
+      )
+    : null;
 
   const navigation = useNavigation<NavigationProp<TYPES.RootStackParamList>>();
 
-  const dateOfBirth = new Date(userProfile.user.profile.dateOfBirth);
+  const dateObj = new Date(userProfile.user.profile.dateOfBirth);
 
-  const currentDate = new Date();
+  const daySuffix = (day: number) => {
+      if (day > 3 && day < 21) return 'th';
+      switch (day % 10) {
+          case 1:  return 'st';
+          case 2:  return 'nd';
+          case 3:  return 'rd';
+          default: return 'th';
+      }
+  };
+  
+  const monthNames = ["January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  
+  const formattedDate = `Born on ${dateObj.getDate()}${daySuffix(dateObj.getDate())} of ${monthNames[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
 
-  let age = currentDate.getFullYear() - dateOfBirth.getFullYear();
+  const joinedDateObj = new Date(userProfile.user.createdAt);
+const joinedDate = `Joined on ${joinedDateObj.getDate()}${daySuffix(joinedDateObj.getDate())} of ${monthNames[joinedDateObj.getMonth()]} ${joinedDateObj.getFullYear()}`;
 
-  // If the user hasn't had their birthday this year, subtract 1 from the age
-  if (
-    currentDate.getMonth() < dateOfBirth.getMonth() ||
-    (currentDate.getMonth() === dateOfBirth.getMonth() &&
-      currentDate.getDate() < dateOfBirth.getDate())
-  ) {
-    age--;
-  }
+  
 
   const onEditPress = () => {
-    if(userProfile){
+    if (userProfile) {
       dispatch(EditProfileActions.initUserProfile(userProfile));
 
-    navigation.navigate(ROUTES.EDIT_PROFILE_SCREEN)
+      navigation.navigate(ROUTES.EDIT_PROFILE_SCREEN);
     }
-    
-  }
+  };
+
+  type CallToActionProps = {
+    icon: ImageSourcePropType;
+    header: string;
+    onPress?: () => void;
+  };
+
+  const CallToAction: React.FC<CallToActionProps> = ({
+    icon,
+    header,
+    onPress,
+  }) => {
+    return (
+      <TouchableRipple onPress={onPress} style={{width: '100%'}}>
+        <View
+          style={{
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexDirection: 'row',
+            height: 70,
+            marginHorizontal: 20,
+          }}>
+          <View style={{flexDirection: 'row'}}>
+            <Image
+              source={icon}
+              style={{
+                tintColor: THEME_COLORS.dark,
+                width: 20,
+                height: 20,
+                alignSelf: 'center',
+              }}
+            />
+            <Text
+              style={{
+                color: THEME_COLORS.dark,
+                ...themeText.bodyRegularFive,
+                marginLeft: 20,
+              }}>
+              {header}
+            </Text>
+          </View>
+          <Image
+            source={icons.arrowRight}
+            style={{tintColor: THEME_COLORS.tertiary, width: 20, height: 20}}
+          />
+        </View>
+      </TouchableRipple>
+    );
+  };
 
   return (
     <SafeContainer>
       <ProfilePrivateHeader />
       <View style={GeneralStyles.container}>
-        <ScrollView contentContainerStyle={{alignItems: 'center'}}>
-          <UserProfileCard
-            about={userProfile.user.profile.bio}
-            firstName={userProfile.user.profile.firstName}
-            age={age.toString()}
-            city={userProfile.user.location.lastLocation?.city}
-            statusText={userProfile.user.preferences?.relationshipGoal}
-            interests={userProfile.user.interests.interests}
-            movementActive={false}
-          />
-          <View style={{flexDirection: 'row', marginTop: 15}}>
-            <Button.DarkButton onPress={onEditPress} height={50} width={150} style={GeneralStyles.button} textStyle={GeneralStyles.text}>
-                    Edit
-                    </Button.DarkButton>
-            
-            <Button.LightButton height={50} width={150} style={GeneralStyles.button} textStyle={GeneralStyles.text}>
-                    Your thoughts
-                    </Button.LightButton>
-          </View>
-          <View style={styles.planContainer}>
-            <View style={styles.creditAndPlainInformation}>
-              <Text style={styles.creditAndPlainInformation_text}>
-                Current connects: {userProfile.user.appActivity.connects}
-              </Text>
-              <Text style={styles.creditAndPlainInformation_text}>
-                Active plan: {userProfile.user.appActivity.isPremiumUser ? 'On' : 'Off'}
-              </Text>
+      <ScrollView contentContainerStyle={styles.scrollViewContainer}>
+          <View style={styles.profileInfoContainer}>
+            <Image source={{uri: userProfile.user.profile.pictures[0]}} style={styles.profileImage}/>
+            <View style={styles.profileTextContainer}>
+              <Text style={styles.profileName}>{userProfile.user.profile.firstName}</Text>
+              <Text style={styles.profileBirthDate}>{formattedDate}</Text>
+              <Text style={styles.profileJoinDate}>{joinedDate}</Text>
             </View>
+           </View>
 
-            <View style={[styles.planCard, {backgroundColor: PALETTE.PURPLE}]}>
-              <View style={styles.planCard_textContainer}>
-                <Text style={styles.planCard_header}>Premium</Text>
-                <Text style={styles.planCard_paragraph}>
-                  Upgrade to Flyleaf Premium for a superior dating experience
-                </Text>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    marginTop: 15,
-                  }}>
-                    <Button.DarkButton height={50} width={150} style={styles.planCard_button} textStyle={GeneralStyles.text}>
-                    From £4.99
-                    </Button.DarkButton>
-                    <Button.LightButton height={50} width={150} style={styles.planCard_button} textStyle={GeneralStyles.text}>
-                    Read more
-                    </Button.LightButton>
-                </View>
-              </View>
-              <Image
-                source={icons.premium}
-                style={styles.planCard_icon}
-                resizeMode="cover"
-              />
+          <CallToAction icon={icons.profile} header={'Edit Profile'} onPress={onEditPress} />
+          <CallToAction icon={icons.subscription} header={'Subscription'} />
+          <CallToAction icon={icons.settings} header={'Settings'} />
+          <CallToAction icon={icons.support} header={'Help'} />
+          <CallToAction icon={icons.information} header={'About FlyLeaf'} />
+          <View style={[styles.planCard, {backgroundColor: PALETTE.GREEN300}]}>
+            <Image
+              source={icons.coinsColoured}
+              style={styles.planCard_icon}
+              resizeMode="contain"
+            />
+            <View style={styles.planCard_textContainer}>
+              <Text style={styles.planCard_textContainer_header}>
+                Recharge connects
+              </Text>
+              <Text style={styles.planCard_textContainer_paragraph}>
+                Connects let you initiate conversations. Recharge to ensure you
+                don't miss out on potential matches. Enjoy better visibility and
+                better pricing with every recharge.
+              </Text>
             </View>
-            <View
-              style={[
-                styles.planCard,
-                {backgroundColor: PALETTE.GREEN300},
-              ]}>
-                <View style={styles.planCard_textContainer}>
-                <Text style={styles.planCard_header}>Recharge connects</Text>
-                <Text style={styles.planCard_paragraph}>
-                Running out of connects? Recharge now and keep the conversation going
-                </Text>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    marginTop: 15,
-                  }}>
-                  <Button.DarkButton height={50} width={150} style={styles.planCard_button} textStyle={GeneralStyles.text}>
-                    From £0.79
-                    </Button.DarkButton>
-                    <Button.LightButton height={50} width={150} style={styles.planCard_button} textStyle={GeneralStyles.text}>
-                    Read more
-                    </Button.LightButton>
-                </View>
-              </View>
-              <Image
-                source={icons.coinsColoured}
-                style={styles.planCard_icon}
-                resizeMode="cover"
-              />
-              </View>
+          </View>
+
+          <View style={[styles.planCard, {backgroundColor: PALETTE.PURPLE}]}>
+            <Image
+              source={icons.premium}
+              style={styles.planCard_icon}
+              resizeMode="contain"
+            />
+            <View style={styles.planCard_textContainer}>
+              <Text style={styles.planCard_textContainer_header}>
+                Flyleaf Premium
+              </Text>
+              <Text style={styles.planCard_textContainer_paragraph}>
+                Experience the best of Flyleaf. Get unlimited connects, profile
+                boosts, read receipts, advanced filtering, and an ad-free
+                experience. Upgrade now for a superior dating journey.
+              </Text>
+            </View>
           </View>
         </ScrollView>
       </View>
@@ -155,50 +187,62 @@ const UserProfileScreen = () => {
 export default UserProfileScreen;
 
 export const styles = StyleSheet.create({
-  planContainer: {
-    marginTop: 40,
-    paddingHorizontal: 10,
-    flexDirection: 'column',
+  scrollViewContainer: {
     width: '100%',
+    paddingVertical: 15
   },
-  creditAndPlainInformation: {
+  profileInfoContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 10
   },
-  creditAndPlainInformation_text: {
-    ...themeText.bodyRegularSix,
-    color: THEME_COLORS.tertiary
+  profileImage: {
+    flex: 0.3,
+    aspectRatio: 1,
+    borderRadius: 500
+  },
+  profileTextContainer: {
+    flex: 0.7,
+    marginLeft: 20
+  },
+  profileName: {
+    color: THEME_COLORS.dark,
+    ...themeText.bodyBoldThree
+  },
+  profileBirthDate: {
+    color: THEME_COLORS.dark,
+    ...themeText.bodyRegularSix
+  },
+  profileJoinDate: {
+    color: THEME_COLORS.tertiary,
+    ...themeText.bodyRegularSeven
   },
   planCard: {
-    width: '100%',
-    borderRadius: BORDER_RADIUS.extraLarge,
-    marginTop: 20,
-    flexDirection: 'row',
-  },
-  planCard_header: {
-    ...themeText.bodyBoldThree,
-    color: 'white',
-  },
-  planCard_paragraph: {
-    ...themeText.bodyRegularFive,
-    color: 'white',
-    paddingVertical: 10,
-  },
-  planCard_textContainer: {
-    width: 300,
     padding: 20,
-    height: '100%',
-    flexDirection: 'column',
+    borderRadius: 15,
+    width: '95%',
+    flexDirection: 'row',
+    marginVertical: 10,
+    alignSelf:'center',
   },
   planCard_icon: {
-    width: 100,
     height: 100,
-    position: 'absolute',
-    top: -10,
-    right: -10,
+    width: 100,
+    flex: 0.2,
+    maxWidth: '20%',
+    marginRight: 20,
+    alignSelf: 'center',
   },
-  planCard_button: {
-    marginRight: 10,
-    borderRadius: BORDER_RADIUS.extraLarge
-  }
+  planCard_textContainer: {
+    flex: 0.8,
+  },
+  planCard_textContainer_header: {
+    color: 'white',
+    ...themeText.bodyMediumFour,
+  },
+  planCard_textContainer_paragraph: {
+    color: 'white',
+    ...themeText.bodyRegularSix,
+  },
 });

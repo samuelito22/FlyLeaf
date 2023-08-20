@@ -6,11 +6,11 @@ import { EditProfileActions } from '../../redux';
 import { useDispatch} from '../../utils/hooks';
 import { verticalScale } from 'react-native-size-matters';
 import { useSelector } from 'react-redux';
+import { useFocusEffect } from '@react-navigation/native';
 
 const EditVaccineScreen = () => {
 
 
-  const [valid, setValid] = useState(false);
 
   const state = useSelector(
     (state: TYPES.AppState) => state.editUserReducer,
@@ -22,46 +22,29 @@ const EditVaccineScreen = () => {
 
   const dispatch = useDispatch();
 
-  const handleBackPress = () => {
-    if(valid) dispatch(EditProfileActions.updateUserProfile("covidVaccination", vaccine))
-  }
-
+ 
   const vaccineField = questionsList.find(field => field.id === 17) as {question: string, id: number, answers: string[]}
 
 
   const ClickableIndicatorPrimaryButtonHandlePress = (name: string) => {
-    setVaccine(name)
+    if(vaccine == name){
+      setVaccine("")
+    }else{
+      setVaccine(name)
+    }
   
   };
 
-  useEffect(() => {
-    setValid(vaccine ? true : false);
-  }, [vaccine]);
+  useEffect(() => {vaccine != "" ? dispatch(EditProfileActions.updateUserProfile("covidVaccination", vaccine)) : dispatch(EditProfileActions.updateUserProfile("covidVaccination", undefined))}, [vaccine])
 
-  useEffect(() => {
-    // Add event listener for hardware back button
-    const backAction = () => {
-      handleBackPress()
-      return false;
-    };
-
-    const backHandler = BackHandler.addEventListener("hardwareBackPress", backAction);
-
-    return () => {
-      // Remove event listener when the component is unmounted
-      backHandler.remove();
-    };
-  }, [valid]);
 
 
   return (
     <SafeContainer>
-      <EditProfileHeader onBackPress={handleBackPress} leftIconText='Save'/>
+      <EditProfileHeader leftIconText='Save'/>
       <View style={styles.container}>
         <Text style={styles.title}>{vaccineField?.question}</Text>
-        <Text style={styles.paragraph}>
-        You can either give a yes or a no answer.
-        </Text>
+    
         <ScrollView
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}

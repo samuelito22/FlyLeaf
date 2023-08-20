@@ -29,8 +29,8 @@ const editUserReducer = (
             return {
                 ...state,
                 bio: action.payload.user.profile?.bio,
-                instagram: {...action.payload.user.profile?.instagram, images: action.payload.instagram?.images},
-                spotify: {...action.payload.user.profile?.spotify, artists: action.payload.spotify?.artists},
+                instagram: {...action.payload.user.profile?.instagram, images: action.payload.instagram},
+                spotify: {...action.payload.user.profile?.spotify, artists: action.payload.spotify},
                 height: action.payload.user.profile?.height,
                 interests: action.payload.user.interests?.interests,
                 additionalInformation: action.payload.user.interests?.additionalInformation,

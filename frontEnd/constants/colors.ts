@@ -1,7 +1,7 @@
 export const PALETTE = {
   // Basic PALETTE
   WHITE: '#FFFFFF',
-  DARK: '#0F172A',
+  DARK: '#212121',
 
   // Gray shades
   GRAY300: '#bec2c4',
