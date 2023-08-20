@@ -6,11 +6,11 @@ import { EditProfileActions } from '../../redux';
 import { useDispatch} from '../../utils/hooks';
 import { verticalScale } from 'react-native-size-matters';
 import { useSelector } from 'react-redux';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 const EditSexualOrientationScreen = () => {
 
 
-  const [valid, setValid] = useState(false);
 
   const sexualOrientation = useSelector(
     (state: TYPES.AppState) => state.editUserReducer.sexualOrientation,
@@ -22,9 +22,7 @@ const EditSexualOrientationScreen = () => {
 
   const dispatch = useDispatch();
 
-  const handleBackPress = () => {
-    if(valid) dispatch(EditProfileActions.updateUserProfile("sexualOrientation", sexualOrientationTemp))
-  }
+
 
   const sexualOrientationField = questionsList.find(field => field.id === 13) as {question: string, id: number, answers: string[]}
 
@@ -40,29 +38,13 @@ const EditSexualOrientationScreen = () => {
   
   };
 
-  useEffect(() => {
-    setValid(sexualOrientationTemp.length >= 0 ? true : false);
-  }, [sexualOrientationTemp]);
-
-  useEffect(() => {
-    // Add event listener for hardware back button
-    const backAction = () => {
-      handleBackPress()
-      return false;
-    };
-
-    const backHandler = BackHandler.addEventListener("hardwareBackPress", backAction);
-
-    return () => {
-      // Remove event listener when the component is unmounted
-      backHandler.remove();
-    };
-  }, [valid]);
+  useEffect(() =>    { sexualOrientationTemp.length != 0 ? dispatch(EditProfileActions.updateUserProfile("sexualOrientation", sexualOrientationTemp)) : dispatch(EditProfileActions.updateUserProfile("sexualOrientation", undefined))}
+,[sexualOrientationTemp]  )
 
 
   return (
     <SafeContainer>
-      <EditProfileHeader onBackPress={handleBackPress} leftIconText='Save'/>
+      <EditProfileHeader leftIconText='Save'/>
       <View style={styles.container}>
         <Text style={styles.title}>{sexualOrientationField?.question}</Text>
         <Text style={styles.paragraph}>

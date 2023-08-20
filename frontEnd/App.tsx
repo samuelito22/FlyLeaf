@@ -17,7 +17,6 @@ const MainContent = () => {
   const {showLocationScreen, isBlocked, isLoggedIn} = useSelector(
     (state: TYPES.AppState) => state.appStatusReducer,
   );
-  const boo = useSelector((state: TYPES.AppState) => state.usersReducer.currentUserId);
 
   const {isRegisterCompleted} = useSelector(
     (state: TYPES.AppState) => state.registerReducer,

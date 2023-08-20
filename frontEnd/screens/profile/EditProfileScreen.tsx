@@ -35,7 +35,7 @@ import {useSelector} from 'react-redux';
 import {icons} from '../../assets';
 import {FlatList, LongPressGestureHandler, ScrollView} from 'react-native-gesture-handler';
 import {TouchableRipple} from 'react-native-paper';
-import {useNavigation, NavigationProp} from '@react-navigation/native';
+import {useNavigation, NavigationProp, useFocusEffect} from '@react-navigation/native';
 import {useDispatch, useImagePicker} from '../../utils/hooks';
 import {AppStatusActions, EditProfileActions, UserActions} from '../../redux';
 import {isEqual} from 'lodash';
@@ -138,44 +138,37 @@ const EdiScreen: React.FC<NavigationProps> = ({navigation}) => {
     }, 300); // adjust the time as per your requirement
   }, []);
 
-  useEffect(() => {
-   
-    // Add event listener for hardware back button
-    const backAction = () => {
-      return false;
-    };
+  useFocusEffect(
+    React.useCallback(() => {
+        const backAction = () => {
+            handleBackPress();
+            return false;
+        };
 
-    const backHandler = BackHandler.addEventListener(
-      'hardwareBackPress',
-      backAction,
-    );
+        const backHandler = BackHandler.addEventListener("hardwareBackPress", backAction);
 
-    return () => {
-      // Remove event listener when the component is unmounted
-      backHandler.remove();
-    };
-  }, []);
+        return () => {
+            backHandler.remove();
+        };
+    }, [])
+);
 
-  useEffect(() => {
-    setTimeout(() => {
-      setLoading(false);
-    }, 300); // adjust the time as per your requirement
-  }, []);
-
-  const handleBackPress = async () => {
-    try{
-      if(uid){
-        setLoading(true)
-        const result = await UserService.updateProfile(uid,state)
-        dispatch(UserActions.setUserProfile(uid , result))
-        setLoading(false)
-      }
-     
-
-    } catch(error) {
-      console.log(error)
+const handleBackPress = async () => {
+    try {
+        if (uid) {
+            setLoading(true);
+            const result = await UserService.updateProfile(uid, state);
+            console.log(result)
+            if (result.type === "success") {
+                dispatch(UserActions.setUserProfile(uid, result.profile));
+            }
+            setLoading(false);
+        }
+    } catch (error) {
+        console.log(error);
     }
-  };
+};
+
 
   return (
     <KeyboardAvoidingViewWrapper>
@@ -380,10 +373,10 @@ const AdditionalInformation = ({state, dispatch}: SectionProps) => {
 
 const HeightSection = ({state, dispatch}: SectionProps) => {
   const [feets, setFeets] = useState(
-    state?.height?.feets ? state?.height?.feets.toString : '',
+    state?.height?.feets ? state?.height?.feets : '',
   );
   const [inches, setInches] = useState(
-    state?.height?.inches ? state?.height?.inches.toString : '',
+    state?.height?.inches ? state?.height?.inches : '',
   );
   const [active, setActive] = useState({feet: 0, inches: 0});
 
@@ -395,7 +388,7 @@ const HeightSection = ({state, dispatch}: SectionProps) => {
     try {
       if (!feets) return;
       const feetToInt = parseInt(feets);
-      if (feetToInt < 3 || feetToInt > 7 || !feetToInt) {
+      if (isNaN(feetToInt) || feetToInt < 3 || feetToInt > 7 ) {
         setShowFeetError(true);
       }
     } catch {
@@ -407,10 +400,11 @@ const HeightSection = ({state, dispatch}: SectionProps) => {
     setActive(prevState => ({...prevState, inches: 0}));
     try {
       if (!inches) return;
-      const inchesToInt = parseInt(inches);
-      if (inchesToInt < 0 || inchesToInt > 11 || !inchesToInt) {
+    
+    const inchesToInt = parseInt(inches);
+    if (isNaN(inchesToInt) || inchesToInt < 0 || inchesToInt > 11) {
         setShowInchesError(true);
-      }
+    }
     } catch {
       setShowInchesError(true);
     }
@@ -421,23 +415,40 @@ const HeightSection = ({state, dispatch}: SectionProps) => {
 
 
   useEffect(() => {
-    if((feets && inches) || (feets && inches == '')){
+    const isValidFeet = (value:string) => {
+        const feetToInt = parseInt(value);
+        return feetToInt >= 3 && feetToInt <= 7;
+    };
+
+    const isValidInches = (value:string) => {
+        if (value === '') return true;  // if inches is empty, it's valid
+        const inchesToInt = parseInt(value);
+        return inchesToInt >= 0 && inchesToInt <= 11;
+    };
+
+    if (isValidFeet(feets) && isValidInches(inches)) {
+        dispatch(
+            EditProfileActions.updateUserProfile('height', {
+                feets: feets,
+                inches: inches || '0',
+            }),
+        );
+
+    }else{
       dispatch(
-        EditProfileActions.updateUserProfile('height', {
-          feets: feets,
-          inches: inches || '00',
-        }),
-      );
+        EditProfileActions.updateUserProfile('height', undefined),
+    );
     }
 
-  }, [feets, inches])
+}, [feets, inches]);
+
 
   return (
     <View style={styles.section}>
       <Text style={styles.section_header}>Height</Text>
       <View style={{flexDirection: 'row'}}>
         <View style={styles.section_height}>
-          <Text style={styles.section_height_header}>Feet</Text>
+          <Text style={styles.section_height_header}>Feets</Text>
           <TextInput
             onFocus={() => setActive(prevState => ({...prevState, feet: 1}))}
             onBlur={onFeetBlur}
@@ -523,6 +534,13 @@ const PicturesSection = ({state, dispatch}: SectionProps) => {
 const handleAlertClose = () => {
 setAlertVisible(false);
 };
+
+useEffect(() => {
+  dispatch(EditProfileActions.updateUserProfile('pictures', pictures));
+  // you can return a cleanup function here if needed, like:
+  // return () => { /* cleanup code here */ };
+}, [pictures]);
+
 
 
   const PictureField = ({
@@ -1046,7 +1064,7 @@ const InstagramSection: React.FC<SectionProps & NavigationProps> = ({
   dispatch,
   navigation,
 }) => {
-  const [images, setImages] = useState<any>(state?.instagram?.images ? state.instagram.images : Array(10).fill(null),);
+  const [images, setImages] = useState<any>(state.instagram?.images ? state.instagram.images : Array(10).fill(null),);
   const authCodeRef = useRef<string>('');
   const [loading, setLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(

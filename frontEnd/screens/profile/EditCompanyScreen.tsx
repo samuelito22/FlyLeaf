@@ -19,7 +19,6 @@ const EditCompanyScreen = () => {
         <EditProfileHeader leftIconText='Save'/>
 
           <View style={styles.container}>
-            <Text style={styles.requirement}>Required</Text>
             <Text style={styles.title}>What’s your company's name?</Text>
             <Text style={styles.paragraph}>
               Please enter your company's name in the field below
@@ -39,7 +38,7 @@ const EditCompanyScreen = () => {
             placeholder="Tech Innovators, Inc., etc."
             placeholderTextColor={THEME_COLORS.tertiary}
             onChangeText={text =>
-                dispatch(EditProfileActions.updateUserProfile('company', text))
+                text != "" ? dispatch(EditProfileActions.updateUserProfile('company', text)) : dispatch(EditProfileActions.updateUserProfile('company', undefined))
               }
           />
           </View>

@@ -11,7 +11,6 @@ import { EditProfileActions } from '../../redux';
 
 const EditGenderScreen = () => {
 
-  const [valid, setValid] = useState(false);
 
   const dispatch = useDispatch()
 
@@ -32,12 +31,12 @@ const EditGenderScreen = () => {
     const genderInformation = state.gender
 
   
-  const foundFieldId = (questionsList as Field[]).find(field => field.id === 12)?.answers.find((answer: Answer) => answer.gender === genderInformation.general)?.id;
+  const foundFieldId = (questionsList as Field[]).find(field => field.id === 12)?.answers.find((answer: Answer) => answer.gender === genderInformation?.general)?.id;
   
   const [activeId, setActiveId] = useState<number | null>(foundFieldId ? foundFieldId : null);
 
-  const [genderTemp, setGenderTemp] = useState(genderInformation.general);
-  const [extraGenderTemp, setExtraGenderTemp] = useState<null | string>(genderInformation.specific);
+  const [genderTemp, setGenderTemp] = useState(genderInformation?.general);
+  const [extraGenderTemp, setExtraGenderTemp] = useState<undefined | string>(genderInformation?.specific);
 
   const [moreSpecificPress, setMoreSpecificPress] = useState(false);
 
@@ -61,35 +60,17 @@ const EditGenderScreen = () => {
       setActiveId(id); // set the clicked id as the activeId
       setGenderTemp(text);
     }
-    setExtraGenderTemp(null);
+    setExtraGenderTemp(undefined);
   };
 
   useEffect(() => {
-    setValid(genderTemp ? true : false);
+    genderTemp && dispatch(EditProfileActions.updateUserProfile("gender",{general: genderTemp, specific: extraGenderTemp}))
   }, [genderTemp]);
 
-  useEffect(() => {
-    // Add event listener for hardware back button
-    const backAction = () => {
-      handleBackPress()
-      return false;
-    };
 
-    const backHandler = BackHandler.addEventListener("hardwareBackPress", backAction);
-
-    return () => {
-      // Remove event listener when the component is unmounted
-      backHandler.remove();
-    };
-  }, [valid]);
-
-
-  const handleBackPress = () => {
-    if(valid) dispatch(EditProfileActions.updateUserProfile("gender",{general: genderTemp, specific: extraGenderTemp}))
-  }
   return (
     <SafeContainer>
-    <EditProfileHeader onBackPress={handleBackPress} leftIconText='Save'/>
+    <EditProfileHeader  leftIconText='Save'/>
     <View style={styles.container}>
       <Text style={styles.title}>{genderListField?.question}</Text>
       <ScrollView
@@ -169,7 +150,7 @@ const EditGenderScreen = () => {
                       key={index}
                       onPress={() => {
                         if (extraGenderTemp === extraGender)
-                          setExtraGenderTemp(null);
+                          setExtraGenderTemp(undefined);
                         else setExtraGenderTemp(extraGender);
                         setMoreSpecificPress(false);
                       }}>

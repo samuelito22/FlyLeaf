@@ -40,7 +40,7 @@ const UserSchema = new Schema<UserDocument>({
     jobTitle: {type: String},
     company: {type: String},
     bio: { type: String, default: "Hello! I'm new here and haven't written my bio yet. Check my profile!" },
-    height: {type: {feets: String, inches: String}},
+    height: {type: {feets: String, inches: String},    _id: false,  },
     pictures: [{ type: String }],
     spotify: {type:SpotifySchema},
     instagram: {type:InstagramSchema}

@@ -127,6 +127,7 @@ async function updateUserProfile(req: express.Request, res: express.Response) {
     pictures
   } = req.body;
 
+
   const { error } = validateUserUpdateParams({
     uid,
     bio,
@@ -141,7 +142,6 @@ async function updateUserProfile(req: express.Request, res: express.Response) {
     additionalInformation,
     pictures
   });
-  console.log(error)
 
   if (error) {
     return res.status(400).json({
@@ -162,53 +162,36 @@ async function updateUserProfile(req: express.Request, res: express.Response) {
       });
     }
 
-    console.log(pictures)
 
-    const updatedProfile = {
-      bio: bio || undefined,
-      gender: gender || undefined,
-      jobTitle: jobTitle || undefined,
-      company: company || undefined,
-      height: height
-        ? {
-            feet: Number(height.feet),
-            inches: Number(height.inches)
-          }
-        : undefined,
-      pictures: pictures || undefined
-    };
-    
-    const updatedInterests = {
-      languages: languages || undefined,
-      covidVaccination: covidVaccination || undefined,
-      ethnicity: ethnicity || undefined,
-      additionalInformation: additionalInformation || undefined
-    };
-    
-    const updatedPreferences = {
-      sexualOrientation: sexualOrientation || undefined
-    };
-    
+    let updateFields: { [key: string]: any } = {};
+    let unsetFields: { [key: string]: any } = {};
+
+    if (bio !== undefined) updateFields["profile.bio"] = bio; else unsetFields["profile.bio"] = 1;
+if (gender !== undefined) updateFields["profile.gender"] = gender; else unsetFields["profile.gender"] = 1;
+if (jobTitle !== undefined) updateFields["profile.jobTitle"] = jobTitle; else unsetFields["profile.jobTitle"] = 1;
+if (company !== undefined) updateFields["profile.company"] = company; else unsetFields["profile.company"] = 1;
+if (height !== undefined) updateFields["profile.height"] = height; else unsetFields["profile.height"] = 1;
+if (pictures !== undefined) updateFields["profile.pictures"] = pictures; else unsetFields["profile.pictures"] = 1;
+
+if (languages !== undefined) updateFields["interests.languages"] = languages; else unsetFields["interests.languages"] = 1;
+if (covidVaccination !== undefined) updateFields["interests.covidVaccination"] = covidVaccination; else unsetFields["interests.covidVaccination"] = 1;
+if (ethnicity !== undefined) updateFields["interests.ethnicity"] = ethnicity; else unsetFields["interests.ethnicity"] = 1;
+if (additionalInformation !== undefined) updateFields["interests.additionalInformation"] = additionalInformation; else unsetFields["interests.additionalInformation"] = 1;
+
+if (sexualOrientation !== undefined) updateFields["preferences.sexualOrientation"] = sexualOrientation; else unsetFields["preferences.sexualOrientation"] = 1;
+
+    let updateQuery: any = {};
+    if (Object.keys(updateFields).length) updateQuery["$set"] = updateFields;
+    if (Object.keys(unsetFields).length) updateQuery["$unset"] = unsetFields;
+
+
     // Update the user data with the new object
     const updatedUser = await User.findOneAndUpdate(
       { _id: uid },
-      {
-        $set: {
-          "profile.bio": updatedProfile.bio,
-          "profile.gender": updatedProfile.gender,
-          "profile.jobTitle": updatedProfile.jobTitle,
-          "profile.company": updatedProfile.company,
-          "profile.height": updatedProfile.height,
-          "profile.pictures": updatedProfile.pictures,
-          "interests.languages": updatedInterests.languages,
-          "interests.covidVaccination": updatedInterests.covidVaccination,
-          "interests.ethnicity": updatedInterests.ethnicity,
-          "interests.additionalInformation": updatedInterests.additionalInformation,
-          "preferences.sexualOrientation": updatedPreferences.sexualOrientation
-        }
-      },
+      updateQuery,
       { new: true }
     );
+
     
 
     if (!updatedUser) {
@@ -217,20 +200,16 @@ async function updateUserProfile(req: express.Request, res: express.Response) {
         message: USER_NOT_FOUND_ERR
       });
     }
-    combinedProfile = {...combinedProfile, ...updatedUser.toObject()}
+    combinedProfile = {...combinedProfile, user: updatedUser}
 
     if(user.profile.instagram?.isConnected){
       const InstagramData = await instagramModel.findOne({_id: user.profile.instagram.instagram_id})
-
-    delete InstagramData?.accessToken;
-    delete InstagramData?.expiryDate;
 
     combinedProfile = {...combinedProfile, instagram: InstagramData?.images}
     }
 
     if(user.profile.spotify?.isConnected){
       const spotifyData = await SpotifyModel.findOne({_id: user.profile.spotify.spotify_id})
-      delete spotifyData?.refreshToken;
   
       combinedProfile = {...combinedProfile, spotify: spotifyData?.artists}
     }
@@ -287,7 +266,6 @@ async function initUserProfile(req:express.Request, res: express.Response) {
     await SpotifyServices.fetchTopArtists(result.accessToken, result.spotify_id)   
 
     const spotifyData = await Spotify.findOne({_id: user.profile.spotify.spotify_id})
-    delete spotifyData?.refreshToken;
     
     combinedProfile = { ...combinedProfile, spotify: spotifyData?.artists }
   }
@@ -322,14 +300,12 @@ async function initUserProfile(req:express.Request, res: express.Response) {
       )
     
     InstagramData = await instagramModel.findOne({_id: instagram_id})
-    delete InstagramData?.accessToken;
-    delete InstagramData?.expiryDate;
     
     combinedProfile = { ...combinedProfile, instagram: InstagramData?.images }
   }
   
-  combinedProfile = { ...combinedProfile, ...user.toObject() }
-
+  
+  combinedProfile = { ...combinedProfile, user }
 
   return res.status(200).json({ type: "success", profile: combinedProfile });
 

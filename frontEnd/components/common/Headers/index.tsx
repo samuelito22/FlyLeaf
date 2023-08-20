@@ -3,7 +3,7 @@ import React from 'react';
 import {styles} from './styles';
 import {ButtonImage} from '../Button';
 import {icons, images} from '../../../assets';
-import {THEME_COLORS, ROUTES, TYPES} from '../../../constants';
+import {THEME_COLORS, ROUTES, TYPES, PALETTE} from '../../../constants';
 import {useNavigation, NavigationProp} from '@react-navigation/native';
 
 export const HomeHeader = () => {
@@ -17,7 +17,7 @@ export const HomeHeader = () => {
   return (
     <View style={styles.container}>
         <ButtonImage
-          imgUrl={icons.sidebar}
+          imgUrl={icons.menu}
           width={30}
           height={30}
           contentContainerStyle={styles.iconContainer}
@@ -33,7 +33,7 @@ export const HomeHeader = () => {
       height={30}
       contentContainerStyle={styles.iconContainer}
       iconHeaderRight={true}
-        imgUrl={icons.magic}
+        imgUrl={icons.nature}
         tintColor={THEME_COLORS.dark}
       />
     </View>
@@ -57,15 +57,7 @@ export const ProfilePrivateHeader = () => {
           contentContainerStyle={styles.iconContainer}
           iconHeaderLeft={true}
         />
-
-      <ButtonImage
-       width={30}
-       height={30}
-        imgUrl={icons.settings}
-        tintColor={THEME_COLORS.dark}
-        contentContainerStyle={styles.iconContainer}
-        iconHeaderRight={true}
-      />
+  
     </View>
   );
 };

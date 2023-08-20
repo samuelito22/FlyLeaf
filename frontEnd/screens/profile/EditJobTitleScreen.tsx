@@ -37,8 +37,8 @@ const EditJobTitleScreen = () => {
             value={jobTitle ? jobTitle : ""}
             placeholder="Marketing Manager, etc."
             placeholderTextColor={THEME_COLORS.tertiary}
-            onChangeText={text =>
-                dispatch(EditProfileActions.updateUserProfile('jobTitle', text))
+            onChangeText={text => 
+                text != "" ? dispatch(EditProfileActions.updateUserProfile('jobTitle', text)) : dispatch(EditProfileActions.updateUserProfile('jobTitle', undefined))
               }
               numberOfLines={1}
           />
