@@ -7,7 +7,7 @@ import {
   NotificationScreen,
 } from '../screens';
 import {Image, ImageSourcePropType, View} from 'react-native';
-import {icons} from '../assets';
+import {icons, images} from '../assets';
 import {THEME_COLORS, HEIGHT, COMPONENT_COLORS} from '../constants';
 import {TouchableRipple} from 'react-native-paper';
 
@@ -48,58 +48,7 @@ const BottomTabNavigator = () => {
       }}
       initialRouteName="Home"
       backBehavior="initialRoute">
-      <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{
-          tabBarIcon: ({focused}) => (
-            <TabIcon
-              focused={focused}
-              source={focused ? icons.homeBold : icons.homeLight}
-            />
-          ),
-          tabBarButton: props => (
-            <View
-              style={{
-                flex: 1,
-                borderRadius: BORDER_RADIUS,
-                overflow: 'hidden',
-              }}>
-              <TouchableRipple
-                {...props}
-                rippleColor={COMPONENT_COLORS.tabBarIcon}
-                onPress={props.onPress}
-              />
-            </View>
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Likes"
-        component={LikesScreen}
-        options={{
-          tabBarIcon: ({focused}) => (
-            <TabIcon
-              focused={focused}
-              source={focused ? icons.heartBold : icons.heartLight}
-            />
-          ),
-          tabBarButton: props => (
-            <View
-              style={{
-                flex: 1,
-                borderRadius: BORDER_RADIUS,
-                overflow: 'hidden',
-              }}>
-              <TouchableRipple
-                {...props}
-                rippleColor={COMPONENT_COLORS.tabBarIcon}
-                onPress={props.onPress}
-              />
-            </View>
-          ),
-        }}
-      />
+      
       <Tab.Screen
         name="Notification"
         component={NotificationScreen}
@@ -108,7 +57,7 @@ const BottomTabNavigator = () => {
             <TabIcon
               focused={focused}
               source={
-                focused ? icons.notificationBold : icons.notificationLight
+               icons.notificationBold 
               }
             />
           ),
@@ -116,7 +65,57 @@ const BottomTabNavigator = () => {
             <View
               style={{
                 flex: 1,
-                borderRadius: BORDER_RADIUS,
+                overflow: 'hidden',
+              }}>
+              <TouchableRipple
+                {...props}
+                rippleColor={COMPONENT_COLORS.tabBarIcon}
+                onPress={props.onPress}
+              />
+            </View>
+          ),
+        }}
+      />
+      
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{
+          tabBarIcon: ({focused}) => (
+            <TabIcon
+              focused={focused}
+              source={ images.logo}
+            />
+          ),
+          tabBarButton: props => (
+            <View
+              style={{
+                flex: 1,
+                overflow: 'hidden',
+              }}>
+              <TouchableRipple
+                {...props}
+                rippleColor={COMPONENT_COLORS.tabBarIcon}
+                onPress={props.onPress}
+              />
+            </View>
+          ),
+        }}
+      />
+     <Tab.Screen
+        name="Likes"
+        component={LikesScreen}
+        options={{
+          tabBarIcon: ({focused}) => (
+            <TabIcon
+              focused={focused}
+              source={icons.heartBold}
+            />
+          ),
+          tabBarButton: props => (
+            <View
+              style={{
+                flex: 1,
                 overflow: 'hidden',
               }}>
               <TouchableRipple
@@ -135,14 +134,13 @@ const BottomTabNavigator = () => {
           tabBarIcon: ({focused}) => (
             <TabIcon
               focused={focused}
-              source={focused ? icons.messageBold : icons.messageLight}
+              source={icons.messageBold}
             />
           ),
           tabBarButton: props => (
             <View
               style={{
                 flex: 1,
-                borderRadius: BORDER_RADIUS,
                 overflow: 'hidden',
               }}>
               <TouchableRipple
