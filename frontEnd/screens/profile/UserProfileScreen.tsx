@@ -129,20 +129,9 @@ const joinedDate = `Joined on ${joinedDateObj.getDate()}${daySuffix(joinedDateOb
       <ProfilePrivateHeader />
       <View style={GeneralStyles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContainer}>
-          <View style={styles.profileInfoContainer}>
-            <Image source={{uri: userProfile.user.profile.pictures[0]}} style={styles.profileImage}/>
-            <View style={styles.profileTextContainer}>
-              <Text style={styles.profileName}>{userProfile.user.profile.firstName}</Text>
-              <Text style={styles.profileBirthDate}>{formattedDate}</Text>
-              <Text style={styles.profileJoinDate}>{joinedDate}</Text>
-            </View>
-           </View>
+         
 
-          <CallToAction icon={icons.profile} header={'Edit Profile'} onPress={onEditPress} />
-          <CallToAction icon={icons.subscription} header={'Subscription'} />
-          <CallToAction icon={icons.settings} header={'Settings'} />
-          <CallToAction icon={icons.support} header={'Help'} />
-          <CallToAction icon={icons.information} header={'About FlyLeaf'} />
+          
           <View style={[styles.planCard, {backgroundColor: PALETTE.GREEN300}]}>
             <Image
               source={icons.coinsColoured}
