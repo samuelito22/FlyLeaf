@@ -25,10 +25,11 @@ import {
   UserProfileCard,
 } from '../../components';
 import {style as GeneralStyles} from './styles';
-import {icons} from '../../assets';
+import {icons, images} from '../../assets';
 import {useDispatch} from '../../utils/hooks';
 import {EditProfileActions} from '../../redux';
 import {TouchableRipple} from 'react-native-paper';
+import {useState} from "react"
 
 const UserProfileScreen = () => {
   const dispatch = useDispatch();
@@ -44,26 +45,9 @@ const UserProfileScreen = () => {
 
   const navigation = useNavigation<NavigationProp<TYPES.RootStackParamList>>();
 
+  const [premiumPressed, setPremiumPressed] = useState(false)
+
   const dateObj = new Date(userProfile.user.profile.dateOfBirth);
-
-  const daySuffix = (day: number) => {
-      if (day > 3 && day < 21) return 'th';
-      switch (day % 10) {
-          case 1:  return 'st';
-          case 2:  return 'nd';
-          case 3:  return 'rd';
-          default: return 'th';
-      }
-  };
-  
-  const monthNames = ["January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
-  
-  const formattedDate = `Born on ${dateObj.getDate()}${daySuffix(dateObj.getDate())} of ${monthNames[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
-
-  const joinedDateObj = new Date(userProfile.user.createdAt);
-const joinedDate = `Joined on ${joinedDateObj.getDate()}${daySuffix(joinedDateObj.getDate())} of ${monthNames[joinedDateObj.getMonth()]} ${joinedDateObj.getFullYear()}`;
 
   
 
@@ -75,54 +59,42 @@ const joinedDate = `Joined on ${joinedDateObj.getDate()}${daySuffix(joinedDateOb
     }
   };
 
-  type CallToActionProps = {
-    icon: ImageSourcePropType;
-    header: string;
-    onPress?: () => void;
-  };
+  const featuresList = [
+    { feature: 'Profile Creation', free: true, pro: true },
+    { feature: 'Unlimited Matches', free: true, pro: true },
+    { feature: 'Blurred Image Engagement', free: true, pro: true },
+    { feature: 'Standard Search', free: true, pro: true },
+    { feature: 'Unlimited Chat', free: true, pro: true },
+    { feature: 'Notifications', free: true, pro: true },
+    { feature: 'Advanced Search', free: false, pro: true },
+    { feature: 'See Who Liked You', free: false, pro: true },
+    { feature: 'Priority Profile', free: false, pro: true },
+    { feature: 'Engagement Insights', free: false, pro: true },
+    { feature: 'Faster Image Reveal', free: false, pro: true },
+    { feature: 'Ad-Free Experience', free: false, pro: true },
+    { feature: 'Offline Events or Webinars', free: false, pro: true },
+    { feature: 'Icebreakers & Conversation Starters', free: false, pro: true },
+  ]
 
-  const CallToAction: React.FC<CallToActionProps> = ({
-    icon,
-    header,
-    onPress,
-  }) => {
+  const FieldOfTable = ({feature, free, pro}: {feature:string, free: boolean, pro: boolean}) => {
     return (
-      <TouchableRipple onPress={onPress} style={{width: '100%'}}>
-        <View
-          style={{
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexDirection: 'row',
-            height: 70,
-            marginHorizontal: 20,
-          }}>
-          <View style={{flexDirection: 'row'}}>
-            <Image
-              source={icon}
-              style={{
-                tintColor: THEME_COLORS.dark,
-                width: 20,
-                height: 20,
-                alignSelf: 'center',
-              }}
-            />
-            <Text
-              style={{
-                color: THEME_COLORS.dark,
-                ...themeText.bodyRegularFive,
-                marginLeft: 20,
-              }}>
-              {header}
-            </Text>
-          </View>
-          <Image
-            source={icons.arrowRight}
-            style={{tintColor: THEME_COLORS.tertiary, width: 20, height: 20}}
-          />
-        </View>
-      </TouchableRipple>
-    );
-  };
+      <View style={{flexDirection: 'row', minHeight: 60,alignItems:'center'}}>
+      <View style={styles.plansContainer_firstColumn}>
+        <Text style={styles.plansContainer_feature}>{feature}</Text>
+      </View>
+      <View style={styles.plansContainer_restOfColumn}>
+        <Image source={free ? images.successIllustration : icons.dash} resizeMode='contain' style={[!free && {tintColor: THEME_COLORS.tertiary}, {width: 20, height: 20}]}/>
+      </View>
+      <View style={styles.plansContainer_restOfColumn}>
+      <Image source={pro ? images.successIllustration : icons.dash} resizeMode='contain' style={[!pro && {tintColor: THEME_COLORS.tertiary}, {width: 20, height: 20}]}/>
+
+      </View>
+      </View>
+    )
+  }
+
+  
+
 
   return (
     <SafeContainer>
@@ -130,43 +102,38 @@ const joinedDate = `Joined on ${joinedDateObj.getDate()}${daySuffix(joinedDateOb
       <View style={GeneralStyles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContainer}>
          
+      <View style={styles.plansContainer}> 
+      <View style={styles.planCard}>
+        <Image source={icons.coinsColoured} style={styles.planCard_icon} resizeMode='contain' />
+        <View  style={styles.planCard_textContainer}><Text style={styles.planCard_text}>Recharge connects</Text><Text style={styles.planCard_paragraph}><Text style={{...themeText.bodyBoldSix, color: THEME_COLORS.tertiary}}>{userProfile?.user.appActivity.connects ? userProfile.user.appActivity.connects : 0}</Text> Connects</Text></View>
+    <Button.ButtonImage imgUrl={icons.plus} contentContainerStyle={{position:'absolute', top: -8, right: -8, borderWidth: 0.2, borderRadius: 500, borderColor: THEME_COLORS.tertiary}} width={30} height={30} tintColor={THEME_COLORS.tertiary}/>
+      </View> 
+      <View style={styles.planCard}>
+        <Image source={images.logo} style={styles.planCard_icon} resizeMode='contain' tintColor={THEME_COLORS.primary}/>
+        <View  style={styles.planCard_textContainer}><Text style={styles.planCard_text}>Pro membership</Text><Text style={styles.planCard_paragraph}>Enjoy the additional features that pro membership offers to you</Text></View>
+    <Button.ButtonImage imgUrl={icons.plus} contentContainerStyle={{position:'absolute', top: -8, right: -8, borderWidth: 0.2, borderRadius: 500, borderColor: THEME_COLORS.tertiary}} width={30} height={30} tintColor={THEME_COLORS.tertiary}/>
+      </View>
+      <View style={{flexDirection: 'row', minHeight: 50,alignItems:'center'}}>
+      <View style={styles.plansContainer_firstColumn}>
+        <Text style={styles.plansContainer_title}>Features</Text>
+      </View>
+      <View style={styles.plansContainer_restOfColumn}>
+      <Text style={[styles.plansContainer_title, {textAlign:'center'}]}>Free</Text>
 
-          
-          <View style={[styles.planCard, {backgroundColor: PALETTE.GREEN300}]}>
-            <Image
-              source={icons.coinsColoured}
-              style={styles.planCard_icon}
-              resizeMode="contain"
-            />
-            <View style={styles.planCard_textContainer}>
-              <Text style={styles.planCard_textContainer_header}>
-                Recharge connects
-              </Text>
-              <Text style={styles.planCard_textContainer_paragraph}>
-                Connects let you initiate conversations. Recharge to ensure you
-                don't miss out on potential matches. Enjoy better visibility and
-                better pricing with every recharge.
-              </Text>
-            </View>
-          </View>
-
-          <View style={[styles.planCard, {backgroundColor: PALETTE.PURPLE}]}>
-            <Image
-              source={icons.premium}
-              style={styles.planCard_icon}
-              resizeMode="contain"
-            />
-            <View style={styles.planCard_textContainer}>
-              <Text style={styles.planCard_textContainer_header}>
-                Flyleaf Premium
-              </Text>
-              <Text style={styles.planCard_textContainer_paragraph}>
-                Experience the best of Flyleaf. Get unlimited connects, profile
-                boosts, read receipts, advanced filtering, and an ad-free
-                experience. Upgrade now for a superior dating journey.
-              </Text>
-            </View>
-          </View>
+      </View>
+      <View style={styles.plansContainer_restOfColumn}>
+      <Text style={[styles.plansContainer_title, {textAlign:'center'}]}>Pro</Text>
+      </View>
+      </View>
+      {featuresList.map((item, index) => (
+                <FieldOfTable 
+                  key={index}
+                  feature={item.feature}
+                  free={item.free}
+                  pro={item.pro}
+                />
+              ))}
+      </View>  
         </ScrollView>
       </View>
     </SafeContainer>
@@ -180,58 +147,60 @@ export const styles = StyleSheet.create({
     width: '100%',
     paddingVertical: 15
   },
-  profileInfoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+ 
+  plansContainer: {
+    backgroundColor: "white", 
     paddingHorizontal: 20,
     paddingVertical: 10
+
   },
-  profileImage: {
-    flex: 0.3,
-    aspectRatio: 1,
-    borderRadius: 500
+  header: {
+    ...themeText.bodyMediumThree,
+    color:THEME_COLORS.dark,
+    paddingHorizontal: 20,
+    paddingBottom: 10
   },
-  profileTextContainer: {
-    flex: 0.7,
-    marginLeft: 20
+  plansContainer_firstColumn:{
+    flex:  0.5,
   },
-  profileName: {
-    color: THEME_COLORS.dark,
-    ...themeText.bodyBoldThree
+  plansContainer_title:{
+    ...themeText.bodyMediumSix,
+    color:THEME_COLORS.dark,
   },
-  profileBirthDate: {
-    color: THEME_COLORS.dark,
-    ...themeText.bodyRegularSix
+  plansContainer_restOfColumn:{
+    flex:  0.25,
+    alignItems:'center'
   },
-  profileJoinDate: {
-    color: THEME_COLORS.tertiary,
-    ...themeText.bodyRegularSeven
+  plansContainer_feature:{
+    ...themeText.bodyRegularSix,
+    color:THEME_COLORS.dark,
   },
   planCard: {
-    padding: 20,
-    borderRadius: 15,
-    width: '95%',
     flexDirection: 'row',
-    marginVertical: 10,
-    alignSelf:'center',
+    justifyContent:'space-evenly',
+    alignItems:'center',
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: PALETTE.GHOSTWHITE,
+    padding: 20,
+    marginVertical: 10
   },
   planCard_icon: {
-    height: 100,
-    width: 100,
     flex: 0.2,
-    maxWidth: '20%',
-    marginRight: 20,
-    alignSelf: 'center',
-  },
+    aspectRatio: 1
+  } ,
+  planCard_text: {
+    color: THEME_COLORS.dark,
+    ...themeText.bodyMediumFive,
+  } ,
   planCard_textContainer: {
-    flex: 0.8,
-  },
-  planCard_textContainer_header: {
-    color: 'white',
-    ...themeText.bodyMediumFour,
-  },
-  planCard_textContainer_paragraph: {
-    color: 'white',
+    flex: 0.6,
+
+
+
+  } ,
+  planCard_paragraph: {
+    color: THEME_COLORS.tertiary,
     ...themeText.bodyRegularSix,
-  },
+  } ,
 });

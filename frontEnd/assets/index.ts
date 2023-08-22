@@ -90,9 +90,12 @@ import flyleaf from './images/FlyLeaf.png';
 import manAvatar from './images/manAvatar.png';
 import successIllustration from './images/successillustration.png';
 import sprout from "./icons/sprout.png"
+import crown from "./icons/crown.png"
+import shield from "./icons/shield.png"
+import dash from "./icons/dash.png"
 
 export const icons = {
-  subscription, profile, information, support,
+  subscription, profile, information, support, crown, shield, dash,
   sprout,
   arrowRight,
   nature,
