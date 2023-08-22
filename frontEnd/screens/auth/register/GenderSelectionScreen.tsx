@@ -4,9 +4,7 @@ import {SafeContainer, Button, LoadingSpinner, questionsList} from '../../../com
 import {styles} from './styles';
 import {THEME_COLORS, ROUTES, TYPES, PALETTE} from '../../../constants';
 import {
-  setGender,
-  setIsRegisterCompleted,
-  setProgressBarValue,
+  RegisterActions
 } from '../../../redux';
 import {NavigationProp} from '@react-navigation/native';
 import {usePreventBackHandler, useDispatch} from '../../../utils/hooks';
@@ -26,7 +24,7 @@ const GenderSelectionScreen = ({
   const [activeId, setActiveId] = useState<number | null>(null);
 
   const [genderTemp, setGenderTemp] = useState('');
-  const [extraGenderTemp, setExtraGenderTemp] = useState<null | string>(null);
+  const [extraGenderTemp, setExtraGenderTemp] = useState<undefined | string>();
 
   const [moreSpecificPress, setMoreSpecificPress] = useState(false);
 
@@ -45,8 +43,8 @@ const GenderSelectionScreen = ({
       setIsLoading(true);
       try {
         navigation.navigate(ROUTES.REGISTER_GENDER_PREFERENCE_SCREEN);
-        dispatch(setGender({general: genderTemp, specific: extraGenderTemp}));
-        dispatch(setProgressBarValue(42));
+        dispatch(RegisterActions.setGender({general: genderTemp, specific: extraGenderTemp}));
+        dispatch(RegisterActions.setProgressBarValue(42));
       } catch (error) {
         console.error(error);
       } finally {
@@ -67,7 +65,7 @@ const GenderSelectionScreen = ({
       setActiveId(id); // set the clicked id as the activeId
       setGenderTemp(text);
     }
-    setExtraGenderTemp(null);
+    setExtraGenderTemp(undefined);
   };
 
   useEffect(() => {
@@ -77,7 +75,7 @@ const GenderSelectionScreen = ({
   useEffect(
     () =>
       dispatch(
-        setIsRegisterCompleted({
+        RegisterActions.setIsRegisterCompleted({
           status: false,
           currentScreen: ROUTES.REGISTER_GENDER_SELECTION_SCREEN,
         }),
@@ -120,7 +118,7 @@ const GenderSelectionScreen = ({
                     style={
                       styles.clickableIndicatorPrimaryButton__extraContainer_text
                     }>
-                    {extraGenderTemp === null
+                    {!extraGenderTemp
                       ? 'More specific?'
                       : extraGenderTemp}
                   </Text>
@@ -181,7 +179,7 @@ const GenderSelectionScreen = ({
                         key={index}
                         onPress={() => {
                           if (extraGenderTemp === extraGender)
-                            setExtraGenderTemp(null);
+                            setExtraGenderTemp(undefined);
                           else setExtraGenderTemp(extraGender);
                           setMoreSpecificPress(false);
                         }}>

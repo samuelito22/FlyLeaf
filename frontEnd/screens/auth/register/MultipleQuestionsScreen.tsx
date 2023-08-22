@@ -4,58 +4,27 @@ import {styles as generalStyles} from './styles';
 import {
   SafeContainer,
   Button,
-  LoadingSpinner,
-  questionsList,
-  interestsList,
 } from '../../../components';
 import {
-  setInterests,
-  setIsRegisterCompleted,
-  setAdditionalInformation,
-  resetRegister,
+  RegisterActions
 } from '../../../redux';
 import {
   THEME_COLORS,
   ROUTES,
   TYPES,
-  themeText,
-  PALETTE,
+
 } from '../../../constants';
 import {NavigationProp} from '@react-navigation/native';
 import {usePreventBackHandler, useDispatch} from '../../../utils/hooks';
 import {useSelector} from 'react-redux';
 import {icons} from '../../../assets';
-import {AuthService} from '../../../services';
-import auth from '@react-native-firebase/auth';
-
-const styles = StyleSheet.create({
-  interest_title: {
-    ...themeText.bodyBoldFour,
-    color: THEME_COLORS.dark,
-    paddingVertical: 10,
-  },
-  interest_buttonsContainer: {
-    flexWrap: 'wrap',
-    flexDirection: 'row',
-  },
-  interest_button: {
-    marginVertical: 10,
-    marginRight: 10,
-  },
-  interest_section: {
-    borderBottomColor: PALETTE.GHOSTWHITE,
-    borderBottomWidth: 1,
-    marginBottom: 10,
-    paddingBottom: 10,
-  },
-});
 
 const BuildYourProfileScreen = ({handlePress}: {handlePress: () => void}) => {
   return (
     <SafeContainer>
       <View style={generalStyles.container}>
         <Image
-          source={icons.writing}
+          source={icons.sprout}
           style={{width: 150, height: 150, marginBottom: 20}}
           resizeMode="contain"
         />
@@ -86,7 +55,7 @@ const MultipleQuestionsScreen = ({
 }) => {
   usePreventBackHandler();
   const dispatch = useDispatch();
-  const {additionalInformation} = useSelector(
+  const {additionalInformation, questionsList } = useSelector(
     (state: TYPES.AppState) => state.registerReducer,
   );
 
@@ -95,15 +64,16 @@ const MultipleQuestionsScreen = ({
   const [currentQuestion, setCurrentQuestion] = useState(-1);
   const [answer, setAnswer] = useState<string>('');
 
-  const questionFieldList = questionsList.filter(
+  const questionFieldList = questionsList && questionsList.filter(
     item => item.id >= 1 && item.id <= 9 || item.id == 15,
   ) as Array<{question: string; id: number; answers: string[]; icon: string}>;
 
+
   const handlePress = () => {
-    if (valid) {
+    if (valid && questionFieldList) {
       if(additionalInformation){
       dispatch(
-        setAdditionalInformation([
+        RegisterActions.setAdditionalInformation([
           ...additionalInformation,
           {
             question: questionFieldList[currentQuestion].question,
@@ -114,7 +84,7 @@ const MultipleQuestionsScreen = ({
       );
       }else{
         dispatch(
-          setAdditionalInformation([
+          RegisterActions.setAdditionalInformation([
             {
               question: questionFieldList[currentQuestion].question,
               answer: answer,
@@ -127,8 +97,11 @@ const MultipleQuestionsScreen = ({
       setAnswer('');
       setActiveId(null);
 
+
       if (additionalInformation && additionalInformation.length === 9) {
         navigation.navigate(ROUTES.REGISTER_INTEREST_SCREEN)
+      }else{
+        setCurrentQuestion(prevState => {return prevState + 1})
       }
     }
   };
@@ -154,7 +127,7 @@ const MultipleQuestionsScreen = ({
   useEffect(
     () =>
       dispatch(
-        setIsRegisterCompleted({
+        RegisterActions.setIsRegisterCompleted({
           status: false,
           currentScreen: ROUTES.REGISTER_MULTIPLE_QUESTIONS_SCREEN,
         }),
@@ -179,7 +152,7 @@ const MultipleQuestionsScreen = ({
             {currentQuestion + 1}/10
           </Text>
           <Text style={generalStyles.title}>
-            {questionFieldList[currentQuestion].question}
+            {questionFieldList && questionFieldList[currentQuestion].question}
           </Text>
 
           <ScrollView
@@ -187,7 +160,7 @@ const MultipleQuestionsScreen = ({
             showsVerticalScrollIndicator={false}
             overScrollMode={'never'}
             contentContainerStyle={{flexGrow: 1}}>
-            {questionFieldList[currentQuestion].answers.map((answer, index) => (
+             {questionFieldList && questionFieldList[currentQuestion].answers.map((answer, index) => (
               <View
                 key={questionFieldList[currentQuestion].question + index}
                 style={generalStyles.clickableIndicatorPrimaryButton}>

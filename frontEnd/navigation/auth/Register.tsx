@@ -46,7 +46,7 @@ const RegisterNavigator = () => {
         />
       ) : null}
       <Stack.Navigator
-        initialRouteName={initialRouteNameDecider()}
+        initialRouteName={ROUTES.REGISTER_INTEREST_SCREEN}
         screenOptions={{
           headerShown: false,
 

@@ -1,9 +1,12 @@
 import { StyleSheet, Text, View, Image } from 'react-native'
-import React from 'react'
-import { Button, KeyboardAvoidingViewWrapper, SafeContainer } from '../../../components'
+import React, { useState } from 'react'
+import { Button, KeyboardAvoidingViewWrapper, Loading, SafeContainer } from '../../../components'
 import { icons, images } from '../../../assets'
 import { BORDER_RADIUS, ROUTES, THEME_COLORS, TYPES, themeText } from '../../../constants'
 import { NavigationProp } from "@react-navigation/native"
+import { UserService } from '../../../services'
+import { useDispatch } from '../../../utils/hooks'
+import { RegisterActions } from '../../../redux'
 
 const WelcomeScreen = ({
     navigation,
@@ -13,14 +16,27 @@ const WelcomeScreen = ({
     const handleExit = () => {
         navigation.navigate(ROUTES.LOGIN_NAVIGATOR)
     }
+    const dispatch = useDispatch()
+    const [isLoading, setIsLoading] = useState(false)
 
-    const handleContinue = () => {
-        navigation.navigate(ROUTES.REGISTER_FIRST_NAME_SCREEN)
+    const handleContinue = async () => {
+        //navigation.navigate(ROUTES.REGISTER_FIRST_NAME_SCREEN)
+        setIsLoading(true)
+        UserService.getQuestionsAndInterests().then(result => {
+            if(result.type){
+                dispatch(RegisterActions.setQuestionsList(result.questions))
+                dispatch(RegisterActions.setInterestsList(result.interests))
+                navigation.navigate(ROUTES.REGISTER_FIRST_NAME_SCREEN)
+            }
+
+        }
+        ).catch(e => console.log(e)).finally(() => setIsLoading(false))
     }
 
   return (
     <KeyboardAvoidingViewWrapper>
     <SafeContainer>
+        {isLoading && <Loading.ActiveIndicator modalBackground={{backgroundColor:"transparent"}}/>}
         <Button.ButtonImage imgUrl={icons.normalCross} width={20} height={20} contentContainerStyle={styles.crossIconContainer} onPress={handleExit}/>
         <View style={styles.container}>
             <Image source={images.logo} style={styles.image} resizeMode='contain'/>

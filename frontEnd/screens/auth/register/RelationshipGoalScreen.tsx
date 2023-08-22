@@ -4,9 +4,7 @@ import {SafeContainer, Button, LoadingSpinner, questionsList} from '../../../com
 import {styles} from './styles';
 import {THEME_COLORS, ROUTES, TYPES} from '../../../constants';
 import {
-  setIsRegisterCompleted,
-  setProgressBarValue,
-  setRelationshipGoal,
+  RegisterActions
 } from '../../../redux';
 import {NavigationProp} from '@react-navigation/native';
 import {usePreventBackHandler, useDispatch} from '../../../utils/hooks';
@@ -35,8 +33,8 @@ const RelationshipGoalsScreen = ({
       setIsLoading(true);
       try {
         navigation.navigate(ROUTES.REGISTER_PICTURE_UPLOAD_SCREEN);
-        dispatch(setProgressBarValue(70));
-        dispatch(setRelationshipGoal(relationshipGoalTemp));
+        dispatch(RegisterActions.setProgressBarValue(70));
+        dispatch(RegisterActions.setRelationshipGoal(relationshipGoalTemp));
       } catch (err) {
         console.error(err);
       } finally {
@@ -66,7 +64,7 @@ const RelationshipGoalsScreen = ({
   useEffect(
     () =>
       dispatch(
-        setIsRegisterCompleted({
+        RegisterActions.setIsRegisterCompleted({
           status: false,
           currentScreen: ROUTES.REGISTER_RELATIONSHIP_GOAL_SCREEN,
         }),

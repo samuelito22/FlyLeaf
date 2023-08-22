@@ -14,4 +14,8 @@ router.get("/get/profile/:uid", userController.getUserProfile);
 
 router.put("/initUserProfile/:uid", userController.initUserProfile);
 
+router.get("/get/questionsAndInterests", userController.getQuestionsAndInterests);
+
+
+
 export default router;

@@ -4,9 +4,7 @@ import {SafeContainer, Button, LoadingSpinner, questionsList} from '../../../com
 import {styles} from './styles';
 import {THEME_COLORS, ROUTES, TYPES} from '../../../constants';
 import {
-  setGenderPreferences,
-  setIsRegisterCompleted,
-  setProgressBarValue,
+  RegisterActions
 } from '../../../redux';
 import {NavigationProp} from '@react-navigation/native';
 import {usePreventBackHandler, useDispatch} from '../../../utils/hooks';
@@ -36,8 +34,8 @@ const GenderPreferenceScreen = ({
       setIsLoading(true);
       try {
         navigation.navigate(ROUTES.REGISTER_RELATIONSHIP_GOAL_SCREEN);
-        dispatch(setProgressBarValue(56));
-        dispatch(setGenderPreferences(genderPreferencesTemp));
+        dispatch(RegisterActions.setProgressBarValue(56));
+        dispatch(RegisterActions.setGenderPreferences(genderPreferencesTemp));
       } catch (err) {
         console.error(err);
       } finally {
@@ -63,7 +61,7 @@ const GenderPreferenceScreen = ({
   useEffect(
     () =>
       dispatch(
-        setIsRegisterCompleted({
+        RegisterActions.setIsRegisterCompleted({
           status: false,
           currentScreen: ROUTES.REGISTER_GENDER_PREFERENCE_SCREEN,
         }),

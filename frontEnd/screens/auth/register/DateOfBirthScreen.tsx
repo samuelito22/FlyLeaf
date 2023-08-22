@@ -17,9 +17,7 @@ import {ROUTES, THEME_COLORS, TYPES} from '../../../constants';
 import {styles} from './styles';
 import {usePreventBackHandler, useDispatch} from '../../../utils/hooks';
 import {
-  setDateOfBirth,
-  setProgressBarValue,
-  setIsRegisterCompleted,
+  RegisterActions
 } from '../../../redux';
 import { AuthService } from '../../../services';
 import { AppStatusActions } from '../../../redux';
@@ -66,7 +64,7 @@ const DateOfBirthScreen = ({
   useEffect(
     () =>
       dispatch(
-        setIsRegisterCompleted({
+        RegisterActions.setIsRegisterCompleted({
           status: false,
           currentScreen: ROUTES.REGISTER_DATE_OF_BIRTH_SCREEN,
         }),
@@ -98,11 +96,11 @@ const DateOfBirthScreen = ({
         setIsLoading(false)
       } 
       // Dispatch the action to update the birthday in Redux
-      dispatch(setDateOfBirth(moment(dateOfBirthTemp, 'DD/MM/YYYY').toDate()));
+      dispatch(RegisterActions.setDateOfBirth(moment(dateOfBirthTemp, 'DD/MM/YYYY').toDate()));
       // Navigate to the next screen
       navigation.navigate(ROUTES.REGISTER_GENDER_SELECTION_SCREEN);
 
-      dispatch(setProgressBarValue(28));
+      dispatch(RegisterActions.setProgressBarValue(28));
     } catch (err) {
       console.error(err);
     } finally {

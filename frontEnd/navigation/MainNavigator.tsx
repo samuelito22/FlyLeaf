@@ -50,7 +50,7 @@ const MainNavigator = () => {
 
           cardStyleInterpolator: cardSlideLeftAnimation,
         }}
-        initialRouteName={ROUTES.BOTTOM_TAB_NAVIGATOR}>
+        initialRouteName={ROUTES.REGISTER_NAVIGATOR}>
         <Stack.Screen
           name={ROUTES.LOGIN_NAVIGATOR}
           component={LoginNavigator}

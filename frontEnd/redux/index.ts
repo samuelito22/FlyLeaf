@@ -1,19 +1,5 @@
 // Import the action creators
-import {
-  setDateOfBirth,
-  setFirstName,
-  setGenderPreferences,
-  setGender,
-  setPictures,
-  setEmail,
-  setRelationshipGoal,
-  setPhoneNumber,
-  setIsRegisterCompleted,
-  setProgressBarValue,
-  setAdditionalInformation,
-  setInterests,
-  resetRegister,
-} from './actions/registerActions';
+import * as RegisterActions from './actions/registerActions';
 import 
   * as EditProfileActions
  from './actions/editProfileActions';
@@ -25,21 +11,10 @@ import {Store, Persistor} from './store';
 // Export the action creators
 export {
   AppStatusActions,
-  setDateOfBirth,
-  setFirstName,
-  setGenderPreferences,
-  setGender,
-  setPictures,
-  setEmail,
-  setRelationshipGoal,
-  setPhoneNumber,
+  RegisterActions,
   Store,
-  setIsRegisterCompleted,
   Persistor,
-  setProgressBarValue,
-  setAdditionalInformation,
-  setInterests,
-  resetRegister,
+
   UserActions,
   EditProfileActions
 };

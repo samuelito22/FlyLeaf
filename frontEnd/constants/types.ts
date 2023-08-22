@@ -29,7 +29,8 @@ export interface ButtonProps {
 }
 
 export interface InterestsButtonProps extends ButtonProps{
-  active: boolean
+  active: boolean;
+  icon?: string | null
 }
 
 export interface ButtonImageProps extends ButtonProps {
@@ -299,7 +300,19 @@ interface initUserProfile {
   payload: userProfileDataStructure
 }
 
+interface setQuestionsList { 
+  type: 'SET_QUESTIONS_LIST';
+  payload: {id: number, question: string, answers: any}[]
+}
+
+interface setInterestsList {
+  type: 'SET_INTERESTS_LIST';
+  payload: {question:string, answers:{title:string, interests:{title:string, icon:string}[]}[]}
+}
+
 export type AppAction =
+setInterestsList | 
+setQuestionsList
 |updateUserProfile
 |initUserProfile
 | setAdditionalInformation
@@ -342,6 +355,9 @@ export interface InitialStateRegisterType {
     status: boolean;
     currentScreen: keyof RootStackParamList | null;
   };
+  questionsList: {id: number, question: string, answers: any}[] | null
+  interestsList: {question:string, answers:{title:string, interests:{title:string, icon:string}[]}[]} | null
+
 }
 
 export interface InitialStateAppStatusType {

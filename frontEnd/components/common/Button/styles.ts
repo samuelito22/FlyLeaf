@@ -24,7 +24,7 @@ export const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   interestButton: {
-    height: 30,
+    minHeight: 30,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'white',
@@ -42,7 +42,7 @@ export const styles = StyleSheet.create({
   },
   interestButtonText: {
     ...themeText.bodyRegularSix,
-    paddingHorizontal: 10,
+    alignSelf:'center',
   },
   clickableButtonContainer: {
     width: '100%',
@@ -105,5 +105,13 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
   },
   absoluteFill: {flex: 1},
+  iconStyle: {
+    width: 20,
+    height: 20,
+    resizeMode: 'contain',
+    alignSelf:'center',
+    marginLeft: 6
+
+  }
 });
 

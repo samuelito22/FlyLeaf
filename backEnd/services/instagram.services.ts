@@ -6,10 +6,15 @@ import qs from "qs"
 const REDIRECT_URI = process.env.INSTAGRAM_REDIRECT_URI;
 const CLIENT_ID = process.env.INSTAGRAM_CLIENT_ID;
 const CLIENT_SECRET = process.env.INSTAGRAM_CLIENT_SECRET;
-const sixtyDaysInMilliseconds = 58 * 24 * 60 * 60 * 1000;
 
 
-async function obtainInstagramTokens(code:string) {
+interface InstagramTokens {
+  accessToken: string;
+  userId: string;
+  expiryDate: Date;
+}
+
+async function obtainInstagramTokens(code: string): Promise<InstagramTokens | null> {
   const data = {
     client_id: CLIENT_ID,
     client_secret: CLIENT_SECRET,
@@ -23,6 +28,7 @@ async function obtainInstagramTokens(code:string) {
       "Content-Type": "application/x-www-form-urlencoded",
     },
   };
+
   try {
     const tokenResponse = await axios.post(
       "https://api.instagram.com/oauth/access_token",
@@ -30,16 +36,20 @@ async function obtainInstagramTokens(code:string) {
       config
     );
 
+    const exchangeTokenResponse = await axios.get<{ access_token: string; expires_in: number }>(
+      `https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${data.client_secret}&access_token=${tokenResponse.data.access_token}`
+    );
 
-    const expiryDate = new Date(Date.now() + sixtyDaysInMilliseconds);
+    const expiryDate = new Date(Date.now() + (exchangeTokenResponse.data.expires_in * 1000 * 0.95));
 
     return {
-      accessToken: tokenResponse.data.access_token,
+      accessToken: exchangeTokenResponse.data.access_token,
       userId: tokenResponse.data.user_id,
       expiryDate: expiryDate,
     };
   } catch (error) {
-    console.log(error);
+    console.error("Error obtaining Instagram tokens:", error);
+    return null;
   }
 }
 
@@ -67,7 +77,7 @@ async function fetchInstagramImages(accessToken:string, userId:string) {
 
 async function refreshInstagramToken(accessToken:string) {
   try {
-    const response = await axios.get(
+    const response:{data:{access_token: string, expires_in: number}} = await axios.get(
       "https://graph.instagram.com/refresh_access_token",
       {
         params: {
@@ -77,7 +87,7 @@ async function refreshInstagramToken(accessToken:string) {
       }
     );
 
-    const expiryDate = new Date(Date.now() + sixtyDaysInMilliseconds);
+    const expiryDate = new Date(Date.now() + (response.data.expires_in * 1000 * 0.95));
 
     return { token: response.data.access_token, expiryDate: expiryDate };
   } catch (error) {
