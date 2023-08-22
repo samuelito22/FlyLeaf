@@ -89,9 +89,11 @@ import backButton from './images/backButton.png';
 import flyleaf from './images/FlyLeaf.png';
 import manAvatar from './images/manAvatar.png';
 import successIllustration from './images/successillustration.png';
+import sprout from "./icons/sprout.png"
 
 export const icons = {
   subscription, profile, information, support,
+  sprout,
   arrowRight,
   nature,
   stars,

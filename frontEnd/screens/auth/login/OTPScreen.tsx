@@ -10,12 +10,13 @@ import {
   BackButton,
   Button,
   KeyboardAvoidingViewWrapper,
+  Loading,
   LoadingSpinner,
   OTPField,
   SafeContainer,
 } from '../../../components';
 
-import { AppStatusActions, setPhoneNumber} from '../../../redux';
+import { AppStatusActions, RegisterActions} from '../../../redux';
 
 import {styles} from './styles';
 import {useCountdown, useDispatch} from '../../../utils/hooks';
@@ -115,7 +116,7 @@ const LoginOTPScreen = ({navigation, route}: LoginOTPScreenProps) => {
               navigation?.navigate(ROUTES.BOTTOM_TAB_NAVIGATOR);
             } else if (userUidExistResult.type === 'error') {
               navigation?.navigate(ROUTES.REGISTER_NAVIGATOR);
-              dispatch(setPhoneNumber(phoneNumber));
+              dispatch(RegisterActions.setPhoneNumber(phoneNumber));
             }
           } catch (error) {
             console.error(error);
@@ -153,7 +154,7 @@ const LoginOTPScreen = ({navigation, route}: LoginOTPScreenProps) => {
   return (
     <KeyboardAvoidingViewWrapper>
       <SafeContainer>
-        {isLoading && <LoadingSpinner />}
+        {isLoading && <Loading.ActiveIndicator modalBackground={{backgroundColor:"white"}} />}
         <BackButton
           onPress={() => navigation?.navigate(ROUTES.LOGIN_START_SCREEN)}
         />

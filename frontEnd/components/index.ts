@@ -16,6 +16,7 @@ export * from "./common/Headers"
 
 // common
 export * as Button from './common/Button';
+export * as Loading from "./common/Loading"
 export {default as TextField} from './common/TextField';
 export {default as Dropdown} from './common/Dropdown';
 export {default as OTPField} from './common/OTPField';

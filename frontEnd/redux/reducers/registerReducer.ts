@@ -13,6 +13,8 @@ import {TYPES} from '../../constants';
     progressBarValue: 0,
     additionalInformation: null,
     interests: [],
+    questionsList: null,
+    interestsList: null,
     isRegisterCompleted: {status: true, currentScreen: null},
   };
 
@@ -59,6 +61,10 @@ import {TYPES} from '../../constants';
             currentScreen: keyof TYPES.RootStackParamList | null;
           },
         };
+        case registerActions.SET_QUESTIONS_LIST:
+          return {...state, questionsList: action.payload as { id: number; question: string; answers: any}[]};
+          case registerActions.SET_INTERESTS_LIST:
+            return {...state, interestsList: action.payload as {question:string, answers:{title:string, interests:{title:string, icon:string}[]}[]}};
       case registerActions.RESET_REGISTER:
         console.log('Resetting register...');
         let resetState = initialStateRegister;

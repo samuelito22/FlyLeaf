@@ -137,8 +137,27 @@ const profileService = () => {
   return {getProfile, initUserProfile, updateProfile};
 };
 
+const getQuestionsAndInterests = async ( signal?: AbortSignal) => {
+ try{
+  const response = await fetch(`${API_ENDPOINTS.GET_QUESTIONS_AND_INTERESTS}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    signal,     
+  });
+
+  const data = await response.json();
+
+  return data;
+} catch (error:any) {
+  console.log('Error message:', error.message);
+}
+}
+
 export const UserService = {
   ...locationService(),
   ...profileService(),
+  getQuestionsAndInterests
 };
 

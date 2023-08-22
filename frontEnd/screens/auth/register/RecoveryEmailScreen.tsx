@@ -16,7 +16,7 @@ import {
   useFormValidation,
   usePreventBackHandler,
 } from '../../../utils/hooks';
-import {setIsRegisterCompleted, setProgressBarValue} from '../../../redux';
+import {RegisterActions} from '../../../redux';
 
 const RecoveryEmailScreen = ({
   navigation,
@@ -38,7 +38,7 @@ const RecoveryEmailScreen = ({
   useEffect(
     () =>
       dispatch(
-        setIsRegisterCompleted({
+        RegisterActions.setIsRegisterCompleted({
           status: false,
           currentScreen: ROUTES.REGISTER_RECOVERY_EMAIL_SCREEN,
         }),
@@ -63,7 +63,7 @@ const RecoveryEmailScreen = ({
   };
 
   const handleSkipPress = () => {
-    dispatch(setProgressBarValue(100));
+    dispatch(RegisterActions.setProgressBarValue(100));
     navigation.navigate(ROUTES.REGISTER_MULTIPLE_QUESTIONS_SCREEN);
   };
 

@@ -12,7 +12,8 @@ export const SET_PROGRESS_BAR_VALUE = 'SET_PROGRESS_BAR_VALUE' as const;
 export const SET_ADDITIONAL_INFORMATION = 'SET_ADDITIONAL_INFORMATION' as const;
 export const SET_INTERESTS = 'SET_INTERESTS' as const;
 export const RESET_REGISTER = 'RESET_REGISTER' as const;
-
+export const SET_QUESTIONS_LIST = 'SET_QUESTIONS_LIST' as const
+export const SET_INTERESTS_LIST = 'SET_INTERESTS_LIST' as const
 
 import {TYPES} from '../../constants';
 
@@ -126,3 +127,16 @@ export const resetRegister = (): TYPES.AppAction => ({
   type: RESET_REGISTER,
 });
 
+export const setQuestionsList = (questionsList: {id: number, question: string, answers: any}[]) => (dispatch: (action: TYPES.AppAction) => void) => {
+  dispatch({
+    type: SET_QUESTIONS_LIST,
+    payload: questionsList
+  })
+}
+
+export const setInterestsList = (interestsList: {question:string, answers:{title:string, interests:{title:string, icon:string}[]}[]}) => (dispatch: (action: TYPES.AppAction) => void) => {
+  dispatch({
+    type: SET_INTERESTS_LIST,
+    payload: interestsList
+  })
+}

@@ -21,7 +21,6 @@ export const HomeHeader = () => {
           width={30}
           height={30}
           contentContainerStyle={styles.iconContainer}
-          iconHeaderLeft={true}
           tintColor={THEME_COLORS.dark}
           onPress={handleProfilePress}
         />
@@ -32,7 +31,6 @@ export const HomeHeader = () => {
       width={30}
       height={30}
       contentContainerStyle={styles.iconContainer}
-      iconHeaderRight={true}
         imgUrl={icons.nature}
         tintColor={THEME_COLORS.dark}
       />
@@ -55,7 +53,6 @@ export const ProfilePrivateHeader = () => {
           tintColor={THEME_COLORS.dark}
           onPress={handleBackPress}
           contentContainerStyle={styles.iconContainer}
-          iconHeaderLeft={true}
         />
   
     </View>
@@ -79,7 +76,6 @@ export const EditProfileHeader = ({ onBackPress, leftIconText } : {onBackPress?:
           width={30}
           height={30}
           contentContainerStyle={styles.iconContainer}
-          iconHeaderLeft={true}
         />
         <Text style={styles.iconText}>{leftIconText}</Text>
         </View>

@@ -12,9 +12,7 @@ import {
 } from '../../../components';
 
 import {
-  setFirstName,
-  setIsRegisterCompleted,
-  setProgressBarValue,
+  RegisterActions
 } from '../../../redux';
 import {ROUTES, THEME_COLORS, TYPES} from '../../../constants';
 
@@ -60,7 +58,7 @@ const FirstNameEntryScreen = ({
   useEffect(
     () =>
       dispatch(
-        setIsRegisterCompleted({
+        RegisterActions.setIsRegisterCompleted({
           status: false,
           currentScreen: ROUTES.REGISTER_FIRST_NAME_SCREEN,
         }),
@@ -83,13 +81,13 @@ const FirstNameEntryScreen = ({
     try {
       setAlertVisible(false);
       // Dispatch the action to update the firstName in Redux
-      dispatch(setFirstName(formattedFirstName));
+      dispatch(RegisterActions.setFirstName(formattedFirstName));
 
       // Navigate to the next screen
       navigation.navigate(ROUTES.REGISTER_DATE_OF_BIRTH_SCREEN);
 
       // Update the progress using the setProgress function
-      dispatch(setProgressBarValue(14));
+      dispatch(RegisterActions.setProgressBarValue(14));
     } catch (err) {
       console.error(err);
     } finally {

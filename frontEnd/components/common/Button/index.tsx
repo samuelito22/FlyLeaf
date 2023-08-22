@@ -1,7 +1,13 @@
 import React, {useState} from 'react';
 import {Text, Image, View, Pressable} from 'react-native';
 import {styles} from './styles';
-import {BORDER_RADIUS, PALETTE, THEME_COLORS, TYPES, themeText} from '../../../constants';
+import {
+  BORDER_RADIUS,
+  PALETTE,
+  THEME_COLORS,
+  TYPES,
+  themeText,
+} from '../../../constants';
 import {images} from '../../../assets';
 import {TouchableRipple} from 'react-native-paper';
 
@@ -11,29 +17,34 @@ export const PrimaryButton = ({
   children,
   height,
   width,
-  textStyle
+  textStyle,
 }: TYPES.ButtonProps) => {
   let buttonStyle = {
-    ...styles.button, 
+    ...styles.button,
     backgroundColor: THEME_COLORS.primary,
-    ...style
+    ...style,
   };
 
   if (height) buttonStyle.height = height;
   if (width) buttonStyle.width = width;
-  
+
   return (
     <View style={buttonStyle}>
       <TouchableRipple
         onPress={onPress}
         style={styles.fullCenterContainer}
         rippleColor={PALETTE.GRAY400}>
-        <Text style={[{color: PALETTE.WHITE, ...themeText.bodyBoldFive}, textStyle]}>{children}</Text>
+        <Text
+          style={[
+            {color: PALETTE.WHITE, ...themeText.bodyBoldFive},
+            textStyle,
+          ]}>
+          {children}
+        </Text>
       </TouchableRipple>
     </View>
   );
 };
-
 
 export const DarkButton = ({
   onPress,
@@ -41,12 +52,12 @@ export const DarkButton = ({
   children,
   height,
   width,
-  textStyle
+  textStyle,
 }: TYPES.ButtonProps) => {
   let buttonStyle = {
     ...styles.button,
     backgroundColor: THEME_COLORS.dark,
-    ...style
+    ...style,
   };
 
   if (height) buttonStyle.height = height;
@@ -58,7 +69,13 @@ export const DarkButton = ({
         onPress={onPress}
         style={styles.fullCenterContainer}
         rippleColor={PALETTE.GRAY400}>
-        <Text style={[{color: PALETTE.WHITE, ...themeText.bodyBoldFive}, textStyle]}>{children}</Text>
+        <Text
+          style={[
+            {color: PALETTE.WHITE, ...themeText.bodyBoldFive},
+            textStyle,
+          ]}>
+          {children}
+        </Text>
       </TouchableRipple>
     </View>
   );
@@ -70,16 +87,16 @@ export const LightButton = ({
   children,
   height,
   width,
-  textStyle
+  textStyle,
 }: TYPES.ButtonProps) => {
   let buttonStyle = {
     ...styles.button,
     backgroundColor: PALETTE.WHITE,
-    ...style
+    ...style,
   };
 
   if (height) buttonStyle.height = height;
-  if (width) buttonStyle.width = width ;
+  if (width) buttonStyle.width = width;
 
   return (
     <View style={buttonStyle}>
@@ -87,12 +104,14 @@ export const LightButton = ({
         onPress={onPress}
         style={styles.fullCenterContainer}
         rippleColor={PALETTE.GRAY400}>
-        <Text style={[{color: PALETTE.DARK, ...themeText.bodyBoldFive}, textStyle]}>{children}</Text>
+        <Text
+          style={[{color: PALETTE.DARK, ...themeText.bodyBoldFive}, textStyle]}>
+          {children}
+        </Text>
       </TouchableRipple>
     </View>
   );
 };
-
 
 export const ButtonImage = ({
   imgUrl,
@@ -103,35 +122,40 @@ export const ButtonImage = ({
   contentContainerStyle,
   style,
   iconHeaderLeft,
-  iconHeaderRight
+  iconHeaderRight,
 }: TYPES.ButtonImageProps) => {
   const borderRight = {
     borderTopLeftRadius: BORDER_RADIUS.medium,
-    borderBottomLeftRadius: BORDER_RADIUS.medium 
-  }
+    borderBottomLeftRadius: BORDER_RADIUS.medium,
+  };
 
   const borderLeft = {
     borderTopRightRadius: BORDER_RADIUS.medium,
-    borderBottomRightRadius: BORDER_RADIUS.medium 
-  }
+    borderBottomRightRadius: BORDER_RADIUS.medium,
+  };
 
   return (
-    <View style={[styles.imageButtonContainer, contentContainerStyle, iconHeaderLeft && borderLeft, iconHeaderRight && borderRight ]}>
+    <View
+      style={[
+        styles.imageButtonContainer,
+        contentContainerStyle,
+        iconHeaderLeft && borderLeft,
+        iconHeaderRight && borderRight,
+      ]}>
       <Image
         source={imgUrl}
         resizeMode="contain"
         style={[styles.imageButton, {tintColor, width, height}]}
       />
-        <TouchableRipple
-          onPress={onPress}
-          style={styles.fullCenterContainer}
-          rippleColor={PALETTE.GRAY400}>
-          <></>
-        </TouchableRipple>
+      <TouchableRipple
+        onPress={onPress}
+        style={styles.fullCenterContainer}
+        rippleColor={PALETTE.LIGHT400}>
+        <></>
+      </TouchableRipple>
     </View>
   );
 };
-
 
 export const ClickableIndicatorPrimaryButton = ({
   onPress,
@@ -145,33 +169,34 @@ export const ClickableIndicatorPrimaryButton = ({
         <View style={styles.textContainer}>
           <Text style={styles.clickableButtonText}>{children}</Text>
         </View>
-        <View style={{height: "100%", justifyContent: 'flex-start', padding:5}}>
         <View
-          style={[
-            styles.clickableButtonIndicator,
-            isActive ? styles.indicatorActive : styles.indicatorInactive,
-          ]}>
-          {isActive && (
-            <Image
-              source={images.successIllustration}
-              resizeMode="contain"
-              style={styles.clickableButtonIndicatorImage}
-            />
-          )}
-        </View>
+          style={{height: '100%', justifyContent: 'flex-start', padding: 5}}>
+          <View
+            style={[
+              styles.clickableButtonIndicator,
+              isActive ? styles.indicatorActive : styles.indicatorInactive,
+            ]}>
+            {isActive && (
+              <Image
+                source={images.successIllustration}
+                resizeMode="contain"
+                style={styles.clickableButtonIndicatorImage}
+              />
+            )}
+          </View>
         </View>
       </View>
     </Pressable>
   );
 };
 
-export const interestsButton = ({
+export const interestsButton = React.memo(({
   onPress,
   style,
   children,
-  active
+  active,
+  icon = null,
 }: TYPES.InterestsButtonProps) => {
-
   return (
     <View
       style={[
@@ -187,15 +212,21 @@ export const interestsButton = ({
         rippleColor={PALETTE.GRAY400}>
         <></>
       </TouchableRipple>
-      <Text
-        style={[
-          styles.interestButtonText,
-          active
-            ? styles.activeInterestButtonText
-            : styles.inactiveInterestButtonText,
-        ]}>
-        {children}
-      </Text>
+      <View style={{flexDirection: 'row',     paddingHorizontal: 10, paddingVertical: 5
+}}>
+        <Text
+          style={[
+            styles.interestButtonText,
+            active
+              ? styles.activeInterestButtonText
+              : styles.inactiveInterestButtonText,
+          ]}>
+          {children}
+        </Text>
+        {icon && <Image source={{uri: icon}} style={styles.iconStyle} />}
+        {/* Show icon if provided */}
+      </View>
     </View>
   );
-};
+}
+)

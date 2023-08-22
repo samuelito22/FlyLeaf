@@ -1,17 +1,14 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useCallback} from 'react';
 import {Text, View, ScrollView, Image, StyleSheet} from 'react-native';
 import {styles as generalStyles} from './styles';
 import {
   SafeContainer,
   Button,
-  LoadingSpinner,
-  interestsList,
   ThreeDotsLoader,
+  Loading,
 } from '../../../components';
 import {
-  setInterests,
-  setIsRegisterCompleted,
-  resetRegister,
+  RegisterActions,
   AppStatusActions,
   UserActions
 } from '../../../redux';
@@ -69,6 +66,7 @@ const InterestScreen = ({
     phoneNumber,
     additionalInformation,
     interests,
+    interestsList
   } = useSelector((state: TYPES.AppState) => state.registerReducer);
 
   const [valid, setValid] = useState(false);
@@ -127,7 +125,7 @@ const InterestScreen = ({
           } else {
             dispatch(AppStatusActions.setIsLoggedIn(true));
             dispatch(UserActions.setCurrentUserId(uid))
-            dispatch(resetRegister());
+            dispatch(RegisterActions.resetRegister());
             navigation.navigate(ROUTES.BOTTOM_TAB_NAVIGATOR);
           }
         });
@@ -141,21 +139,25 @@ const InterestScreen = ({
 
   const handlePress = () => {
     if (valid) {
-      dispatch(setInterests(answer));
+      dispatch(RegisterActions.setInterests(answer));
       registration()
     }
   };
 
-  const handleInterestPress = (interest: string) => {
+  const handleInterestPress = useCallback((interest: string) => {
     setAnswer(prevState => {
+      let newAnswer;
       if (Array.isArray(prevState) && prevState.includes(interest)) {
-        return (prevState as Array<string>).filter(item => item !== interest);
+        newAnswer = prevState.filter(item => item !== interest);
       } else {
         if (prevState.length === 5) return prevState;
-        else return [...(prevState as Array<string>), interest];
+        else newAnswer = [...prevState, interest];
       }
+      setValid(newAnswer.length === 5);
+      return newAnswer;
     });
-  };
+}, []);
+
 
   useEffect(() => {
     setValid(answer.length === 5);
@@ -164,7 +166,7 @@ const InterestScreen = ({
   useEffect(
     () =>
       dispatch(
-        setIsRegisterCompleted({
+        RegisterActions.setIsRegisterCompleted({
           status: false,
           currentScreen: ROUTES.REGISTER_INTEREST_SCREEN,
         }),
@@ -175,10 +177,10 @@ const InterestScreen = ({
 
   return (
     <SafeContainer>
-      {isLoading && <ThreeDotsLoader />}
+      {isLoading && <Loading.ActiveIndicator modalBackground={{backgroundColor:'white'}} />}
         <View style={generalStyles.container}>
           <Text style={generalStyles.title}>
-            {interestsList.question}
+            {interestsList?.question}
           </Text>
           <Text style={generalStyles.paragraph}>
               Please select 5 interests
@@ -189,7 +191,7 @@ const InterestScreen = ({
             showsVerticalScrollIndicator={false}
             overScrollMode={'never'}
             contentContainerStyle={{flexGrow: 1}}>
-            {interestsList.answers.map((category, index) => (
+            {interestsList?.answers.map((category, index) => (
                   <View
                     key={category.title + index}
                     style={styles.interest_section}>
@@ -198,11 +200,12 @@ const InterestScreen = ({
                       {category.interests.map((interest, idx) => {
                         return (
                           <Button.interestsButton
-                            active={answer.includes(interest)}
-                            key={interest + idx}
+                            active={answer.includes(interest.title)}
+                            key={interest.title + idx}
                             style={styles.interest_button}
-                            onPress={() => handleInterestPress(interest)}>
-                            {interest}
+                            icon={interest.icon}
+                            onPress={() => handleInterestPress(interest.title)}>
+                            {interest.title}
                           </Button.interestsButton>
                         );
                       })}

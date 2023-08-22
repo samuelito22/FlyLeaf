@@ -18,9 +18,7 @@ import {
   useDispatch,
 } from '../../../utils/hooks';
 import {
-  setIsRegisterCompleted,
-  setPictures,
-  setProgressBarValue,
+  RegisterActions
 } from '../../../redux';
 import {TYPES, THEME_COLORS, ROUTES} from '../../../constants';
 import {icons} from '../../../assets';
@@ -49,9 +47,9 @@ const PictureUploadScreen = ({
     if (valid && imageOne && imageTwo) {
       setIsLoading(true);
       try {
-        dispatch(setPictures([imageOne, imageTwo]));
+        dispatch(RegisterActions.setPictures([imageOne, imageTwo]));
 
-        dispatch(setProgressBarValue(84));
+        dispatch(RegisterActions.setProgressBarValue(84));
 
         navigation.navigate(ROUTES.REGISTER_RECOVERY_EMAIL_SCREEN);
       } catch (error) {
@@ -63,7 +61,7 @@ const PictureUploadScreen = ({
   }, [valid, imageOne, imageTwo, dispatch]);
 
   const handleSkipPress = () => {
-    dispatch(setProgressBarValue(84));
+    dispatch(RegisterActions.setProgressBarValue(84));
     navigation.navigate(ROUTES.REGISTER_RECOVERY_EMAIL_SCREEN);
   };
 
@@ -99,7 +97,7 @@ const PictureUploadScreen = ({
   useEffect(
     () =>
       dispatch(
-        setIsRegisterCompleted({
+        RegisterActions.setIsRegisterCompleted({
           status: false,
           currentScreen: ROUTES.REGISTER_PICTURE_UPLOAD_SCREEN,
         }),
@@ -111,11 +109,6 @@ const PictureUploadScreen = ({
     <SafeContainer>
       <View style={styles.container}>
         {isLoading && <LoadingSpinner />}
-        <TouchableOpacity
-          style={styles.skipContainer}
-          onPress={handleSkipPress}>
-          <Text style={styles.skipContainerText}>SKIP</Text>
-        </TouchableOpacity>
         <Text style={styles.requirement}>Optional</Text>
         <Text style={styles.title}>Add your first 2 photos</Text>
         <View style={styles.galleryButtonsContainer}>
