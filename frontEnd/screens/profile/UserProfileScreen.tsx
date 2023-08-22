@@ -137,13 +137,14 @@ const joinedDate = `Joined on ${joinedDateObj.getDate()}${daySuffix(joinedDateOb
         </View>
          
       <View style={styles.plansContainer}> 
-      <View style={styles.planCard}>
+      <View style={[styles.planCard, userProfile.user.appActivity.connects > 0 && {borderColor: "#fda831"}]}>
         <Image source={icons.coinsColoured} style={styles.planCard_icon} resizeMode='contain' />
         <View  style={styles.planCard_textContainer}><Text style={styles.planCard_text}>Recharge connects</Text><Text style={styles.planCard_paragraph}><Text style={{...themeText.bodyBoldSix, color: THEME_COLORS.tertiary}}>{userProfile?.user.appActivity.connects ? userProfile.user.appActivity.connects : 0}</Text> Connects</Text></View>
     <Button.ButtonImage imgUrl={icons.plus} contentContainerStyle={{position:'absolute', top: -8, right: -8, borderWidth: 0.2, borderRadius: 500, borderColor: THEME_COLORS.tertiary}} width={30} height={30} tintColor={THEME_COLORS.tertiary}/>
       </View> 
-      <View style={styles.planCard}>
+      <View style={[styles.planCard, userProfile.user.appActivity.isPremiumUser && {borderColor: "green"}]}>
         <Image source={images.logo} style={styles.planCard_icon} resizeMode='contain' tintColor={THEME_COLORS.primary}/>
+        <Text style={userProfile.user.appActivity.isPremiumUser ? styles.activeText : styles.inactiveText}>{userProfile.user.appActivity.isPremiumUser ? 'Active' : 'Inactive'}</Text>
         <View  style={styles.planCard_textContainer}><Text style={styles.planCard_text}>Pro membership</Text><Text style={styles.planCard_paragraph}>Enjoy the additional features that pro membership offers to you</Text></View>
     <Button.ButtonImage imgUrl={icons.plus} contentContainerStyle={{position:'absolute', top: -8, right: -8, borderWidth: 0.2, borderRadius: 500, borderColor: THEME_COLORS.tertiary}} width={30} height={30} tintColor={THEME_COLORS.tertiary}/>
       </View>
@@ -181,6 +182,20 @@ export const styles = StyleSheet.create({
     width: '100%',
     paddingVertical: 15,
   },
+  activeText: {
+    position: 'absolute',
+    bottom: 5,
+    right: 10,
+    color: 'green',
+    ...themeText.bodyBoldSeven
+},
+inactiveText: {
+  position: 'absolute',
+  bottom: 5,
+  right: 10,
+  color: THEME_COLORS.tertiary,
+  ...themeText.bodyBoldSeven
+},
  
   plansContainer: {
     backgroundColor: "white", 
@@ -215,7 +230,7 @@ export const styles = StyleSheet.create({
     borderRadius: 15,
     borderWidth: 2,
     borderColor: PALETTE.GHOSTWHITE,
-    padding: 20,
+    paddingVertical: 25,
     marginVertical: 10
   },
   planCard_icon: {
