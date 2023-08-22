@@ -54,7 +54,14 @@ export const ProfilePrivateHeader = () => {
           onPress={handleBackPress}
           contentContainerStyle={styles.iconContainer}
         />
-  
+    <ButtonImage
+       width={30}
+       height={30}
+        imgUrl={icons.settings}
+        tintColor={THEME_COLORS.dark}
+        contentContainerStyle={styles.iconContainer}
+        iconHeaderRight={true}
+      />
     </View>
   );
 };

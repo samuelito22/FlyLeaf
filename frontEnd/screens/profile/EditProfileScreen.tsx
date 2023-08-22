@@ -15,6 +15,7 @@ import {
   Button,
   EditProfileHeader,
   KeyboardAvoidingViewWrapper,
+  Loading,
   LoadingSpinner,
   OAuth2WebView,
   SafeContainer,
@@ -124,19 +125,15 @@ interface ModalSelectionProps extends SectionProps {
 
 type NavigationProps = {
   navigation?: NavigationProp<TYPES.RootStackParamList>;
-};
+}
+
 
 const EdiScreen: React.FC<NavigationProps> = ({navigation}) => {
   const state = useSelector((state: TYPES.AppState) => state.editUserReducer);
   const uid = useSelector((state: TYPES.AppState) => state.usersReducer.currentUserId);
   const dispatch = useDispatch();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    setTimeout(() => {
-      setLoading(false);
-    }, 300); // adjust the time as per your requirement
-  }, []);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -173,7 +170,7 @@ const handleBackPress = async () => {
   return (
     <KeyboardAvoidingViewWrapper>
       <SafeContainer>
-        {loading && <ThreeDotsLoader modalBackground={{backgroundColor:"white"}}/>}
+        {loading && <Loading.ActiveIndicator modalBackground={{backgroundColor:"white"}}/>}
         <EditProfileHeader
           onBackPress={handleBackPress}
           leftIconText="Edit"
@@ -194,12 +191,10 @@ const handleBackPress = async () => {
         <SpotifySection
           state={state}
           dispatch={dispatch}
-          navigation={navigation}
         />
         <InstagramSection
           state={state}
           dispatch={dispatch}
-          navigation={navigation}
         />
         </View>
       </SafeContainer>
@@ -870,10 +865,9 @@ const modalSelectionStyles = StyleSheet.create({
   },
 });
 
-const SpotifySection: React.FC<SectionProps & NavigationProps> = ({
+const SpotifySection: React.FC<SectionProps> = ({
   state,
   dispatch,
-  navigation,
 }) => {
   const [artists, setArtists] = useState<any>(
     state?.spotify?.artists ? state.spotify.artists : Array(10).fill(null),
@@ -1059,10 +1053,9 @@ const SpotifySection: React.FC<SectionProps & NavigationProps> = ({
   );
 };
 
-const InstagramSection: React.FC<SectionProps & NavigationProps> = ({
+const InstagramSection: React.FC<SectionProps> = ({
   state,
   dispatch,
-  navigation,
 }) => {
   const [images, setImages] = useState<any>(state.instagram?.images ? state.instagram.images : Array(10).fill(null),);
   const authCodeRef = useRef<string>('');

@@ -6,7 +6,7 @@ export const style = StyleSheet.create({
     flex: 1,
     backgroundColor: 'white',
     width:"100%",
-    maxWidth: 420
+    maxWidth: 420,
   },
   profileCard:{
     position: 'relative',
