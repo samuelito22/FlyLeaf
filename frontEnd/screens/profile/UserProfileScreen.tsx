@@ -47,8 +47,34 @@ const UserProfileScreen = () => {
 
   const [premiumPressed, setPremiumPressed] = useState(false)
 
-  const dateObj = new Date(userProfile.user.profile.dateOfBirth);
+  const dateOfBirth = new Date(userProfile.user.profile.dateOfBirth);
 
+  const currentDate = new Date();
+
+  let age = currentDate.getFullYear() - dateOfBirth.getFullYear();
+
+  // If the user hasn't had their birthday this year, subtract 1 from the age
+  if (
+    currentDate.getMonth() < dateOfBirth.getMonth() ||
+    (currentDate.getMonth() === dateOfBirth.getMonth() &&
+      currentDate.getDate() < dateOfBirth.getDate())
+  ) {
+    age--;
+  }
+  const monthNames = ["January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+const daySuffix = (day: number) => {
+  if (day > 3 && day < 21) return 'th';
+  switch (day % 10) {
+      case 1:  return 'st';
+      case 2:  return 'nd';
+      case 3:  return 'rd';
+      default: return 'th';
+  }
+};
+  const joinedDateObj = new Date(userProfile.user.createdAt);
+const joinedDate = `Joined on ${joinedDateObj.getDate()}${daySuffix(joinedDateObj.getDate())} of ${monthNames[joinedDateObj.getMonth()]} ${joinedDateObj.getFullYear()}`;
   
 
   const onEditPress = () => {
@@ -101,6 +127,14 @@ const UserProfileScreen = () => {
       <ProfilePrivateHeader />
       <View style={GeneralStyles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContainer}>
+        <View style={{flexDirection:'row', justifyContent:'space-evenly' }}>
+        <Image source={{uri:userProfile.user.profile.pictures[0]}} style={{resizeMode:'cover', maxWidth: 150, flex: 0.3, aspectRatio: 1, borderRadius: 5000, alignSelf:'center'}} />
+        <View style={{flex: 0.6}}>
+        <Text style={[styles.header]}>{userProfile.user.profile.firstName}, {age}</Text>
+        <Text style={styles.profileJoinDate}>{joinedDate}</Text>
+        <Button.DarkButton onPress={onEditPress} height={35} width={200} style={{alignSelf:"center", borderRadius: 50}} textStyle={{...themeText.bodyMediumSix}}>Edit Profile</Button.DarkButton>
+        </View>
+        </View>
          
       <View style={styles.plansContainer}> 
       <View style={styles.planCard}>
@@ -145,7 +179,7 @@ export default UserProfileScreen;
 export const styles = StyleSheet.create({
   scrollViewContainer: {
     width: '100%',
-    paddingVertical: 15
+    paddingVertical: 15,
   },
  
   plansContainer: {
@@ -157,8 +191,7 @@ export const styles = StyleSheet.create({
   header: {
     ...themeText.bodyMediumThree,
     color:THEME_COLORS.dark,
-    paddingHorizontal: 20,
-    paddingBottom: 10
+    textAlign:'center'
   },
   plansContainer_firstColumn:{
     flex:  0.5,
@@ -203,4 +236,10 @@ export const styles = StyleSheet.create({
     color: THEME_COLORS.tertiary,
     ...themeText.bodyRegularSix,
   } ,
+  profileJoinDate: {
+    color: THEME_COLORS.tertiary,
+    ...themeText.bodyRegularSeven,
+    paddingVertical: 10,
+    textAlign:'center'
+  },
 });
