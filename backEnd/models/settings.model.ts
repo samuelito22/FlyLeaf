@@ -1,18 +1,19 @@
 import mongoose, {Schema} from "mongoose";
+import { Notification, Safety, Filter, Privacy, Account,  Settings} from "../../types"
 
-const NotificationSchema = new Schema({
+const NotificationSchema = new Schema<Notification>({
     emailNotifications: {type: Boolean, default: true},
     newMessageNotification: {type: Boolean, default: true},
     newMatchNotification: {type: Boolean, default: true},
     pushNotifications:  {type: Boolean, default: true},
 }, {_id:false})
 
-const SafetySchema = new Schema({
+const SafetySchema = new Schema<Safety>({
     blockList: {type: [String], default: []},
     reportList: {type: [String], default: []},
 }, {_id:false})
 
-const FilterSchema = new Schema({
+const FilterSchema = new Schema<Filter>({
     preferredRelationshipGoal: {type: String, enum: ['Friendship', 'Relationship', 'Exploring', 'All']},
   seeking: {type: [String]},
   ageMax: {
@@ -31,18 +32,18 @@ const FilterSchema = new Schema({
   showVerifiedProfilesOnly: {type: Boolean, default: false},
 })
 
-const PrivacySchema = new Schema({
+const PrivacySchema = new Schema<Privacy>({
     showOnlineStatus: {type: Boolean, default: true},
   showLastActive: {type: Boolean, default: true},
 })
 
-const AccountSchema = new Schema({
+const AccountSchema = new Schema<Account>({
     deactivateAccountAfterInactivity: {type: [Number], enum: [-1, ...Array.from({ length: 7 }, (_, i) => i)] },
     discoverable: {type: Boolean, default: true}
 
 })
 
-const SettingsSchema = new Schema({
+const SettingsSchema = new Schema<Settings>({
     _id: { type: String, required: true, unique: true ,ref: 'User' },
     
   distanceInKm: {type: Boolean, default: false},

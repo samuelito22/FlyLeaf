@@ -1,6 +1,7 @@
 import mongoose, {Schema} from "mongoose";
+import { Premium } from "../../types";
 
-const PremiumSchema = new Schema({
+const PremiumSchema = new Schema<Premium>({
     userId: { 
         type: String, 
         required: true, 

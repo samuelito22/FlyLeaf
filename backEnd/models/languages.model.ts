@@ -1,6 +1,7 @@
 import mongoose, {Schema} from "mongoose";
+import { Languages } from "../../types";
 
-const languagesSchema = new Schema({
+const languagesSchema = new Schema<Languages>({
     code: {
         type: String, 
         required: true,

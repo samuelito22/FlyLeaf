@@ -1,6 +1,7 @@
 import mongoose, {Schema} from "mongoose";
+import { Gender } from "../../types";
 
-const genderSchema = new Schema({
+const genderSchema = new Schema<Gender>({
     gender: {
         type: String, 
         required: true,

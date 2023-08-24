@@ -1,6 +1,7 @@
 import mongoose, {Schema} from "mongoose";
+import { Interest } from "../../types";
 
-const InterestsSchema = new Schema({
+const InterestsSchema = new Schema<Interest>({
     category_id: {
         type: String,
         required: true

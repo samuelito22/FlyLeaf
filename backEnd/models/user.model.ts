@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 const { Schema } = mongoose;
-import { Profession, Gender, Location, AdditionalInformation} from "../../types"
+import { Profession, Gender, Location, AdditionalInformation, User} from "../../types"
 
 const ProfessionSchema = new Schema<Profession>({
   jobTitle: {type: String },
@@ -22,7 +22,7 @@ const AdditionalInformationSchema = new Schema<AdditionalInformation>({
   answer: { type: String, required: true },
 }, { _id : false });
 
-const UserSchema = new Schema({
+const UserSchema = new Schema<User>({
   _id: { type: String, alias: 'uid' },
   username: { type: String, required: true},
   profession: {type: ProfessionSchema},

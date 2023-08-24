@@ -1,6 +1,7 @@
 import mongoose, {Schema} from "mongoose";
+import { Questions } from "../../types";
 
-const questionSchema = new Schema({
+const questionSchema = new Schema<Questions>({
   question: {
     type: String,
     required: true,
