@@ -12,7 +12,6 @@ export const styles = StyleSheet.create({
     maxHeight: HEIGHT.homeHeader,
     height: "100%",
     width: '100%',
-    borderBottomWidth: 0.5,
     borderBottomColor: COMPONENT_COLORS.headerBorder,
     justifyContent: 'space-between',
     alignItems: 'center',

@@ -302,7 +302,7 @@ interface initUserProfile {
 
 interface setQuestionsList { 
   type: 'SET_QUESTIONS_LIST';
-  payload: {id: number, question: string, answers: any}[]
+  payload: {id: number, question: string, shortForm:string, icon: string, answers: any}[]
 }
 
 interface setInterestsList {
@@ -355,7 +355,7 @@ export interface InitialStateRegisterType {
     status: boolean;
     currentScreen: keyof RootStackParamList | null;
   };
-  questionsList: {id: number, question: string, answers: any}[] | null
+  questionsList: {id: number, question: string, shortForm:string, icon:string, answers: any}[] | null
   interestsList: {question:string, answers:{title:string, interests:{title:string, icon:string}[]}[]} | null
 
 }
@@ -400,7 +400,7 @@ export interface InitialStateEditUserType {
   additionalInformation: {
     question: string;
     answer: string;
-    icon: number;
+    icon: string;
   }[];
   jobTitle: string | undefined;
   company: string | undefined;
@@ -412,7 +412,9 @@ export interface InitialStateEditUserType {
   pictures: string[];
   languages: string[] | undefined;
   covidVaccination: string | undefined;
-  ethnicity: string | undefined
+  ethnicity: string | undefined;
+  questionsList: {id: number, question: string, shortForm:string, icon: string, answers: any}[] | null
+  interestsList: {question:string, answers:{title:string, interests:{title:string, icon:string}[]}[]} | null
 }
 
 /**

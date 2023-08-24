@@ -62,7 +62,7 @@ import {TYPES} from '../../constants';
           },
         };
         case registerActions.SET_QUESTIONS_LIST:
-          return {...state, questionsList: action.payload as { id: number; question: string; answers: any}[]};
+          return {...state, questionsList: action.payload as { id: number; question: string; answers: any, shortForm:string, icon: string}[]};
           case registerActions.SET_INTERESTS_LIST:
             return {...state, interestsList: action.payload as {question:string, answers:{title:string, interests:{title:string, icon:string}[]}[]}};
       case registerActions.RESET_REGISTER:

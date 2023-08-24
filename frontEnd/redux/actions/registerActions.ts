@@ -127,7 +127,7 @@ export const resetRegister = (): TYPES.AppAction => ({
   type: RESET_REGISTER,
 });
 
-export const setQuestionsList = (questionsList: {id: number, question: string, answers: any}[]) => (dispatch: (action: TYPES.AppAction) => void) => {
+export const setQuestionsList = (questionsList: {id: number, question: string, shortForm:string, icon: string, answers: any}[]) => (dispatch: (action: TYPES.AppAction) => void) => {
   dispatch({
     type: SET_QUESTIONS_LIST,
     payload: questionsList

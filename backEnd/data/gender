@@ -1,0 +1,42 @@
+[
+  {
+    "gender": "Male",
+    "extra": [
+      "Intersex man",
+      "Trans man",
+      "Transmasculine",
+      "Man and Nonbinary",
+      "Cis man"
+    ]
+  },
+  {
+    "gender": "Female",
+    "extra": [
+      "Intersex woman",
+      "Trans woman",
+      "Transfeminine",
+      "Woman and Nonbinary",
+      "Cis woman"
+    ]
+  },
+  {
+    "gender": "Non-Binary",
+    "extra": [
+      "Agender",
+      "Bigender",
+      "Genderfluid",
+      "Genderqueer",
+      "Gender nonconforming",
+      "Gender questioning",
+      "Gendervariant",
+      "Intersex",
+      "Neutrois",
+      "Nonbinary man",
+      "Nonbinary woman",
+      "Pangender",
+      "Polygender",
+      "Transgender",
+      "Two-spirit"
+    ]
+  }
+]

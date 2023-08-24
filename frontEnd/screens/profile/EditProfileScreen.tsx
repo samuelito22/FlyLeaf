@@ -8,20 +8,16 @@ import {
   Pressable,
   BackHandler,
   Animated,
-  Dimensions,
 } from 'react-native';
-import React, {useEffect, useMemo, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
   Button,
   EditProfileHeader,
   KeyboardAvoidingViewWrapper,
   Loading,
-  LoadingSpinner,
   OAuth2WebView,
   SafeContainer,
-  ThreeDotsLoader,
   UploadSelectionAlert,
-  questionsList,
 } from '../../components';
 import {
   BORDER_RADIUS,
@@ -34,14 +30,12 @@ import {
 } from '../../constants';
 import {useSelector} from 'react-redux';
 import {icons} from '../../assets';
-import {FlatList, LongPressGestureHandler, ScrollView} from 'react-native-gesture-handler';
+import { LongPressGestureHandler, ScrollView} from 'react-native-gesture-handler';
 import {TouchableRipple} from 'react-native-paper';
 import {useNavigation, NavigationProp, useFocusEffect} from '@react-navigation/native';
 import {useDispatch, useImagePicker} from '../../utils/hooks';
-import {AppStatusActions, EditProfileActions, UserActions} from '../../redux';
-import {isEqual} from 'lodash';
+import { EditProfileActions, UserActions} from '../../redux';
 import {InstagramService, SpotifyService, UserService} from '../../services';
-import auth from '@react-native-firebase/auth';
 
 const styles = StyleSheet.create({
   section: {
@@ -112,6 +106,22 @@ const styles = StyleSheet.create({
     height: 20,
     marginRight: 10,
   },
+  callToActionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginVertical: 10,
+  },
+  callToActionInnerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexGrow: 1
+  },
+  paragraphStyle: {
+    flex: 2,
+    flexShrink: 1,
+    textAlign: 'right',
+  },
 });
 
 interface SectionProps {
@@ -128,43 +138,74 @@ type NavigationProps = {
 }
 
 
-const EdiScreen: React.FC<NavigationProps> = ({navigation}) => {
+const useUserProfile = (uid: string | null) => {
+  const dispatch = useDispatch();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchData = async () => {
+      try {
+        const result = await UserService.getQuestionsAndInterests(controller.signal);
+        if (result.type) {
+          dispatch(EditProfileActions.setQuestionsList(result.questions));
+          dispatch(EditProfileActions.setInterestsList(result.interests));
+        }
+        setLoading(false);
+      } catch (error) {
+        console.error(error);
+        // You can set some state here to show an error message to the user if needed
+      }
+    }
+    if(uid)
+    fetchData();
+
+    return () => {
+      controller.abort();
+    };
+  }, [dispatch]);
+
+  return { loading, setLoading };
+};
+
+const EdiScreen: React.FC<NavigationProps> = ({ navigation }) => {
   const state = useSelector((state: TYPES.AppState) => state.editUserReducer);
   const uid = useSelector((state: TYPES.AppState) => state.usersReducer.currentUserId);
+  const { loading, setLoading } = useUserProfile(uid);
   const dispatch = useDispatch();
-  const [loading, setLoading] = useState(false);
+
+  const handleBackPress = async () => {
+    try {
+      if (uid) {
+        setLoading(true);
+        const result = await UserService.updateProfile(uid, state);
+        if (result.type === "success") {
+          dispatch(UserActions.setUserProfile(uid, result.profile));
+        }
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error(error);
+      // Handle the error appropriately
+    }
+  };
 
 
   useFocusEffect(
     React.useCallback(() => {
-        const backAction = () => {
-            handleBackPress();
-            return false;
-        };
+      const backAction = () => {
+        handleBackPress();
+        return false;
+      };
 
-        const backHandler = BackHandler.addEventListener("hardwareBackPress", backAction);
+      const backHandler = BackHandler.addEventListener("hardwareBackPress", backAction);
 
-        return () => {
-            backHandler.remove();
-        };
-    }, [])
-);
-
-const handleBackPress = async () => {
-    try {
-        if (uid) {
-            setLoading(true);
-            const result = await UserService.updateProfile(uid, state);
-            console.log(result)
-            if (result.type === "success") {
-                dispatch(UserActions.setUserProfile(uid, result.profile));
-            }
-            setLoading(false);
-        }
-    } catch (error) {
-        console.log(error);
-    }
-};
+      return () => {
+        backHandler.remove();
+      };
+    }, [handleBackPress])
+  );
 
 
   return (
@@ -206,51 +247,32 @@ const BasicInformation = ({state, dispatch}: SectionProps) => {
   const [result, setResult] = useState<any>(null);
   const navigation = useNavigation<NavigationProp<TYPES.RootStackParamList>>();
 
-  const CallToAction = ({
-    header,
-    paragraph,
-    icon,
-    onPress,
-  }: {
+  interface CallToActionProps {
     header: string;
     paragraph: string | null | undefined;
     icon: string;
     onPress: () => void;
-  }) => {
+  }
+  
+  const CallToAction: React.FC<CallToActionProps> = React.memo(({ header, paragraph, icon, onPress }) => {
     return (
       <TouchableRipple
         style={styles.section_withBorder}
         onPress={onPress}
         rippleColor={PALETTE.GHOSTWHITE}>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginVertical: 10,
-          }}>
-          <View
-            style={{flexDirection: 'row', alignItems: 'center', flexGrow: 1}}>
-            <Image
-              source={Number(icon)}
-              style={styles.section_withBorder_icon}
-              resizeMode="contain"
-            />
+        <View style={styles.callToActionContainer}>
+          <View style={styles.callToActionInnerContainer}>
+            <Image source={Number(icon)} style={styles.section_withBorder_icon} resizeMode="contain" />
             <Text style={styles.section_withBorder_header}>{header}</Text>
           </View>
-          <Text
-            style={[
-              styles.section_withBorder_paragraph,
-              {flex: 2, flexShrink: 1, textAlign: 'right'},
-            ]}
-            numberOfLines={1}
-            ellipsizeMode="tail">
+          <Text style={[styles.paragraphStyle, styles.section_withBorder_paragraph]} numberOfLines={1} ellipsizeMode="tail">
             {paragraph}
           </Text>
         </View>
       </TouchableRipple>
     );
-  };
+  });
+  
 
   return (
     <View style={styles.section}>
@@ -317,125 +339,126 @@ const BasicInformation = ({state, dispatch}: SectionProps) => {
   );
 };
 
-const AdditionalInformation = ({state, dispatch}: SectionProps) => {
+const AdditionalInformation = React.memo(({ state, dispatch }: SectionProps) => {
   const [result, setResult] = useState<any>(null);
-  const onPress = (text: string) => {
-    let result = questionsList.find(item => item.question.includes(text));
-    setResult(result);
+
+  const onPress = useCallback((text: string) => {
+    let foundResult = state.questionsList?.find(item => item.question.includes(text));
+    setResult(foundResult);
     dispatch(EditProfileActions.updateUserProfile('modalVisible', true));
-  };
+  }, [state.questionsList, dispatch]);
+
+  const renderTouchableRipple = useCallback(
+    (field: any, index: number) => (
+      <TouchableRipple
+        key={index}
+        style={styles.section_withBorder}
+        onPress={() => onPress(field.question)}
+        rippleColor={PALETTE.GHOSTWHITE}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Image
+            source={Number(field.icon)}
+            style={styles.section_withBorder_icon}
+            resizeMode="contain"
+          />
+          <View>
+            <Text style={styles.section_withBorder_header}>
+              {field.question}
+            </Text>
+            <Text style={styles.section_withBorder_paragraph}>
+              {field.answer}
+            </Text>
+          </View>
+        </View>
+      </TouchableRipple>
+    ),
+    [onPress]
+  );
 
   return (
     <View style={styles.section}>
       <Text style={styles.section_header}>Additional information</Text>
-      <Text style={[styles.section_subHeader, {paddingBottom: 10}]}>
-        Make your adjustments here, and let others know more about youself
+      <Text style={[styles.section_subHeader, { paddingBottom: 10 }]}>
+        Make your adjustments here, and let others know more about yourself
       </Text>
-      {state.additionalInformation.map(
-        (
-          field,
-          index,
-        ) => (
-          <TouchableRipple
-            key={index}
-            style={styles.section_withBorder}
-            onPress={() => onPress(field.question)}
-            rippleColor={PALETTE.GHOSTWHITE}>
-            <View style={{flexDirection: 'row', alignItems: 'center'}}>
-              <Image
-                source={Number(field.icon)}
-                style={styles.section_withBorder_icon}
-                resizeMode="contain"
-              />
-              <View>
-                <Text style={styles.section_withBorder_header}>
-                  {field.question}
-                </Text>
-                <Text style={styles.section_withBorder_paragraph}>
-                  {field.answer}
-                </Text>
-              </View>
-            </View>
-          </TouchableRipple>
-        ),
-      )}
+      {state.additionalInformation.map(renderTouchableRipple)}
       {result && (
         <ModalSelection state={state} dispatch={dispatch} data={result} />
       )}
     </View>
   );
-};
+});
 
-const HeightSection = ({state, dispatch}: SectionProps) => {
-  const [feets, setFeets] = useState(
-    state?.height?.feets ? state?.height?.feets : '',
-  );
-  const [inches, setInches] = useState(
-    state?.height?.inches ? state?.height?.inches : '',
-  );
-  const [active, setActive] = useState({feet: 0, inches: 0});
 
-  const [showFeetError, setShowFeetError] = useState(false);
-  const [showInchesError, setShowInchesError] = useState(false);
 
-  const onFeetBlur = () => {
-    setActive(prevState => ({...prevState, feet: 0}));
-    try {
-      if (!feets) return;
-      const feetToInt = parseInt(feets);
-      if (isNaN(feetToInt) || feetToInt < 3 || feetToInt > 7 ) {
-        setShowFeetError(true);
+const HeightSection = React.memo(({ state, dispatch }: SectionProps) => {
+
+  const [heightState, setHeightState] = useState({
+    feets: state?.height?.feets || '',
+    inches: state?.height?.inches || '',
+    active: { feet: 0, inches: 0 },
+    showFeetError: false,
+    showInchesError: false
+  });
+
+  const onFeetBlur = useCallback(() => {
+    setHeightState(prevState => {
+      let error = false;
+      if (prevState.feets) {
+        const feetToInt = parseInt(prevState.feets);
+        if (isNaN(feetToInt) || feetToInt < 3 || feetToInt > 7) {
+          error = true;
+        }
       }
-    } catch {
-      setShowFeetError(true);
-    }
-  };
+      return { ...prevState, active: { ...prevState.active, feet: 0 }, showFeetError: error };
+    });
+  }, []);
 
-  const onInchesBlur = () => {
-    setActive(prevState => ({...prevState, inches: 0}));
-    try {
-      if (!inches) return;
-    
-    const inchesToInt = parseInt(inches);
-    if (isNaN(inchesToInt) || inchesToInt < 0 || inchesToInt > 11) {
-        setShowInchesError(true);
-    }
-    } catch {
-      setShowInchesError(true);
-    }
-  };
-
-  useEffect(() => setShowFeetError(false), [feets]);
-  useEffect(() => setShowInchesError(false), [inches]);
-
+  const onInchesBlur = useCallback(() => {
+    setHeightState(prevState => {
+      let error = false;
+      if (prevState.inches) {
+        const inchesToInt = parseInt(prevState.inches);
+        if (isNaN(inchesToInt) || inchesToInt < 0 || inchesToInt > 11) {
+          error = true;
+        }
+      }
+      return { ...prevState, active: { ...prevState.active, inches: 0 }, showInchesError: error };
+    });
+  }, []);
 
   useEffect(() => {
-    const isValidFeet = (value:string) => {
-        const feetToInt = parseInt(value);
-        return feetToInt >= 3 && feetToInt <= 7;
+    setHeightState(prevState => ({ ...prevState, showFeetError: false }));
+  }, [heightState.feets]);
+
+  useEffect(() => {
+    setHeightState(prevState => ({ ...prevState, showInchesError: false }));
+  }, [heightState.inches]);
+
+  useEffect(() => {
+    const isValidFeet = (value: string) => {
+      const feetToInt = parseInt(value);
+      return feetToInt >= 3 && feetToInt <= 7;
     };
 
-    const isValidInches = (value:string) => {
-        if (value === '') return true;  // if inches is empty, it's valid
-        const inchesToInt = parseInt(value);
-        return inchesToInt >= 0 && inchesToInt <= 11;
+    const isValidInches = (value: string) => {
+      if (value === '') return true;
+      const inchesToInt = parseInt(value);
+      return inchesToInt >= 0 && inchesToInt <= 11;
     };
 
-    if (isValidFeet(feets) && isValidInches(inches)) {
-        dispatch(
-            EditProfileActions.updateUserProfile('height', {
-                feets: feets,
-                inches: inches || '0',
-            }),
-        );
-
-    }else{
+    if (isValidFeet(heightState.feets) && isValidInches(heightState.inches)) {
       dispatch(
-        EditProfileActions.updateUserProfile('height', undefined),
-    );
+        EditProfileActions.updateUserProfile('height', {
+          feets: heightState.feets,
+          inches: heightState.inches || '0'
+        })
+      );
+    } else {
+      dispatch(EditProfileActions.updateUserProfile('height', undefined));
     }
 
-}, [feets, inches]);
+  }, [heightState.feets, heightState.inches]);
 
 
   return (
@@ -445,23 +468,23 @@ const HeightSection = ({state, dispatch}: SectionProps) => {
         <View style={styles.section_height}>
           <Text style={styles.section_height_header}>Feets</Text>
           <TextInput
-            onFocus={() => setActive(prevState => ({...prevState, feet: 1}))}
+            onFocus={() => setHeightState(prevState => ({...prevState, active: { ...prevState.active, feet: 1 }}))}
             onBlur={onFeetBlur}
             style={[
               styles.section_height_boxInput,
               {
-                borderColor: active.feet
+                borderColor: heightState.active.feet
                   ? THEME_COLORS.primary
                   : THEME_COLORS.tertiary,
               },
             ]}
-            value={feets}
-            onChangeText={text => setFeets(text)}
+            value={heightState.feets}
+            onChangeText={text => setHeightState(prevState => ({...prevState, feets: text}))}
             placeholder="ft"
             placeholderTextColor={THEME_COLORS.tertiary}
             keyboardType="number-pad"
           />
-          {showFeetError && (
+          {heightState.showFeetError && (
             <Text style={styles.section_height_error}>
               Please enter a number between 3 and 7
             </Text>
@@ -470,23 +493,23 @@ const HeightSection = ({state, dispatch}: SectionProps) => {
         <View style={styles.section_height}>
           <Text style={styles.section_height_header}>Inches</Text>
           <TextInput
-            onFocus={() => setActive(prevState => ({...prevState, inches: 1}))}
+            onFocus={() => setHeightState(prevState => ({...prevState, active: { ...prevState.active, inches: 1 }}))}
             onBlur={onInchesBlur}
             style={[
               styles.section_height_boxInput,
               {
-                borderColor: active.inches
+                borderColor: heightState.active.inches
                   ? THEME_COLORS.primary
                   : THEME_COLORS.tertiary,
               },
             ]}
-            value={inches}
-            onChangeText={text => setInches(text)}
+            value={heightState.inches}
+            onChangeText={text => setHeightState(prevState => ({...prevState, inches: text}))}
             placeholder="in"
             placeholderTextColor={THEME_COLORS.tertiary}
             keyboardType="number-pad"
           />
-          {showInchesError && (
+          {heightState.showInchesError && (
             <Text style={styles.section_height_error}>
               Please enter a number between 0 and 11
             </Text>
@@ -495,9 +518,10 @@ const HeightSection = ({state, dispatch}: SectionProps) => {
       </View>
     </View>
   );
-};
+  
+})
 
-const PicturesSection = ({state, dispatch}: SectionProps) => {
+const PicturesSection = React.memo(({state, dispatch}: SectionProps) => {
   const [sectionWidth, setSectionWidth] = useState(0);
   const [pictures, setPictures] = useState<(string | null | undefined)[]>(
     state.pictures ? state.pictures : [],
@@ -507,12 +531,13 @@ const PicturesSection = ({state, dispatch}: SectionProps) => {
   const {handleCameraButtonPress, handleGalleryButtonPress} = useImagePicker();
   const imageToBeChangedRef = useRef<number>()
 
-  const picturesWidth = [
+  const picturesWidth = useMemo(() => [
     (sectionWidth / 3) * 2,
     ...Array(5).fill(sectionWidth / 3),
-  ];
+  ], [sectionWidth]);
+  
 
-  const handleImageSelection = async (getImage: () => Promise<string | undefined>) => {
+  const handleImageSelection = useCallback(async (getImage: () => Promise<string | undefined>) => {
     setAlertVisible(false);
     const result = await getImage();
 
@@ -524,7 +549,7 @@ const PicturesSection = ({state, dispatch}: SectionProps) => {
         return newState
       })
     }
-  }
+  }, [handleGalleryButtonPress, handleCameraButtonPress]);
   
 const handleAlertClose = () => {
 setAlertVisible(false);
@@ -538,7 +563,7 @@ useEffect(() => {
 
 
 
-  const PictureField = ({
+  const PictureField = React.memo(({
     picture,
     idx,
   }: {
@@ -620,7 +645,7 @@ useEffect(() => {
        
       </LongPressGestureHandler>
     );
-  };
+  })
 
 
   const onLayout = (event: TYPES.LayoutChangeEvent) => {
@@ -675,10 +700,10 @@ useEffect(() => {
         />
     </View>
   );
-};
+})
 
 
-const BiographySection = ({state, dispatch}: SectionProps) => {
+const BiographySection = React.memo(({state, dispatch}: SectionProps) => {
   const [active, setActive] = useState(0);
 
   return (
@@ -704,21 +729,28 @@ const BiographySection = ({state, dispatch}: SectionProps) => {
       />
     </View>
   );
-};
+})
 
-const ModalSelection = ({state, dispatch, data}: ModalSelectionProps) => {
+const ModalSelection = React.memo(({ state, dispatch, data }: ModalSelectionProps) => {
+
   const field = useMemo(() => {
-    return state.additionalInformation?.find((field: any) =>
+    return state.additionalInformation?.find((field: any) => 
       field.question.includes(data.question),
     );
   }, [data.question, state.additionalInformation]);
 
-  const [selectedAnswer, setSelectedAnswer] = useState<
-    null | undefined | string
-  >(null);
+  const [selectedAnswer, setSelectedAnswer] = useState<null | undefined | string>(null);
 
-  const onPress = () => {
-    const question = state.additionalInformation?.find((field: any) =>
+  const closeModal = useCallback(() => {
+    dispatch(EditProfileActions.updateUserProfile('modalVisible', false));
+  }, [dispatch]);
+
+  const handleAnswerSelect = useCallback((answer: string) => {
+    setSelectedAnswer(answer);
+  }, []);
+
+  const handleConfirmation = useCallback(() => {
+    const question = state.additionalInformation?.find((field: any) => 
       field.question.includes(data.question),
     );
 
@@ -726,8 +758,8 @@ const ModalSelection = ({state, dispatch, data}: ModalSelectionProps) => {
       question.answer = selectedAnswer;
     }
 
-    dispatch(EditProfileActions.updateUserProfile('modalVisible', false));
-  };
+    closeModal();
+  }, [data.question, state.additionalInformation, selectedAnswer, closeModal]);
 
   useEffect(() => {
     if (state.modalVisible) {
@@ -741,18 +773,11 @@ const ModalSelection = ({state, dispatch, data}: ModalSelectionProps) => {
     <Modal
       transparent={true}
       visible={state.modalVisible}
-      onRequestClose={() =>
-        dispatch(EditProfileActions.updateUserProfile('modalVisible', false))
-      }>
-      <Pressable
-        style={{flex: 1}}
-        onPress={() =>
-          dispatch(EditProfileActions.updateUserProfile('modalVisible', false))
-        }>
+      onRequestClose={closeModal}
+    >
+      <Pressable style={{ flex: 1 }} onPress={closeModal}>
         <View style={modalSelectionStyles.flexEnd}>
-          <Pressable
-            style={modalSelectionStyles.container}
-            onPress={e => e.stopPropagation()}>
+          <Pressable style={modalSelectionStyles.container} onPress={(e) => e.stopPropagation()}>
             <View style={modalSelectionStyles.iconsContainer}>
               <View
                 onStartShouldSetResponder={() => true}
@@ -769,8 +794,7 @@ const ModalSelection = ({state, dispatch, data}: ModalSelectionProps) => {
                 />
               </View>
               <View
-                onStartShouldSetResponder={() => true}
-                onResponderRelease={() => onPress()}
+                onStartShouldSetResponder={() => true} onResponderRelease={handleConfirmation}
                 style={modalSelectionStyles.iconContainer}>
                 <Image
                   source={icons.normalTick}
@@ -783,15 +807,16 @@ const ModalSelection = ({state, dispatch, data}: ModalSelectionProps) => {
             <ScrollView
               contentContainerStyle={modalSelectionStyles.ScrollViewContainer}>
               <View style={modalSelectionStyles.answersContainer}>
-                {data.answers.map((answer: string, index: number) => (
-                  <Button.interestsButton
-                    onPress={() => setSelectedAnswer(answer)}
-                    active={selectedAnswer === answer}
-                    key={index}
-                    style={modalSelectionStyles.interestButtons}>
-                    {answer}
-                  </Button.interestsButton>
-                ))}
+              {data.answers.map((answer: string, index: number) => (
+                <Button.interestsButton
+                  onPress={() => handleAnswerSelect(answer)}
+                  active={selectedAnswer === answer}
+                  key={index}
+                  style={modalSelectionStyles.interestButtons}
+                >
+                  {answer}
+                </Button.interestsButton>
+              ))}
               </View>
             </ScrollView>
           </Pressable>
@@ -799,7 +824,7 @@ const ModalSelection = ({state, dispatch, data}: ModalSelectionProps) => {
       </Pressable>
     </Modal>
   );
-};
+})
 
 const modalSelectionStyles = StyleSheet.create({
   container: {

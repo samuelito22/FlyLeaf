@@ -1,5 +1,5 @@
 import { TYPES } from "../../constants";
-import * as  editUserAction from "../actions/editProfileActions"
+import * as  editUserActions from "../actions/editProfileActions"
 
 const initialStateEditUser: TYPES.InitialStateEditUserType = {
     modalVisible: false,
@@ -16,7 +16,9 @@ const initialStateEditUser: TYPES.InitialStateEditUserType = {
     ethnicity: undefined,
     covidVaccination: undefined,
     sexualOrientation: undefined,
-    languages: undefined
+    languages: undefined,
+    questionsList: null,
+    interestsList: null,
 
 };
 
@@ -25,7 +27,7 @@ const editUserReducer = (
     action: TYPES.AppAction
 ): TYPES.InitialStateEditUserType => {
     switch (action.type) {
-        case editUserAction.INIT_USER_PROFILE:
+        case editUserActions.INIT_USER_PROFILE:
             return {
                 ...state,
                 bio: action.payload.user.profile?.bio,
@@ -43,12 +45,16 @@ const editUserReducer = (
                 covidVaccination: action.payload.user.interests?.covidVaccination,
                 ethnicity: action.payload.user.interests?.ethnicity,
             };
-        case editUserAction.UPDATE_USER_PROFILE:
+        case editUserActions.UPDATE_USER_PROFILE:
             const { field, value } = action.payload;
             return {
                 ...state,
                 [field]: value
             };
+            case editUserActions.SET_QUESTIONS_LIST:
+          return {...state, questionsList: action.payload as { id: number; question: string; answers: any, shortForm:string, icon: string}[]};
+          case  editUserActions.SET_INTERESTS_LIST:
+            return {...state, interestsList: action.payload as {question:string, answers:{title:string, interests:{title:string, icon:string}[]}[]}};
         default:
             return state;
     }
