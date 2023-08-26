@@ -58,13 +58,13 @@ const validateUser = (data:User): ValidationUserResult => {
 };
 
 interface ValidationRefreshTokenResult {
-  value: { refresh_token: string };
+  value: { refreshToken: string };
   error?: Joi.ValidationError;
 }
 
-const validateRefreshToken = (data:{refresh_token:string}):ValidationRefreshTokenResult => {
+const validateRefreshToken = (data:{refreshToken:string}):ValidationRefreshTokenResult => {
   const schema = Joi.object({
-      refresh_token: Joi.string().required(),
+      refreshToken: Joi.string().required(),
   });
   return schema.validate(data) as ValidationRefreshTokenResult
 };
@@ -90,10 +90,22 @@ const validateUid = (data: {_id:string}) => {
     return schema.validate(data);
 };
 
+const validateChangePhoneNumber = (data: { accessToken: string, oldPhoneNumber: string, newPhoneNumber: string }) => {
+    const schema = Joi.object({
+        accessToken: Joi.string().required(),
+        oldPhoneNumber: Joi.string().required(),
+        newPhoneNumber: Joi.string().required(),
+    });
+    return schema.validate(data);
+};
+
+
+
 export {
     validateUser,
     validateEmail,
     validatePhoneNumber,
     validateUid,
-    validateRefreshToken
+    validateRefreshToken,
+    validateChangePhoneNumber
 };

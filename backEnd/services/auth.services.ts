@@ -1,6 +1,5 @@
 import * as TYPES from "../../types";
-import { ACCESS_SECRET, REFRESH_SECRET } from "../config/config";
-import { EMAIL_NOT_EXIST, INVALID_TOKEN, PHONE_NUMBER_NOT_EXIST, REVOKED_TOKEN, TOKEN_NOT_FOUND, UID_NOT_EXIST, USER_ALREADY_EXIST, USER_CREATED } from "../errors";
+import { EMAIL_NOT_EXIST,  PHONE_NUMBER_NOT_EXIST, REVOKED_TOKEN, TOKEN_NOT_FOUND, UID_NOT_EXIST, USER_ALREADY_EXIST, USER_CREATED } from "../errors";
 import PicturesModel from "../models/pictures.model";
 import RefreshTokenModel from "../models/refreshToken.model";
 import SettingsModel from "../models/settings.model";
@@ -11,7 +10,6 @@ import {
     validatePhoneNumber, 
     validateUid 
 } from '../validators/auth.validator';
-import  jwt  from "jsonwebtoken";
 
 
 
@@ -63,9 +61,9 @@ async function addUserRefreshTokenToDB(refreshTokenData: TYPES.RefreshToken, ses
     }
 }
 
-async function deactivateRefreshToken(refresh_token: string){
+async function deactivateRefreshToken(refreshToken: string){
     try{
-        const tokenDoc = await RefreshTokenModel.findOne({token: refresh_token})
+        const tokenDoc = await RefreshTokenModel.findOne({token: refreshToken})
         if(!tokenDoc){
             throw new Error(TOKEN_NOT_FOUND)
         }
@@ -99,66 +97,8 @@ async function emailExistService(data: {email:string}) {
     return EMAIL_NOT_EXIST;
 }
 
-function createAccessToken(_id: string) {
-    const payload = {
-        sub: _id,  
-        type: 'ACCESS', 
-    };
 
-    // The token will expire in 1 day (24 hours)
-    if(ACCESS_SECRET) return jwt.sign(payload, ACCESS_SECRET, { expiresIn: '15m' });
-}
-
-function createRefreshToken(_id: string) {
-    const payload = {
-        sub: _id,
-        type: 'REFRESH',
-    };
-
-    // The token will expire in 30 days
-    if(REFRESH_SECRET) return jwt.sign(payload, REFRESH_SECRET, { expiresIn: '30d' });
-}
-
-
-async function isRefreshTokenExpired(refresh_token: string) {
-    try{
-        const tokenDoc = await RefreshTokenModel.findOne({token: refresh_token})
-        if(!tokenDoc){
-            throw new Error(TOKEN_NOT_FOUND)
-        }
-
-        if(tokenDoc.revoked){
-            throw new Error(REVOKED_TOKEN)
-        }
-
-        const currentDate = Date.now()
-       
-
-    }catch (error:any) {
-        throw new Error(error.message)
-    }
-}
-
-async function updateRefreshToken(refresh_token: string) {
-    try{
-        const tokenDoc = await RefreshTokenModel.findOne({token: refresh_token})
-        if(!tokenDoc){
-            throw new Error(TOKEN_NOT_FOUND)
-        }
-
-        if(tokenDoc.revoked){
-            throw new Error(REVOKED_TOKEN)
-        }
-
-       
-
-    }catch (error:any) {
-        throw new Error(error.message)
-    }
-}
-
-
-async function phoneExistService(data: {phoneNumber:string}) {
+async function phoneNumberExistService(data: {phoneNumber:string}) {
     const { error, value } = validatePhoneNumber(data);
 
     if (error) {
@@ -186,18 +126,16 @@ async function uidExistService(data:{_id: string}) {
     return UID_NOT_EXIST;
 }
 
+
 const AuthServices = {
     emailExistService,
-    phoneExistService,
+    phoneNumberExistService,
     uidExistService,
-    createAccessToken,
-    createRefreshToken,
     addUserPicturesToDB,
     addUserRefreshTokenToDB,
     addUserSettingsToDB,
     addUserToDB,
     deactivateRefreshToken,
-    isRefreshTokenExpired
 };
 
 export default AuthServices
