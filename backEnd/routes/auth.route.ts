@@ -6,6 +6,8 @@ const router = express.Router();
 
 router.post("/register", authController.registerUser);
 
+router.post("/log-out", authController.registerUser);
+
 router.post("/uidExist", authController.uidExist );
 
 router.post("/emailExist", authController.emailExist);
