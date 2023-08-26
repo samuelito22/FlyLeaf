@@ -2,10 +2,8 @@ import mongoose, {Schema} from "mongoose";
 import { Premium } from "../../types";
 
 const PremiumSchema = new Schema<Premium>({
-    userId: { 
+    _id: { 
         type: String, 
-        required: true, 
-        unique: true,
         ref: 'User' // Assuming you have a User model
     },
     startDate: { 

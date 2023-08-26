@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { RefreshToken } from "../../types";
 
 const refreshTokenSchema = new mongoose.Schema<RefreshToken>({
+    _id: { type: String },
     token: {
         type: String,
         required: true,

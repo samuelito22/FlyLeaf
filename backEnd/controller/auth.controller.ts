@@ -3,7 +3,7 @@ import {
 } from "../errors";
 import AuthServices from "../services/auth.services";
 import express from "express"
-import { validateUser } from "../validators/auth.validator";
+import { validateRefreshToken, validateUser } from "../validators/auth.validator";
 import UserModel from "../models/user.model";
 import mongoose from "mongoose";
 
@@ -32,20 +32,14 @@ async function registerUser(req: express.Request, res: express.Response) {
 
 
         // Create the user's settings model
-        const settingsResult = await AuthServices.addUserSettingsToDB({ _id: value._id }, session);
-        if (settingsResult.type === "error" && typeof settingsResult.error === "string") {
-            throw new Error(settingsResult.error);
-        }
+        await AuthServices.addUserSettingsToDB({ _id: value._id }, session);
 
         // Create the user's photo model
         let picturesId = [];
         for (let i = 0; i < value.pictures.length; i++) {
             const response = await AuthServices.addUserPicturesToDB({ user_id: value._id, url: value.pictures[i] }, session);
-            if (response.type === "error" && typeof response.error === "string") {
-                throw new Error(response.error);
-            }
             
-            picturesId.push(response.photosDB?._id);
+            picturesId.push(response._id);
         }
         value.pictures = picturesId;
 
@@ -67,14 +61,7 @@ async function registerUser(req: express.Request, res: express.Response) {
         const expiresAt = new Date(currentDate);
         expiresAt.setDate(currentDate.getDate() + 30); 
 
-        const refreshTokenResponse = await AuthServices.addUserRefreshTokenToDB({ user_id: value._id, token: refresh_token, expiresAt  }, session);
-        if (refreshTokenResponse.type === "error" && typeof refreshTokenResponse.error === "string") {
-            throw new Error(refreshTokenResponse.error);
-        }
-
-        if (settingsResult.type === "error" && typeof settingsResult.error === "string") {
-            throw new Error(settingsResult.error);
-        }
+        await AuthServices.addUserRefreshTokenToDB({ user_id: value._id, token: refresh_token, expiresAt  }, session);
 
 
         await session.commitTransaction();
@@ -103,6 +90,25 @@ async function registerUser(req: express.Request, res: express.Response) {
         });
     } finally {
         session.endSession();
+    }
+}
+
+async function logOutUser(req: express.Request, res: express.Response){
+    try{
+        const { error, value } = validateRefreshToken(req.body);
+        if (error) {
+            throw new Error(error.details[0].message);
+        }
+
+        await AuthServices.deactivateRefreshToken(value.refresh_token)
+
+    } catch (error) {
+        const errorMessage = (error as Error).message;
+
+        return res.status(500).json({
+            type: "error",
+            message: errorMessage,
+        });
     }
 }
 

@@ -144,7 +144,7 @@ export interface PremiumFeatures {
 }
 
 export interface Premium {
-    userId: string;
+    _id: string,
     startDate?: Date;
     endDate: Date;
     planType: 'MONTHLY' | 'YEARLY';
@@ -179,6 +179,7 @@ export interface Gender {
 
 export interface Pictures { 
     user_id: string,
+    _id?: string,
     url: string,
     blurLevel?: number,
 }
@@ -186,6 +187,7 @@ export interface Pictures {
 
 export interface RefreshToken { 
     token: string,
+    _id?:string,
     user_id: string,
     issuedAt?: Date,
     expiresAt: Date,

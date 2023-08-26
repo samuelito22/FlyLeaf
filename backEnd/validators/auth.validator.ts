@@ -1,7 +1,12 @@
 import Joi from 'joi';
 import { User } from '../../types';
 
-const validateUser = (data:User) => {
+interface ValidationUserResult {
+  value: User;
+  error?: Joi.ValidationError;
+}
+
+const validateUser = (data:User): ValidationUserResult => {
   const schema = Joi.object({
       _id: Joi.string().required(),
       username: Joi.string().required(),
@@ -49,7 +54,19 @@ const validateUser = (data:User) => {
       verified: Joi.boolean().default(false),
   });
 
-  return schema.validate(data);
+  return schema.validate(data) as ValidationUserResult
+};
+
+interface ValidationRefreshTokenResult {
+  value: { refresh_token: string };
+  error?: Joi.ValidationError;
+}
+
+const validateRefreshToken = (data:{refresh_token:string}):ValidationRefreshTokenResult => {
+  const schema = Joi.object({
+      refresh_token: Joi.string().required(),
+  });
+  return schema.validate(data) as ValidationRefreshTokenResult
 };
 
 const validateEmail = (data:{email:string}) => {
@@ -77,5 +94,6 @@ export {
     validateUser,
     validateEmail,
     validatePhoneNumber,
-    validateUid
+    validateUid,
+    validateRefreshToken
 };

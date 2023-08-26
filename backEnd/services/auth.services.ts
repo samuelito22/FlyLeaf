@@ -12,6 +12,7 @@ import {
 } from '../validators/auth.validator';
 import  jwt  from "jsonwebtoken";
 
+
 const ACCESS_SECRET = process.env.ACCESS_JWT_SECRET;
 const REFRESH_SECRET = process.env.REFRESH_JWT_SECRET;
 
@@ -20,9 +21,9 @@ async function addUserToDB(userData:TYPES.User,  session?: any) {
         const newUser = new UserModel(userData);
         await newUser.save({ session });
     
-        return {userDB: newUser, type: "success"};
-    } catch (error) {
-        return { type: 'error', error: error}
+        return newUser
+    } catch (error:any) {
+        throw new Error(error)
     }
     
 }
@@ -32,9 +33,9 @@ async function addUserSettingsToDB(settingsData: TYPES.Settings, session?: any) 
         const connectedSettings = new SettingsModel(settingsData);
         await connectedSettings.save({ session }); 
 
-        return { settingsDB: connectedSettings, type: "success" };
-    } catch (error) {
-        return { type: 'error', error: error };
+        return connectedSettings
+    } catch (error:any) {
+        throw new Error(error)
     }
 }
 
@@ -44,10 +45,10 @@ async function addUserPicturesToDB(picturesData:TYPES.Pictures, session?: any) {
     const connectedPhotos = new PicturesModel(picturesData);
     await connectedPhotos.save({ session })
 
-    return {photosDB: connectedPhotos, type: "success"};
+    return connectedPhotos
     }
-    catch (error) {
-        return { type: 'error', error: error}
+    catch (error:any) {
+        throw new Error(error)
     }
 }
 
@@ -56,10 +57,27 @@ async function addUserRefreshTokenToDB(refreshTokenData: TYPES.RefreshToken, ses
     const connectedRefreshToken = new RefreshTokenModel(refreshTokenData);
     await connectedRefreshToken.save({ session })
 
-    return {refreshTokenDB: connectedRefreshToken, type: "success"};
+    return connectedRefreshToken
     }
-    catch (error) {
-        return { type: 'error', error: error}
+    catch (error:any) {
+        throw new Error(error)
+    }
+}
+
+async function deactivateRefreshToken(refresh_token: string){
+    try{
+        const tokenDoc = await RefreshTokenModel.findOne({token: refresh_token})
+        if(!tokenDoc || tokenDoc.revoked){
+            throw new Error("Invalid or revoked token")
+        }
+
+        tokenDoc.revoked = true;
+        await tokenDoc.save();
+        
+        return { status: "success", message: "Token has been revoked." };
+
+    }  catch (error:any) {
+        throw new Error(error)
     }
 }
 
@@ -85,7 +103,7 @@ function createAccessToken(_id: string) {
     };
 
     // The token will expire in 1 day (24 hours)
-    if(ACCESS_SECRET) return jwt.sign(payload, ACCESS_SECRET, { expiresIn: '1d' });
+    if(ACCESS_SECRET) return jwt.sign(payload, ACCESS_SECRET, { expiresIn: '15m' });
 }
 
 function createRefreshToken(_id: string) {
@@ -136,7 +154,8 @@ const AuthServices = {
     addUserPicturesToDB,
     addUserRefreshTokenToDB,
     addUserSettingsToDB,
-    addUserToDB
+    addUserToDB,
+    deactivateRefreshToken
 };
 
 export default AuthServices
