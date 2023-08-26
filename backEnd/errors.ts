@@ -37,3 +37,4 @@ export const FAILED_CREATION_ACCESS_AND_REFRESH_TOKEN = "Failed to create either
 export const INVALID_TOKEN = "Invalid token."
 export const REVOKED_TOKEN = "Revoked token."
 export const TOKEN_NOT_FOUND = "Token not found."
+export const EXPIRED_TOKEN = "Expired token."

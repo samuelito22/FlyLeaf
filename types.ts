@@ -192,3 +192,8 @@ export interface RefreshToken {
     revoked?: Date,
     replacedByToken?: string
 }
+
+export interface jwtPayload {
+  sub: string,
+  type: string
+}

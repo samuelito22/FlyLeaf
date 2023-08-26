@@ -1,4 +1,5 @@
 import * as TYPES from "../../types";
+import { ACCESS_SECRET, REFRESH_SECRET } from "../config/config";
 import { EMAIL_NOT_EXIST, INVALID_TOKEN, PHONE_NUMBER_NOT_EXIST, REVOKED_TOKEN, TOKEN_NOT_FOUND, UID_NOT_EXIST, USER_ALREADY_EXIST, USER_CREATED } from "../errors";
 import PicturesModel from "../models/pictures.model";
 import RefreshTokenModel from "../models/refreshToken.model";
@@ -13,8 +14,6 @@ import {
 import  jwt  from "jsonwebtoken";
 
 
-const ACCESS_SECRET = process.env.ACCESS_JWT_SECRET;
-const REFRESH_SECRET = process.env.REFRESH_JWT_SECRET;
 
 async function addUserToDB(userData:TYPES.User,  session?: any) {
     try{
@@ -121,6 +120,44 @@ function createRefreshToken(_id: string) {
 }
 
 
+async function isRefreshTokenExpired(refresh_token: string) {
+    try{
+        const tokenDoc = await RefreshTokenModel.findOne({token: refresh_token})
+        if(!tokenDoc){
+            throw new Error(TOKEN_NOT_FOUND)
+        }
+
+        if(tokenDoc.revoked){
+            throw new Error(REVOKED_TOKEN)
+        }
+
+        const currentDate = Date.now()
+       
+
+    }catch (error:any) {
+        throw new Error(error.message)
+    }
+}
+
+async function updateRefreshToken(refresh_token: string) {
+    try{
+        const tokenDoc = await RefreshTokenModel.findOne({token: refresh_token})
+        if(!tokenDoc){
+            throw new Error(TOKEN_NOT_FOUND)
+        }
+
+        if(tokenDoc.revoked){
+            throw new Error(REVOKED_TOKEN)
+        }
+
+       
+
+    }catch (error:any) {
+        throw new Error(error.message)
+    }
+}
+
+
 async function phoneExistService(data: {phoneNumber:string}) {
     const { error, value } = validatePhoneNumber(data);
 
@@ -159,7 +196,8 @@ const AuthServices = {
     addUserRefreshTokenToDB,
     addUserSettingsToDB,
     addUserToDB,
-    deactivateRefreshToken
+    deactivateRefreshToken,
+    isRefreshTokenExpired
 };
 
 export default AuthServices

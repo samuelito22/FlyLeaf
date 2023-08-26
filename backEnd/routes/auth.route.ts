@@ -10,6 +10,8 @@ router.post("/log-out", authController.logOutUser);
 
 router.delete("/delete", authController.deleteUser);
 
+router.post("/refresh-token", authController.refreshToken)
+
 router.post("/uidExist", authController.uidExist );
 
 router.post("/emailExist", authController.emailExist);

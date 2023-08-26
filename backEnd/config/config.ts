@@ -11,3 +11,7 @@ export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 export const COOKIE_KEY = process.env.COOKIE_KEY;
 export const CLIENT_PRIVATE_URL = process.env.CLIENT_PRIVATE_URL;
+
+
+export const REFRESH_SECRET = process.env.REFRESH_JWT_SECRET;
+export const ACCESS_SECRET = process.env.ACCESS_JWT_SECRET;
