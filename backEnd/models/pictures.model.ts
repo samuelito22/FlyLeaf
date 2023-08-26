@@ -6,7 +6,6 @@ const PicturesSchema = new Schema<Pictures>({
     type: String,
     required: true,
     ref: 'User',
-    unique: true
   },
   url: {
     type: String,
@@ -14,7 +13,7 @@ const PicturesSchema = new Schema<Pictures>({
   },
   blurLevel: {
     type: Number,
-    required: true,
+    default: 0.75,
     min: 0,
     max: 1,
   },

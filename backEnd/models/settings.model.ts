@@ -38,13 +38,13 @@ const PrivacySchema = new Schema<Privacy>({
 })
 
 const AccountSchema = new Schema<Account>({
-    deactivateAccountAfterInactivity: {type: [Number], enum: [-1, ...Array.from({ length: 7 }, (_, i) => i)] },
+    deactivateAccountAfterInactivity: {type: [Number], enum: [-1, ...Array.from({ length: 7 }, (_, i) => i)], default: 30 },
     discoverable: {type: Boolean, default: true}
 
 })
 
 const SettingsSchema = new Schema<Settings>({
-    _id: { type: String, required: true, unique: true ,ref: 'User' },
+    _id: { type: String, ref: 'User' },
     
   distanceInKm: {type: Boolean, default: false},
   

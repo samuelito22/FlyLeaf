@@ -78,6 +78,7 @@ export interface Image {
     isPremiumMember?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
+    verified?: boolean
   }
   
   export interface Notification {
@@ -179,5 +180,15 @@ export interface Gender {
 export interface Pictures { 
     user_id: string,
     url: string,
-    blurLevel: number,
+    blurLevel?: number,
+}
+
+
+export interface RefreshToken { 
+    token: string,
+    user_id: string,
+    issuedAt?: Date,
+    expiresAt: Date,
+    revoked?: boolean,
+    replacedByToken?: string
 }

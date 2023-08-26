@@ -10,8 +10,6 @@ import { validateUserUpdateParams } from "../validators/user.validator";
 import User from "../models/user.model";
 import SpotifyModel from "../models/spotify.model";
 import express from "express";
-import { questionsList } from "../data/questions";
-import { interestsList } from "../data/interests";
 
 type expressParams = {
   req: express.Request;
@@ -133,27 +131,6 @@ async function updateUserProfile(req: express.Request, res: express.Response) {
     pictures,
   } = req.body;
 
-  const { error } = validateUserUpdateParams({
-    uid,
-    bio,
-    gender,
-    languages,
-    sexualOrientation,
-    jobTitle,
-    company,
-    covidVaccination,
-    ethnicity,
-    height,
-    additionalInformation,
-    pictures,
-  });
-
-  if (error) {
-    return res.status(400).json({
-      type: "error",
-      message: error.details[0].message,
-    });
-  }
 
   try {
     let combinedProfile = {};
@@ -363,7 +340,7 @@ async function initUserProfile(req: express.Request, res: express.Response) {
 
 async function getQuestionsAndInterests(req: express.Request, res: express.Response) {
   try {
-    return res.status(200).json({ type: "success", questions: questionsList, interests: interestsList });
+    return res.status(200).json({ type: "success", });
   } catch (error) {
     console.error(error);
     return res.status(500).json({
