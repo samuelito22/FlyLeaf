@@ -1,6 +1,6 @@
 import { INSTAGRAM_IN_USE, USER_NOT_FOUND_ERR } from "../errors";
 import InstagramServices from "../services/instagram.services";
-import { validateUid } from "../validators/auth.validator";
+import { validateId } from "../validators/auth.validator";
 import { validateUidAndCode } from "../validators/media.validator";
 import User from "../models/user.model";
 import instagramModel from "../models/instagram.model";
@@ -49,7 +49,7 @@ async function authenticateAndFetchInstagram(req:express.Request, res: express.R
 async function refetchInstagram(req:express.Request, res: express.Response) {
     try {
         const { _id } = req.body;
-        const { error } = validateUid({_id});
+        const { error } = validateId({_id});
         if (error) return sendError(res, error.details[0].message, 400);
 
         const user = await User.findOne({_id})
@@ -96,7 +96,7 @@ async function refetchInstagram(req:express.Request, res: express.Response) {
 async function disconnectFromInstagram(req:express.Request, res: express.Response) {
     try {
         const { _id } = req.body;
-        const { error } = validateUid({_id});
+        const { error } = validateId({_id});
         if (error) return sendError(res, error.details[0].message, 400);
 
         const result = await InstagramServices.disconnectInstagram(_id)

@@ -4,12 +4,7 @@ import PicturesModel from "../models/pictures.model";
 import RefreshTokenModel from "../models/refreshToken.model";
 import SettingsModel from "../models/settings.model";
 import UserModel from "../models/user.model";
-import { 
-    validateUser, 
-    validateEmail, 
-    validatePhoneNumber, 
-    validateUid 
-} from '../validators/auth.validator';
+
 
 
 
@@ -84,46 +79,19 @@ async function deactivateRefreshToken(refreshToken: string){
 
 
 async function emailExistService(data: {email:string}) {
-    const { error, value } = validateEmail(data);
-
-    if (error) {
-        throw new Error(error.details[0].message);
-    }
-
-    const emailExist = await UserModel.findOne({ email: value.email });
-    if (emailExist) {
-        throw new Error(USER_ALREADY_EXIST);
-    }
-    return EMAIL_NOT_EXIST;
+    const emailExist = await UserModel.findOne({ email: data.email });
+    return emailExist
 }
 
 
 async function phoneNumberExistService(data: {phoneNumber:string}) {
-    const { error, value } = validatePhoneNumber(data);
-
-    if (error) {
-        throw new Error(error.details[0].message);
-    }
-
-    const phoneNumberExist = await UserModel.findOne({ phoneNumber: value.phoneNumber });
-    if (phoneNumberExist) {
-        throw new Error(USER_ALREADY_EXIST);
-    }
-    return PHONE_NUMBER_NOT_EXIST;
+    const phoneNumberExist = await UserModel.findOne({ phoneNumber: data.phoneNumber });
+    return phoneNumberExist
 }
 
 async function uidExistService(data:{_id: string}) {
-    const { error, value } = validateUid(data);
-
-    if (error) {
-        throw new Error(error.details[0].message);
-    }
-
-    const user = await UserModel.findOne({ _id: value._id });
-    if (user) {
-        throw new Error(USER_ALREADY_EXIST);
-    }
-    return UID_NOT_EXIST;
+    const user = await UserModel.findOne({ _id: data._id });
+    return user
 }
 
 

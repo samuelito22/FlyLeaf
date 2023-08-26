@@ -1,8 +1,10 @@
 import {
     BAD_REQUEST,
+  EMAIL_NOT_EXIST,
   EXPIRED_TOKEN,
   FAILED_CREATION_ACCESS_AND_REFRESH_TOKEN,
   INVALID_TOKEN,
+  PHONE_NUMBER_NOT_EXIST,
   REVOKED_TOKEN,
   SERVER_ERR,
   TOKEN_NOT_FOUND,
@@ -14,10 +16,13 @@ import {
 import AuthServices from "../services/auth.services";
 import express from "express";
 import {
+    validateChangeEmail,
     validateChangePhoneNumber,
-  validateRefreshToken,
-  validateUid,
+  validateToken,
+  validateId,
   validateUser,
+  validatePhoneNumber,
+  validateEmail,
 } from "../validators/auth.validator";
 import UserModel from "../models/user.model";
 import mongoose from "mongoose";
@@ -27,9 +32,6 @@ import RefreshTokenModel from "../models/refreshToken.model";
 import PremiumModel from "../models/premium.mode";
 import InstagramModel from "../models/instagram.model";
 import SpotifyModel from "../models/spotify.model";
-import jwt, { VerifyErrors } from "jsonwebtoken";
-import { ACCESS_SECRET, REFRESH_SECRET } from "../config/config";
-import { jwtPayload } from "../../types";
 import { createAccessToken, createRefreshToken, decodeAccessToken, decodeRefreshToken } from "../utils/token.utils";
 
 // @route POST auth/users/register
@@ -140,7 +142,7 @@ async function logOutUser(req: express.Request, res: express.Response) {
 
         const refreshToken = authHeader.split(' ')[1];
 
-    const { error, value } = validateRefreshToken({refreshToken});
+    const { error, value } = validateToken({token: refreshToken});
     if (error) {
       return res.status(400).json({
         type: "error",
@@ -148,7 +150,7 @@ async function logOutUser(req: express.Request, res: express.Response) {
       });
     }
 
-    await AuthServices.deactivateRefreshToken(value.refreshToken);
+    await AuthServices.deactivateRefreshToken(value.token);
 
     return res.status(200).json({
       type: "success",
@@ -181,7 +183,7 @@ async function deleteUser(req: express.Request, res: express.Response) {
   session.startTransaction();
 
   try {
-    const { error, value } = validateUid(req.body);
+    const { error, value } = validateId(req.body);
     if (error) {
       return res.status(400).json({
         type: "error",
@@ -259,7 +261,7 @@ async function refreshToken(req: express.Request, res: express.Response) {
 
         const refreshToken = authHeader.split(' ')[1];
 
-    const { error, value } = validateRefreshToken({refreshToken});
+    const { error, value } = validateToken({token: refreshToken});
     if (error) {
       return res.status(400).json({
         type: "error",
@@ -268,7 +270,7 @@ async function refreshToken(req: express.Request, res: express.Response) {
     }
 
     const tokenDoc = await RefreshTokenModel.findOne({
-      token: value.refreshToken,
+      token: value.token,
     });
     if (!tokenDoc) throw new Error(TOKEN_NOT_FOUND);
 
@@ -279,7 +281,7 @@ async function refreshToken(req: express.Request, res: express.Response) {
         throw new Error(EXPIRED_TOKEN)
     }
 
-    const decoded = decodeRefreshToken(value.refreshToken)
+    const decoded = decodeRefreshToken(value.token)
 
       if (decoded) {
         const accessToken = createAccessToken(decoded.sub);
@@ -349,44 +351,77 @@ async function refreshToken(req: express.Request, res: express.Response) {
 // @desc Get if the email exists
 // @access Public
 async function emailExist(req: express.Request, res: express.Response) {
-  try {
-    const response = await AuthServices.emailExistService(req.body);
-    return res.status(400).json({ type: "error", message: response });
-  } catch (error) {
-    console.error(error);
-    return res.status(200).json({
-      type: "error",
-      message: SERVER_ERR,
-    });
-  }
+    try {
+        const { error, value } = validateEmail(req.body);
+    
+        if (error) {
+            return res.status(400).json({
+                type: "error",
+                message: error.details[0].message,
+            });
+        }
+    
+        const response = await AuthServices.emailExistService(value);
+    
+        if(response) return res.status(200).json({ type: "success", message: USER_ALREADY_EXIST });
+        else return res.status(404).json({ type: "error", message: EMAIL_NOT_EXIST});
+      } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+          type: "error",
+          message: SERVER_ERR,
+        });
+      }
 }
 
 // @route GET auth/users/phoneExist
 // @desc Get if the phone exists
 // @access Public
 async function phoneNumberExist(req: express.Request, res: express.Response) {
-  try {
-    const response = await AuthServices.phoneNumberExistService(req.body);
-    return res.status(400).json({ type: "error", message: response });
-  } catch (error) {
-    console.error(error);
-    return res.status(200).json({
-      type: "error",
-      message: SERVER_ERR,
-    });
-  }
+    try {
+        const { error, value } = validatePhoneNumber(req.body);
+    
+        if (error) {
+            return res.status(400).json({
+                type: "error",
+                message: error.details[0].message,
+            });
+        }
+    
+        const response = await AuthServices.phoneNumberExistService(value);
+    
+        if(response) return res.status(200).json({ type: "success", message: USER_ALREADY_EXIST });
+        else return res.status(404).json({ type: "error", message: PHONE_NUMBER_NOT_EXIST});
+      } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+          type: "error",
+          message: SERVER_ERR,
+        });
+      }
 }
 
 // @route GET auth/users/uidExist
 // @desc Get if the user uid exists
 // @access Public
-async function uidExist(req: express.Request, res: express.Response) {
+async function idExist(req: express.Request, res: express.Response) {
   try {
-    const response = await AuthServices.uidExistService(req.body);
-    return res.status(400).json({ type: "error", message: response });
+    const { error, value } = validateId(req.body);
+
+    if (error) {
+        return res.status(400).json({
+            type: "error",
+            message: error.details[0].message,
+        });
+    }
+
+    const response = await AuthServices.uidExistService(value);
+
+    if(response) return res.status(200).json({ type: "success", message: USER_ALREADY_EXIST });
+    else return res.status(404).json({ type: "error", message: USER_NOT_FOUND_ERR});
   } catch (error) {
     console.error(error);
-    return res.status(200).json({
+    return res.status(500).json({
       type: "error",
       message: SERVER_ERR,
     });
@@ -457,15 +492,145 @@ async function changePhoneNumber(req: express.Request, res: express.Response) {
     }
 }
 
+async function changeEmail(req: express.Request, res: express.Response) {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            throw new Error(UNAUTHORIZED_REQUEST)
+        }
+
+    
+        const accessToken = authHeader.split(' ')[1];
+        const { error, value } = validateChangeEmail({ accessToken, ...req.body });
+
+        if (error) {
+            return res.status(400).json({
+                type: "error",
+                message: error.details[0].message,
+            });
+        }
+
+        const decode = decodeAccessToken(accessToken)
+        if(!decode) throw new Error(EXPIRED_TOKEN)
+
+        const user = await UserModel.findById(decode.sub)
+        if(!user) throw new Error(USER_NOT_FOUND_ERR)
+
+        if(user.email && user.email != value.oldEmail) throw new Error(BAD_REQUEST)
+
+        user.email = value.newEmail
+
+        await user.save()
+
+        return res.status(200).json({
+            type: "success",
+            message: "User's email has been updated.",
+          });
+
+        
+
+    } catch (error) {
+        const errorMessage = (error as Error).message;
+
+        let status;
+        switch (errorMessage) {
+        case UNAUTHORIZED_REQUEST:
+            status = 401;
+            break;
+        case EXPIRED_TOKEN:
+            status = 401;
+            break
+            case USER_NOT_FOUND_ERR:
+                status = 404;
+                break
+        case BAD_REQUEST:
+            status = 400
+            break
+        default:
+            status = 500;
+        }
+
+        return res.status(status).json({
+        type: "error",
+        message: errorMessage,
+        });
+    }
+}
+
+async function removeEmail(req: express.Request, res: express.Response) {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            throw new Error(UNAUTHORIZED_REQUEST)
+        }
+
+    
+        const accessToken = authHeader.split(' ')[1];
+        const { error, value } = validateToken({ token: accessToken });
+
+        if (error) {
+            return res.status(400).json({
+                type: "error",
+                message: error.details[0].message,
+            });
+        }
+
+        const decode = decodeAccessToken(value.token)
+        if(!decode) throw new Error(EXPIRED_TOKEN)
+
+        const user = await UserModel.findById(decode.sub)
+        if(!user) throw new Error(USER_NOT_FOUND_ERR)
+
+        user.email = undefined
+
+
+        await user.save()
+
+        return res.status(200).json({
+            type: "success",
+            message: "User's email has been updated.",
+          });
+
+        
+
+    } catch (error) {
+        const errorMessage = (error as Error).message;
+
+        let status;
+        switch (errorMessage) {
+        case UNAUTHORIZED_REQUEST:
+            status = 401;
+            break;
+        case EXPIRED_TOKEN:
+            status = 401;
+            break
+            case USER_NOT_FOUND_ERR:
+                status = 404;
+                break
+        case BAD_REQUEST:
+            status = 400
+            break
+        default:
+            status = 500;
+        }
+
+        return res.status(status).json({
+        type: "error",
+        message: errorMessage,
+        });
+    }
+}
 
 const authController = {
-  uidExist,
+  idExist,
   phoneNumberExist,
   emailExist,
   registerUser,
   logOutUser,
   deleteUser,
   refreshToken,
-  changePhoneNumber
+  changePhoneNumber,
+  changeEmail,
+  removeEmail
 };
 export default authController;

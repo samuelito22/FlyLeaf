@@ -1,5 +1,5 @@
 // Server and Endpoint Errors
-export const API_ENDPOINT_NOT_FOUND_ERR = "Api endpoint does not found";
+export const API_ENDPOINT_NOT_FOUND_ERR = "Api endpoint is not found";
 export const SERVER_ERR = "Something went wrong";
 
 // Authentication Errors

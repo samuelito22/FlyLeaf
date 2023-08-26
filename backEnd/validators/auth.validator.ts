@@ -57,16 +57,11 @@ const validateUser = (data:User): ValidationUserResult => {
   return schema.validate(data) as ValidationUserResult
 };
 
-interface ValidationRefreshTokenResult {
-  value: { refreshToken: string };
-  error?: Joi.ValidationError;
-}
-
-const validateRefreshToken = (data:{refreshToken:string}):ValidationRefreshTokenResult => {
+const validateToken = (data:{token:string}) => {
   const schema = Joi.object({
-      refreshToken: Joi.string().required(),
+      token: Joi.string().required(),
   });
-  return schema.validate(data) as ValidationRefreshTokenResult
+  return schema.validate(data)
 };
 
 const validateEmail = (data:{email:string}) => {
@@ -83,7 +78,7 @@ const validatePhoneNumber = (data:{phoneNumber:string}) => {
     return schema.validate(data);
 };
 
-const validateUid = (data: {_id:string}) => {
+const validateId = (data: {_id:string}) => {
     const schema = Joi.object({
         _id: Joi.string().required(),
     });
@@ -100,12 +95,32 @@ const validateChangePhoneNumber = (data: { accessToken: string, oldPhoneNumber: 
 };
 
 
+const validateChangeEmail = (data: { accessToken: string, newEmail: string, oldEmail: string }) => {
+    const schema = Joi.object({
+        accessToken: Joi.string().required(),
+        newEmail: Joi.string().required(),
+        oldEmail: Joi.string().required(),
+    });
+    return schema.validate(data);
+};
+
+const validateRemoveEmail = (data: { accessToken: string, email: string}) => {
+    const schema = Joi.object({
+        accessToken: Joi.string().required(),
+        email: Joi.string().required(),
+    });
+    return schema.validate(data);
+};
+
+
 
 export {
     validateUser,
     validateEmail,
     validatePhoneNumber,
-    validateUid,
-    validateRefreshToken,
-    validateChangePhoneNumber
+    validateId,
+    validateToken,
+    validateChangePhoneNumber,
+    validateChangeEmail,
+    validateRemoveEmail
 };

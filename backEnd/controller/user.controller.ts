@@ -1,20 +1,14 @@
 import { USER_NOT_FOUND_ERR, DATABASE_UPDATED, SERVER_ERR } from "../errors";
 import SpotifyServices from "../services/spotify.services";
 import UserServices from "../services/user.services";
-import { validateUid } from "../validators/auth.validator";
+import { validateId } from "../validators/auth.validator";
 import { validateLocation } from "../validators/location.validator";
 import Spotify from "../models/spotify.model";
 import instagramModel from "../models/instagram.model";
 import InstagramServices from "../services/instagram.services";
-import { validateUserUpdateParams } from "../validators/user.validator";
 import User from "../models/user.model";
 import SpotifyModel from "../models/spotify.model";
 import express from "express";
-
-type expressParams = {
-  req: express.Request;
-  res: express.Response;
-};
 
 async function updateUserLocation(req: express.Request, res: express.Response) {
   const { uid, locationData } = req.body;
@@ -47,7 +41,7 @@ async function updateUserLocation(req: express.Request, res: express.Response) {
 
 async function getUserLocation(req: express.Request, res: express.Response) {
   const { _id } = req.params;
-  const { error } = validateUid({ _id });
+  const { error } = validateId({ _id });
 
   if (error) {
     return res.status(400).json({
@@ -77,7 +71,7 @@ async function getUserLocation(req: express.Request, res: express.Response) {
 
 async function getUserProfile(req: express.Request, res: express.Response) {
   const { _id } = req.params;
-  const { error } = validateUid({ _id });
+  const { error } = validateId({ _id });
 
   if (error) {
     return res.status(400).json({

@@ -14,15 +14,15 @@ router.post("/refresh-token", authController.refreshToken)
 
 router.put("/change-phone-number", authController.changePhoneNumber);
 
-//router.put("/change-recovery-email", authController.changeRecoveryEmail);
+router.put("/change-email", authController.changeEmail);
 
-//router.delete("/remove-recovery-email", authController.removeRecoveryEmail);
+router.delete("/remove-email", authController.removeEmail);
 
-router.post("/uidExist", authController.uidExist );
+router.post("/id-exist", authController.idExist );
 
-router.post("/emailExist", authController.emailExist);
+router.post("/email-exist", authController.emailExist);
 
-router.post("/phoneNumberExist", authController.phoneNumberExist);
+router.post("/phone-number-exist", authController.phoneNumberExist);
 
 
 export default router;

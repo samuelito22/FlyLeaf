@@ -1,7 +1,7 @@
 import { SPOTIFY_IN_USE } from "../errors";
 import SpotifyServices from "../services/spotify.services";
 import UserServices from "../services/user.services";
-import { validateUid } from "../validators/auth.validator";
+import { validateId } from "../validators/auth.validator";
 import { validateUidAndCode } from "../validators/media.validator";
 import express from 'express';
 
@@ -44,7 +44,7 @@ async function authenticateAndFetchSpotify(req:express.Request, res: express.Res
 async function refetchSpotify(req:express.Request, res: express.Response) {
     try {
         const { _id } = req.body;
-        const { error } = validateUid({_id});
+        const { error } = validateId({_id});
         if (error) return sendError(res, error.details[0].message, 400);
 
         const result = await SpotifyServices.refetchSpotifyData(_id);
@@ -71,7 +71,7 @@ async function refetchSpotify(req:express.Request, res: express.Response) {
 async function disconnectFromSpotify(req:express.Request, res: express.Response) {
     try {
         const { _id } = req.params;
-        const { error } = validateUid({_id});
+        const { error } = validateId({_id});
         if (error) return sendError(res, error.details[0].message, 400);
 
         await SpotifyServices.disconnectSpotifyService(_id);
