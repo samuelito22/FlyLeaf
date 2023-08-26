@@ -1,5 +1,5 @@
 import * as TYPES from "../../types";
-import { EMAIL_NOT_EXIST, PHONE_NUMBER_NOT_EXIST, UID_NOT_EXIST, USER_ALREADY_EXIST, USER_CREATED } from "../errors";
+import { EMAIL_NOT_EXIST, INVALID_TOKEN, PHONE_NUMBER_NOT_EXIST, REVOKED_TOKEN, TOKEN_NOT_FOUND, UID_NOT_EXIST, USER_ALREADY_EXIST, USER_CREATED } from "../errors";
 import PicturesModel from "../models/pictures.model";
 import RefreshTokenModel from "../models/refreshToken.model";
 import SettingsModel from "../models/settings.model";
@@ -23,7 +23,7 @@ async function addUserToDB(userData:TYPES.User,  session?: any) {
     
         return newUser
     } catch (error:any) {
-        throw new Error(error)
+        throw new Error(error.message)
     }
     
 }
@@ -35,7 +35,7 @@ async function addUserSettingsToDB(settingsData: TYPES.Settings, session?: any) 
 
         return connectedSettings
     } catch (error:any) {
-        throw new Error(error)
+        throw new Error(error.message)
     }
 }
 
@@ -48,7 +48,7 @@ async function addUserPicturesToDB(picturesData:TYPES.Pictures, session?: any) {
     return connectedPhotos
     }
     catch (error:any) {
-        throw new Error(error)
+        throw new Error(error.message)
     }
 }
 
@@ -60,24 +60,28 @@ async function addUserRefreshTokenToDB(refreshTokenData: TYPES.RefreshToken, ses
     return connectedRefreshToken
     }
     catch (error:any) {
-        throw new Error(error)
+        throw new Error(error.message)
     }
 }
 
 async function deactivateRefreshToken(refresh_token: string){
     try{
         const tokenDoc = await RefreshTokenModel.findOne({token: refresh_token})
-        if(!tokenDoc || tokenDoc.revoked){
-            throw new Error("Invalid or revoked token")
+        if(!tokenDoc){
+            throw new Error(TOKEN_NOT_FOUND)
         }
 
-        tokenDoc.revoked = true;
+        if(tokenDoc.revoked){
+            throw new Error(REVOKED_TOKEN)
+        }
+
+        tokenDoc.revoked = new Date();
         await tokenDoc.save();
         
         return { status: "success", message: "Token has been revoked." };
 
     }  catch (error:any) {
-        throw new Error(error)
+        throw new Error(error.message)
     }
 }
 
@@ -131,7 +135,7 @@ async function phoneExistService(data: {phoneNumber:string}) {
     return PHONE_NUMBER_NOT_EXIST;
 }
 
-async function uidExistService(data:{uid: string}) {
+async function uidExistService(data:{_id: string}) {
     const { error, value } = validateUid(data);
 
     if (error) {

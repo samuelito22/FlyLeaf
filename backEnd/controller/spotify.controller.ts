@@ -43,16 +43,16 @@ async function authenticateAndFetchSpotify(req:express.Request, res: express.Res
 
 async function refetchSpotify(req:express.Request, res: express.Response) {
     try {
-        const { uid } = req.body;
-        const { error } = validateUid({uid});
+        const { _id } = req.body;
+        const { error } = validateUid({_id});
         if (error) return sendError(res, error.details[0].message, 400);
 
-        const result = await SpotifyServices.refetchSpotifyData(uid);
+        const result = await SpotifyServices.refetchSpotifyData(_id);
 
         const artists = await SpotifyServices.fetchTopArtists(result.accessToken, result.spotify_id);
 
         if(artists === "access-denied"){
-          const result =  await SpotifyServices.disconnectSpotifyService(uid)
+          const result =  await SpotifyServices.disconnectSpotifyService(_id)
           if(!result){
             return sendError(res, "Error in deleting the user's spotify", 404);
           }
@@ -70,11 +70,11 @@ async function refetchSpotify(req:express.Request, res: express.Response) {
 
 async function disconnectFromSpotify(req:express.Request, res: express.Response) {
     try {
-        const { uid } = req.params;
-        const { error } = validateUid({uid});
+        const { _id } = req.params;
+        const { error } = validateUid({_id});
         if (error) return sendError(res, error.details[0].message, 400);
 
-        await SpotifyServices.disconnectSpotifyService(uid);
+        await SpotifyServices.disconnectSpotifyService(_id);
         return res.status(200).json({
             type: "success",
             message: "Disconnected from Spotify successfully",

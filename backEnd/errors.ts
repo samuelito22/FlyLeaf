@@ -32,3 +32,8 @@ export const DATABASE_UPDATED = "Database updated successfully"
 
 export const SPOTIFY_IN_USE = "Your Spotify account has been linked to a different profile in FlyLeaf. If this was intentional, no action is needed. If you did not request this, please contact our support team immediately."
 export const INSTAGRAM_IN_USE = "Your Instagram account has been linked to a different profile in FlyLeaf. If this was intentional, no action is needed. If you did not request this, please contact our support team immediately."
+
+export const FAILED_CREATION_ACCESS_AND_REFRESH_TOKEN = "Failed to create either the access token or the refresh token."
+export const INVALID_TOKEN = "Invalid token."
+export const REVOKED_TOKEN = "Revoked token."
+export const TOKEN_NOT_FOUND = "Token not found."

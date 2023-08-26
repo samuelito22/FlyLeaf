@@ -179,7 +179,6 @@ export interface Gender {
 
 export interface Pictures { 
     user_id: string,
-    _id?: string,
     url: string,
     blurLevel?: number,
 }
@@ -187,10 +186,9 @@ export interface Pictures {
 
 export interface RefreshToken { 
     token: string,
-    _id?:string,
-    user_id: string,
+    _id:string,
     issuedAt?: Date,
     expiresAt: Date,
-    revoked?: boolean,
+    revoked?: Date,
     replacedByToken?: string
 }

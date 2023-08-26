@@ -6,7 +6,9 @@ const router = express.Router();
 
 router.post("/register", authController.registerUser);
 
-router.post("/log-out", authController.registerUser);
+router.post("/log-out", authController.logOutUser);
+
+router.delete("/delete", authController.deleteUser);
 
 router.post("/uidExist", authController.uidExist );
 

@@ -2,16 +2,11 @@ import mongoose from "mongoose";
 import { RefreshToken } from "../../types";
 
 const refreshTokenSchema = new mongoose.Schema<RefreshToken>({
-    _id: { type: String },
+    _id: { type: String, ref: 'User', required: true },
     token: {
         type: String,
         required: true,
         unique: true,
-    },
-    user_id: {
-        type: String,
-        ref: 'User',
-        required: true,
     },
     issuedAt: {
         type: Date,
@@ -23,7 +18,7 @@ const refreshTokenSchema = new mongoose.Schema<RefreshToken>({
     },
     revoked: {
         type: Date,
-        default: false,
+        default: null,
     },
     replacedByToken: {
         type: String,

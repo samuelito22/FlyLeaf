@@ -48,11 +48,11 @@ async function authenticateAndFetchInstagram(req:express.Request, res: express.R
 
 async function refetchInstagram(req:express.Request, res: express.Response) {
     try {
-        const { uid } = req.body;
-        const { error } = validateUid({uid});
+        const { _id } = req.body;
+        const { error } = validateUid({_id});
         if (error) return sendError(res, error.details[0].message, 400);
 
-        const user = await User.findOne({_id: uid})
+        const user = await User.findOne({_id})
         if(!user){
             sendError(res, USER_NOT_FOUND_ERR, 404)
         }
@@ -77,7 +77,7 @@ async function refetchInstagram(req:express.Request, res: express.Response) {
         const images = accessToken && await InstagramServices.fetchInstagramImages(accessToken,instagram_id)
 
         if(images === "access-denied"){
-            const result = await InstagramServices.disconnectInstagram(uid)
+            const result = await InstagramServices.disconnectInstagram(_id)
             if(!result){
                 sendError(res, "Error deleting user's instagram data", 400)
             }
@@ -95,11 +95,11 @@ async function refetchInstagram(req:express.Request, res: express.Response) {
 
 async function disconnectFromInstagram(req:express.Request, res: express.Response) {
     try {
-        const { uid } = req.body;
-        const { error } = validateUid({uid});
+        const { _id } = req.body;
+        const { error } = validateUid({_id});
         if (error) return sendError(res, error.details[0].message, 400);
 
-        const result = await InstagramServices.disconnectInstagram(uid)
+        const result = await InstagramServices.disconnectInstagram(_id)
         if(!result){
             sendError(res, "Error deleting user's instagram data", 400)
         }

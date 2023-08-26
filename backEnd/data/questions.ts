@@ -40,9 +40,9 @@
     "shortForm": "Party Behavior",
     "answers": [
       { "id": "ans_013", "text": "Dancing" },
-      { "id": "ans_014", "text": "Chatting" },
-      { "id": "ans_015", "text": "Eating" },
-      { "id": "ans_016", "text": "At home" }
+      { "id": "ans_078", "text": "Chatting" },
+      { "id": "ans_079", "text": "Eating" },
+      { "id": "ans_080", "text": "At home" }
     ],
     "icon": "https://flyleaf-icons.s3.eu-west-2.amazonaws.com/questions/party.png",
     "type": "Advanced"

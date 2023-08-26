@@ -46,8 +46,8 @@ async function updateUserLocation(req: express.Request, res: express.Response) {
 }
 
 async function getUserLocation(req: express.Request, res: express.Response) {
-  const { uid } = req.params;
-  const { error } = validateUid({ uid });
+  const { _id } = req.params;
+  const { error } = validateUid({ _id });
 
   if (error) {
     return res.status(400).json({
@@ -57,7 +57,7 @@ async function getUserLocation(req: express.Request, res: express.Response) {
   }
 
   try {
-    const user = await UserServices.getUserLocation(uid);
+    const user = await UserServices.getUserLocation(_id);
     if (!user) {
       return res
         .status(404)
@@ -76,8 +76,8 @@ async function getUserLocation(req: express.Request, res: express.Response) {
 }
 
 async function getUserProfile(req: express.Request, res: express.Response) {
-  const { uid } = req.params;
-  const { error } = validateUid({ uid });
+  const { _id } = req.params;
+  const { error } = validateUid({ _id });
 
   if (error) {
     return res.status(400).json({
@@ -89,7 +89,7 @@ async function getUserProfile(req: express.Request, res: express.Response) {
   try {
     let combinedProfile = {};
 
-    const user = await UserServices.getUserProfile(uid);
+    const user = await UserServices.getUserProfile(_id);
     if (!user) {
       return res
         .status(404)

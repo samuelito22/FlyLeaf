@@ -83,9 +83,9 @@ const validatePhoneNumber = (data:{phoneNumber:string}) => {
     return schema.validate(data);
 };
 
-const validateUid = (data: {uid:string}) => {
+const validateUid = (data: {_id:string}) => {
     const schema = Joi.object({
-        uid: Joi.string().required(),
+        _id: Joi.string().required(),
     });
     return schema.validate(data);
 };
