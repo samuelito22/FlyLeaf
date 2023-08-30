@@ -1,4 +1,4 @@
-import { INSTAGRAM_IN_USE, USER_NOT_FOUND_ERR } from "../errors";
+import { INSTAGRAM_IN_USE, USER_NOT_FOUND_ERR } from "../constants/errors";
 import InstagramServices from "../services/instagram.services";
 import { validateId } from "../validators/auth.validator";
 import { validateUidAndCode } from "../validators/media.validator";
@@ -57,7 +57,7 @@ async function refetchInstagram(req:express.Request, res: express.Response) {
             sendError(res, USER_NOT_FOUND_ERR, 404)
         }
 
-        const instagram_id = user.profile.instagram.instagram_id
+        const instagram_id = user?.instagram
         const InstagramData = await instagramModel.findOne({_id:instagram_id})
 
         if(!InstagramData){
@@ -74,7 +74,8 @@ async function refetchInstagram(req:express.Request, res: express.Response) {
             accessToken = (await InstagramServices.refreshInstagramToken(accessToken)).token
         }
 
-        const images = accessToken && await InstagramServices.fetchInstagramImages(accessToken,instagram_id)
+        
+        const images = accessToken && instagram_id && await InstagramServices.fetchInstagramImages(accessToken,instagram_id)
 
         if(images === "access-denied"){
             const result = await InstagramServices.disconnectInstagram(_id)

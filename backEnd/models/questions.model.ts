@@ -10,7 +10,7 @@ const questionSchema = new Schema<Questions>({
     type: String,
     required: true,
   },
-  answers: [{id: String, text: String}],
+  answers: [Schema.Types.ObjectId],
   icon: {
     type: String,
     required: true,
@@ -22,5 +22,5 @@ const questionSchema = new Schema<Questions>({
   }
 });
 
-const QuestionModel = mongoose.model('questions_list', questionSchema);
+const QuestionModel = mongoose.model('questions', questionSchema);
 export default QuestionModel;

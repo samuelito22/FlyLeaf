@@ -3,7 +3,7 @@ import { Interest } from "../../types";
 
 const InterestsSchema = new Schema<Interest>({
     category_id: {
-        type: String,
+        type: Schema.Types.ObjectId,
         required: true
     },
     icon: {

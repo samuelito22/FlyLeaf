@@ -154,7 +154,7 @@ async function disconnectInstagram(uid:string) {
   const user = await User.findOne({ _id: uid });
   if (!user) throw new Error("User not found.");
 
-  const instagram_id = user.profile.instagram.instagram_id;
+  const instagram_id = user.instagram;
 
   if (!instagram_id)
     throw new Error("User is already disconnected from instagram");

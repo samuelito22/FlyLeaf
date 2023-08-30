@@ -1,5 +1,5 @@
 import {
-    BAD_REQUEST,
+  BAD_REQUEST,
   EMAIL_NOT_EXIST,
   EXPIRED_TOKEN,
   FAILED_CREATION_ACCESS_AND_REFRESH_TOKEN,
@@ -8,16 +8,15 @@ import {
   REVOKED_TOKEN,
   SERVER_ERR,
   TOKEN_NOT_FOUND,
-  UNAUTHORIZED_REQUEST,
   USER_ALREADY_EXIST,
   USER_CREATED,
   USER_NOT_FOUND_ERR,
-} from "../errors";
+} from "../constants/errors";
 import AuthServices from "../services/auth.services";
 import express from "express";
 import {
-    validateChangeEmail,
-    validateChangePhoneNumber,
+  validateChangeEmail,
+  validateChangePhoneNumber,
   validateToken,
   validateId,
   validateUser,
@@ -29,10 +28,22 @@ import mongoose from "mongoose";
 import PicturesModel from "../models/pictures.model";
 import SettingsModel from "../models/settings.model";
 import RefreshTokenModel from "../models/refreshToken.model";
-import PremiumModel from "../models/premium.mode";
+import PremiumModel from "../models/premium.model";
 import InstagramModel from "../models/instagram.model";
 import SpotifyModel from "../models/spotify.model";
-import { createAccessToken, createRefreshToken, decodeAccessToken, decodeRefreshToken } from "../utils/token.utils";
+import {
+  createAccessToken,
+  createRefreshToken,
+  decodeAccessToken,
+  decodeRefreshToken,
+  extractTokenFromHeader,
+  validateGrantType,
+} from "../utils/token.utils";
+import centralizedErrorHandler from "../utils/centralizedErrorHandler.utils";
+import { sendErrorResponse, sendSuccessResponse } from "../utils/response.utils";
+import { convertToObjectIdRecursive } from "../utils/converter.utils";
+import UserResponse from "../models/response.model";
+
 
 // @route POST auth/users/register
 // @desc Register user
@@ -44,13 +55,13 @@ async function registerUser(req: express.Request, res: express.Response) {
     session.startTransaction();
 
     // Check if the req body is valid
-    const { error, value } = validateUser(req.body);
+    let { error, value } = validateUser(req.body);
     if (error) {
-      return res.status(400).json({
-        type: "error",
-        message: error.details[0].message,
-      });
+      return sendErrorResponse(res,400, error.details[0].message)
+
     }
+
+    value = await convertToObjectIdRecursive(value)
 
     // Check if user already exists
     const userExist = await UserModel.findOne({ _id: value._id }, null, {
@@ -60,11 +71,14 @@ async function registerUser(req: express.Request, res: express.Response) {
       throw new Error(USER_ALREADY_EXIST);
     }
 
+    // Create the user's response model
+    await AuthServices.addUserResponsesToDB({_id: value._id, responses: value.additionalInformation}, session)
+
     // Create the user's settings model
     await AuthServices.addUserSettingsToDB({ _id: value._id }, session);
 
     // Create the user's photo model
-    const picturePromises = value.pictures.map((pic) =>
+    const picturePromises = value.pictures.map((pic: any) =>
       AuthServices.addUserPicturesToDB(
         { user_id: value._id, url: pic },
         session
@@ -72,14 +86,11 @@ async function registerUser(req: express.Request, res: express.Response) {
     );
     const pictureResponses = await Promise.all(picturePromises);
     value.pictures = pictureResponses.map((response) =>
-      response._id.toString()
+      response._id
     );
 
     // Create the user's user model
-    const userResult = await AuthServices.addUserToDB(value, session);
-    if (userResult.type === "error" && typeof userResult.error === "string") {
-      throw new Error(userResult.error);
-    }
+    await AuthServices.addUserToDB(value, session);
 
     // Create jwt tokens
     const accessToken = createAccessToken(value._id);
@@ -112,22 +123,10 @@ async function registerUser(req: express.Request, res: express.Response) {
 
     const errorMessage = (error as Error).message;
 
-    if (errorMessage === USER_ALREADY_EXIST) {
-      return res.status(409).json({
-        type: "error",
-        message: errorMessage,
-      });
-    } else if (errorMessage === FAILED_CREATION_ACCESS_AND_REFRESH_TOKEN) {
-      return res.status(500).json({
-        type: "error",
-        message: errorMessage,
-      });
-    } else {
-      return res.status(500).json({
-        type: "error",
-        message: "Internal server error.", // It's better to give a generic error message here
-      });
-    }
+    const status = centralizedErrorHandler(errorMessage)
+
+    return sendErrorResponse(res,status, status != 500 ? errorMessage : SERVER_ERR)
+
   } finally {
     session.endSession();
   }
@@ -135,46 +134,27 @@ async function registerUser(req: express.Request, res: express.Response) {
 
 async function logOutUser(req: express.Request, res: express.Response) {
   try {
-    const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            throw new Error(UNAUTHORIZED_REQUEST)
-        }
+    const {grantType} = req.body
+    validateGrantType(grantType , 'refresh_token')
 
-        const refreshToken = authHeader.split(' ')[1];
 
-    const { error, value } = validateToken({token: refreshToken});
+    const refreshToken = extractTokenFromHeader(req) as string
+
+    const { error, value } = validateToken({ token: refreshToken });
     if (error) {
-      return res.status(400).json({
-        type: "error",
-        message: error.details[0].message,
-      });
+      return sendErrorResponse(res,400, error.details[0].message)
+
     }
 
     await AuthServices.deactivateRefreshToken(value.token);
 
-    return res.status(200).json({
-      type: "success",
-      message: "Logged out successfully.",
-    });
+    return sendSuccessResponse(res, 200,"Logged out successfully.")
   } catch (error) {
     const errorMessage = (error as Error).message;
 
-    if (errorMessage === TOKEN_NOT_FOUND) {
-      return res.status(404).json({
-        type: "error",
-        message: errorMessage,
-      });
-    } else if (errorMessage === REVOKED_TOKEN) {
-      return res.status(403).json({
-        type: "error",
-        message: errorMessage,
-      });
-    } else {
-      return res.status(500).json({
-        type: "error",
-        message: errorMessage,
-      });
-    }
+    const status = centralizedErrorHandler(errorMessage)
+
+    return sendErrorResponse(res,status, status != 500 ? errorMessage : SERVER_ERR)
   }
 }
 
@@ -183,21 +163,32 @@ async function deleteUser(req: express.Request, res: express.Response) {
   session.startTransaction();
 
   try {
-    const { error, value } = validateId(req.body);
+    const {grantType} = req.body
+    validateGrantType(grantType , 'access_token')
+
+
+    const accessToken = extractTokenFromHeader(req) as string
+    const { error, value } = validateToken({ token: accessToken });
+
     if (error) {
-      return res.status(400).json({
-        type: "error",
-        message: error.details[0].message,
-      });
+      return sendErrorResponse(res,400, error.details[0].message)
+
     }
 
-    const user = await UserModel.findById(value._id).session(session);
+    const decode = decodeAccessToken(value.token);
+    if (!decode) throw new Error(EXPIRED_TOKEN);
+
+    
+    const user = await UserModel.findById(decode.sub).session(session);
     if (!user) {
       throw new Error(USER_NOT_FOUND_ERR);
     }
 
+    // delete user's repsonses
+    await UserResponse.deleteOne({_id: decode.sub}).session(session)
+
     // delete user's pictures
-    await PicturesModel.deleteMany({ user_id: value._id }).session(session);
+    await PicturesModel.deleteMany({ user_id: decode.sub }).session(session);
 
     // delete user's instagram
     if (user?.instagram) {
@@ -210,41 +201,29 @@ async function deleteUser(req: express.Request, res: express.Response) {
     }
 
     // delete user's settings
-    await SettingsModel.deleteOne({ _id: value._id }).session(session);
+    await SettingsModel.deleteOne({ _id: decode.sub }).session(session);
 
     // delete user's refresh token
-    await RefreshTokenModel.deleteMany({ _id: value._id }).session(session);
+    await RefreshTokenModel.deleteMany({ _id: decode.sub }).session(session);
 
     // delete user's premium
-    await PremiumModel.deleteOne({ _id: value._id }).session(session);
+    await PremiumModel.deleteOne({ _id: decode.sub }).session(session);
 
     // delete user
-    await UserModel.deleteOne({ _id: value._id }).session(session);
+    await UserModel.deleteOne({ _id: decode.sub }).session(session);
 
     await session.commitTransaction();
 
-    return res.status(200).json({
-      type: "success",
-      message: "User's account successfully deleted.",
-    });
+    return sendSuccessResponse(res, 200,"User's account successfully deleted.")
+
   } catch (error) {
     await session.abortTransaction();
 
     const errorMessage = (error as Error).message;
 
-    let status;
-    switch (errorMessage) {
-      case USER_NOT_FOUND_ERR:
-        status = 404;
-        break;
-      default:
-        status = 500;
-    }
+    const status = centralizedErrorHandler(errorMessage)
 
-    return res.status(status).json({
-      type: "error",
-      message: errorMessage,
-    });
+    return sendErrorResponse(res,status, status != 500 ? errorMessage : SERVER_ERR)
   } finally {
     session.endSession();
   }
@@ -254,19 +233,16 @@ async function logInUser(req: express.Request, res: express.Response) {}
 
 async function refreshToken(req: express.Request, res: express.Response) {
   try {
-    const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            throw new Error(UNAUTHORIZED_REQUEST)
-        }
+    const {grantType} = req.body
+    validateGrantType(grantType , 'refresh_token')
 
-        const refreshToken = authHeader.split(' ')[1];
 
-    const { error, value } = validateToken({token: refreshToken});
+    const refreshToken = extractTokenFromHeader(req) as string
+
+    const { error, value } = validateToken({ token: refreshToken });
     if (error) {
-      return res.status(400).json({
-        type: "error",
-        message: error.details[0].message,
-      });
+      return sendErrorResponse(res,400, error.details[0].message)
+
     }
 
     const tokenDoc = await RefreshTokenModel.findOne({
@@ -277,128 +253,101 @@ async function refreshToken(req: express.Request, res: express.Response) {
     if (tokenDoc.revoked) throw new Error(REVOKED_TOKEN);
 
     const currentDate = new Date();
-    if (tokenDoc.expiresAt <= currentDate){
-        throw new Error(EXPIRED_TOKEN)
+    if (tokenDoc.expiresAt <= currentDate) {
+      throw new Error(EXPIRED_TOKEN);
     }
 
-    const decoded = decodeRefreshToken(value.token)
+    const decoded = decodeRefreshToken(value.token);
 
-      if (decoded) {
-        const accessToken = createAccessToken(decoded.sub);
-        const refreshToken = createRefreshToken(decoded.sub)
+    if (decoded) {
+      const accessToken = createAccessToken(decoded.sub.toString());
+      const refreshToken = createRefreshToken(decoded.sub.toString());
 
-        if (!accessToken || !refreshToken) {
-            throw new Error(FAILED_CREATION_ACCESS_AND_REFRESH_TOKEN);
-        }
-        
-        const currentDate = new Date();
-    const expiresAt = new Date(currentDate);
-    expiresAt.setDate(currentDate.getDate() + 30);
-
-        tokenDoc.replacedByToken = tokenDoc.token
-        tokenDoc.token = refreshToken
-        tokenDoc.expiresAt = expiresAt
-
-        await tokenDoc.save().catch(e => {throw new Error(e.message)})
-
-        return res.status(200).json({
-            type: "success",
-            message: "Tokens were refreshed successfully.",
-            refreshToken,
-            accessToken
-          });
-
-      } else {
-        throw new Error(INVALID_TOKEN);
+      if (!accessToken || !refreshToken) {
+        throw new Error(FAILED_CREATION_ACCESS_AND_REFRESH_TOKEN);
       }
-    
 
+      const currentDate = new Date();
+      const expiresAt = new Date(currentDate);
+      expiresAt.setDate(currentDate.getDate() + 30);
+
+      tokenDoc.replacedByToken = tokenDoc.token;
+      tokenDoc.token = refreshToken;
+      tokenDoc.expiresAt = expiresAt;
+
+      await tokenDoc.save().catch((e) => {
+        throw new Error(e.message);
+      });
+
+      return sendSuccessResponse(res, 200, "Tokens were refreshed successfully.", {refreshToken, accessToken} )
+    
+    } else {
+      throw new Error(INVALID_TOKEN);
+    }
   } catch (error) {
     const errorMessage = (error as Error).message;
 
-    let status;
-    switch (errorMessage) {
-      case TOKEN_NOT_FOUND:
-        status = 404;
-        break;
-      case REVOKED_TOKEN:
-        status = 403;
-        break;
-      case INVALID_TOKEN:
-        status = 403;
-        break;
-      case EXPIRED_TOKEN:
-        status = 401;
-        break;
-        case UNAUTHORIZED_REQUEST:
-            status = 401;
-            break;
-      case FAILED_CREATION_ACCESS_AND_REFRESH_TOKEN: 
-       status = 500
-       break
-      default:
-        status = 500;
-    }
+    const status = centralizedErrorHandler(errorMessage)
 
-    return res.status(status).json({
-      type: "error",
-      message: errorMessage,
-    });
+    return sendErrorResponse(res,status, status != 500 ? errorMessage : SERVER_ERR)
   }
+
 }
 
 // @route GET auth/users/emailExist
 // @desc Get if the email exists
 // @access Public
 async function emailExist(req: express.Request, res: express.Response) {
-    try {
-        const { error, value } = validateEmail(req.body);
-    
-        if (error) {
-            return res.status(400).json({
-                type: "error",
-                message: error.details[0].message,
-            });
-        }
-    
-        const response = await AuthServices.emailExistService(value);
-    
-        if(response) return res.status(200).json({ type: "success", message: USER_ALREADY_EXIST });
-        else return res.status(404).json({ type: "error", message: EMAIL_NOT_EXIST});
-      } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-          type: "error",
-          message: SERVER_ERR,
-        });
-      }
+  try {
+    const { error, value } = validateEmail(req.body);
+
+    if (error) {
+      return sendErrorResponse(res,400, error.details[0].message)
+    }
+
+    const response = await AuthServices.emailExistService(value);
+
+    if (response)
+     
+      return  sendSuccessResponse(res, 200, USER_ALREADY_EXIST)
+
+    else
+      throw new Error(EMAIL_NOT_EXIST)
+  } catch (error) {
+    const errorMessage = (error as Error).message;
+
+    const status = centralizedErrorHandler(errorMessage)
+
+    return sendErrorResponse(res,status, status != 500 ? errorMessage : SERVER_ERR)
+  }
 }
 
 // @route GET auth/users/phoneExist
 // @desc Get if the phone exists
 // @access Public
 async function phoneNumberExist(req: express.Request, res: express.Response) {
-    try {
-        const { error, value } = validatePhoneNumber(req.body);
-    
-        if (error) {
-            return res.status(400).json({
-                type: "error",
-                message: error.details[0].message,
-            });
-        }
-    
-        const response = await AuthServices.phoneNumberExistService(value);
-    
-        if(response) return res.status(200).json({ type: "success", message: USER_ALREADY_EXIST });
-        else return res.status(404).json({ type: "error", message: PHONE_NUMBER_NOT_EXIST});
-      } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-          type: "error",
-          message: SERVER_ERR,
-        });
-      }
+  try {
+    const { error, value } = validatePhoneNumber(req.body);
+
+    if (error) {
+      return sendErrorResponse(res,400, error.details[0].message)
+
+    }
+
+    const response = await AuthServices.phoneNumberExistService(value);
+
+    if (response)
+    return  sendSuccessResponse(res, 200, USER_ALREADY_EXIST)
+
+    else
+      throw new Error(PHONE_NUMBER_NOT_EXIST)
+  } catch (error) {
+    const errorMessage = (error as Error).message;
+
+    const status = centralizedErrorHandler(errorMessage)
+
+    return sendErrorResponse(res,status, status != 500 ? errorMessage : SERVER_ERR)
+  }
 }
 
 // @route GET auth/users/uidExist
@@ -409,216 +358,139 @@ async function idExist(req: express.Request, res: express.Response) {
     const { error, value } = validateId(req.body);
 
     if (error) {
-        return res.status(400).json({
-            type: "error",
-            message: error.details[0].message,
-        });
+      return sendErrorResponse(res,400, error.details[0].message)
+
     }
 
     const response = await AuthServices.uidExistService(value);
 
-    if(response) return res.status(200).json({ type: "success", message: USER_ALREADY_EXIST });
-    else return res.status(404).json({ type: "error", message: USER_NOT_FOUND_ERR});
+    if (response)
+    return  sendSuccessResponse(res, 200, USER_ALREADY_EXIST)
+
+    else
+      throw new Error(USER_NOT_FOUND_ERR)
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      type: "error",
-      message: SERVER_ERR,
-    });
+    const errorMessage = (error as Error).message;
+
+    const status = centralizedErrorHandler(errorMessage)
+
+    return sendErrorResponse(res,status, status != 500 ? errorMessage : SERVER_ERR)
   }
 }
 
 async function changePhoneNumber(req: express.Request, res: express.Response) {
-    try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            throw new Error(UNAUTHORIZED_REQUEST)
-        }
+  try {
+    const {grantType, oldPhoneNumber, newPhoneNumber} = req.body
+    validateGrantType(grantType , 'access_token')
 
-    
-        const accessToken = authHeader.split(' ')[1];
-        const { error, value } = validateChangePhoneNumber({ accessToken, ...req.body });
+    const accessToken = extractTokenFromHeader(req) as string
+    const { error, value } = validateChangePhoneNumber({
+      accessToken,
+      oldPhoneNumber,
+      newPhoneNumber
+    });
 
-        if (error) {
-            return res.status(400).json({
-                type: "error",
-                message: error.details[0].message,
-            });
-        }
+    if (error) {
+      return sendErrorResponse(res,400, error.details[0].message)
 
-        const decode = decodeAccessToken(accessToken)
-        if(!decode) throw new Error(EXPIRED_TOKEN)
-
-        const user = await UserModel.findById(decode.sub)
-        if(!user) throw new Error(USER_NOT_FOUND_ERR)
-
-        if(user.phoneNumber != value.oldPhoneNumber) throw new Error(BAD_REQUEST)
-        user.phoneNumber = value.newPhoneNumber
-
-        await user.save()
-
-        return res.status(200).json({
-            type: "success",
-            message: "User's phone number has been updated.",
-          });
-
-        
-
-    } catch (error) {
-        const errorMessage = (error as Error).message;
-
-        let status;
-        switch (errorMessage) {
-        case UNAUTHORIZED_REQUEST:
-            status = 401;
-            break;
-        case EXPIRED_TOKEN:
-            status = 401;
-            break
-            case USER_NOT_FOUND_ERR:
-                status = 404;
-                break
-        case BAD_REQUEST:
-            status = 400
-            break
-        default:
-            status = 500;
-        }
-
-        return res.status(status).json({
-        type: "error",
-        message: errorMessage,
-        });
     }
+
+    const decode = decodeAccessToken(value.accessToken);
+    if (!decode) throw new Error(EXPIRED_TOKEN);
+
+    const user = await UserModel.findById(decode.sub);
+    if (!user) throw new Error(USER_NOT_FOUND_ERR);
+
+    if (user.phoneNumber != value.oldPhoneNumber) throw new Error(BAD_REQUEST);
+    user.phoneNumber = value.newPhoneNumber;
+
+    const UserWithPhoneNumber = await UserModel.findOne({phoneNumber: newPhoneNumber})
+    if(UserWithPhoneNumber) throw new Error(USER_ALREADY_EXIST)
+
+    await user.save();
+
+    return  sendSuccessResponse(res, 200,  "User's phone number has been updated.")
+
+  } catch (error) {
+    const errorMessage = (error as Error).message;
+
+    const status = centralizedErrorHandler(errorMessage)
+
+    return sendErrorResponse(res,status, status != 500 ? errorMessage : SERVER_ERR)
+  }
 }
 
 async function changeEmail(req: express.Request, res: express.Response) {
-    try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            throw new Error(UNAUTHORIZED_REQUEST)
-        }
+  try {
+   const {grantType, oldEmail, newEmail} = req.body
+    validateGrantType(grantType , 'access_token')
 
-    
-        const accessToken = authHeader.split(' ')[1];
-        const { error, value } = validateChangeEmail({ accessToken, ...req.body });
+    const accessToken = extractTokenFromHeader(req) as string
+    const { error, value } = validateChangeEmail({ accessToken, oldEmail, newEmail});
 
-        if (error) {
-            return res.status(400).json({
-                type: "error",
-                message: error.details[0].message,
-            });
-        }
+    if (error) {
+      return sendErrorResponse(res,400, error.details[0].message)
 
-        const decode = decodeAccessToken(accessToken)
-        if(!decode) throw new Error(EXPIRED_TOKEN)
-
-        const user = await UserModel.findById(decode.sub)
-        if(!user) throw new Error(USER_NOT_FOUND_ERR)
-
-        if(user.email && user.email != value.oldEmail) throw new Error(BAD_REQUEST)
-
-        user.email = value.newEmail
-
-        await user.save()
-
-        return res.status(200).json({
-            type: "success",
-            message: "User's email has been updated.",
-          });
-
-        
-
-    } catch (error) {
-        const errorMessage = (error as Error).message;
-
-        let status;
-        switch (errorMessage) {
-        case UNAUTHORIZED_REQUEST:
-            status = 401;
-            break;
-        case EXPIRED_TOKEN:
-            status = 401;
-            break
-            case USER_NOT_FOUND_ERR:
-                status = 404;
-                break
-        case BAD_REQUEST:
-            status = 400
-            break
-        default:
-            status = 500;
-        }
-
-        return res.status(status).json({
-        type: "error",
-        message: errorMessage,
-        });
     }
+
+    const decode = decodeAccessToken(accessToken);
+    if (!decode) throw new Error(EXPIRED_TOKEN);
+
+    const user = await UserModel.findById(decode.sub);
+    if (!user) throw new Error(USER_NOT_FOUND_ERR);
+
+    if (user.email && user.email != value.oldEmail)
+      throw new Error(BAD_REQUEST);
+    if (value.newEmail == value.oldEmail) throw new Error(BAD_REQUEST);
+
+    user.email = value.newEmail;
+
+    await user.save();
+
+    return  sendSuccessResponse(res, 200, "User's email has been updated.")
+
+  } catch (error) {
+    const errorMessage = (error as Error).message;
+
+    const status = centralizedErrorHandler(errorMessage)
+
+    return sendErrorResponse(res,status, status != 500 ? errorMessage : SERVER_ERR)
+  }
 }
 
 async function removeEmail(req: express.Request, res: express.Response) {
-    try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            throw new Error(UNAUTHORIZED_REQUEST)
-        }
+  try {
+    const {grantType} = req.body
+    validateGrantType(grantType , 'access_token')
 
-    
-        const accessToken = authHeader.split(' ')[1];
-        const { error, value } = validateToken({ token: accessToken });
+    const accessToken = extractTokenFromHeader(req) as string
+    const { error, value } = validateToken({ token: accessToken });
 
-        if (error) {
-            return res.status(400).json({
-                type: "error",
-                message: error.details[0].message,
-            });
-        }
+    if (error) {
+      return sendErrorResponse(res,400, error.details[0].message)
 
-        const decode = decodeAccessToken(value.token)
-        if(!decode) throw new Error(EXPIRED_TOKEN)
-
-        const user = await UserModel.findById(decode.sub)
-        if(!user) throw new Error(USER_NOT_FOUND_ERR)
-
-        user.email = undefined
-
-
-        await user.save()
-
-        return res.status(200).json({
-            type: "success",
-            message: "User's email has been updated.",
-          });
-
-        
-
-    } catch (error) {
-        const errorMessage = (error as Error).message;
-
-        let status;
-        switch (errorMessage) {
-        case UNAUTHORIZED_REQUEST:
-            status = 401;
-            break;
-        case EXPIRED_TOKEN:
-            status = 401;
-            break
-            case USER_NOT_FOUND_ERR:
-                status = 404;
-                break
-        case BAD_REQUEST:
-            status = 400
-            break
-        default:
-            status = 500;
-        }
-
-        return res.status(status).json({
-        type: "error",
-        message: errorMessage,
-        });
     }
+
+    const decode = decodeAccessToken(value.token);
+    if (!decode) throw new Error(EXPIRED_TOKEN);
+
+    const user = await UserModel.findById(decode.sub);
+    if (!user) throw new Error(USER_NOT_FOUND_ERR);
+
+    if (user.email) {
+      user.email = undefined;
+      await user.save();
+    }
+
+    return  sendSuccessResponse(res, 200, "User's email has been updated.")
+
+  } catch (error) {
+    const errorMessage = (error as Error).message;
+
+    const status = centralizedErrorHandler(errorMessage)
+
+    return sendErrorResponse(res,status, status != 500 ? errorMessage : SERVER_ERR)
+  }
 }
 
 const authController = {
@@ -631,6 +503,6 @@ const authController = {
   refreshToken,
   changePhoneNumber,
   changeEmail,
-  removeEmail
+  removeEmail,
 };
 export default authController;

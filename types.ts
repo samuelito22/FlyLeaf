@@ -1,6 +1,7 @@
+import {Schema} from "mongoose";
+
 export interface Image {
-    height: number;
-    width: number;
+    id:Schema.Types.ObjectId;
     url: string;
   }
   
@@ -14,13 +15,13 @@ export interface Image {
   
   export interface SpotifyDocument {
     refreshToken?: string;
-    _id: string; 
+    _id: Schema.Types.ObjectId; 
     artists: Artist[];
   }
   
   export interface InstagramDocument {
     accessToken?: string;
-    _id: string;
+    _id: Schema.Types.ObjectId;
     images: Image[];
     expiryDate?: Date;
   }
@@ -31,8 +32,8 @@ export interface Image {
   }
   
   export interface Gender {
-    general: 'Male' | 'Female' | 'Non-Binary';
-    specific?: string;
+    primary: Schema.Types.ObjectId;
+    secondary?: Schema.Types.ObjectId;
   }
   
   export interface Location {
@@ -41,8 +42,8 @@ export interface Image {
   }
   
   export interface AdditionalInformation {
-    question_id: string;
-    answer: string;
+    question_id: Schema.Types.ObjectId;
+    answer: Schema.Types.ObjectId;
   }
   
   export interface Height {
@@ -51,28 +52,28 @@ export interface Image {
   }
   
   export interface User {
-    _id: string;
+    _id: Schema.Types.ObjectId;
     username: string;
     profession?: Profession;
     gender: Gender;
     phoneNumber?: string;
     email?: string;
     location?: Location;
-    interests: string[];
-    languages?: string[];
+    interests: Schema.Types.ObjectId[];
+    languages?: Schema.Types.ObjectId[];
     bio?: string;
     additionalInformation: AdditionalInformation[];
     height?: Height;
-    relationshipGoal: string;
-    sexualOrientation?: string[];
-    religion?: string[];
-    seeking: string[];
-    pictures: string[];
+    relationshipGoal: Schema.Types.ObjectId;
+    sexualOrientation?: Schema.Types.ObjectId[];
+    religion?: Schema.Types.ObjectId[];
+    seeking: Schema.Types.ObjectId[];
+    pictures: Schema.Types.ObjectId[];
     dateOfBirth: Date;
-    instagram?: string;
-    spotify?: string;
-    covidVaccination?: string;
-    ethnicity?: string;
+    instagram?: Schema.Types.ObjectId;
+    spotify?: Schema.Types.ObjectId;
+    covidVaccination?: Schema.Types.ObjectId;
+    ethnicity?: Schema.Types.ObjectId;
     lastActive?: Date;
     connects?: number;
     isPremiumMember?: boolean;
@@ -115,7 +116,7 @@ export interface Account {
 }
 
 export interface Settings {
-    _id: string;
+    _id: Schema.Types.ObjectId;
     distanceInKm?: boolean;
     notification?: Notification;
     safety?: Safety;
@@ -127,7 +128,7 @@ export interface Settings {
 export interface Questions { 
     question: string,
     shortForm: string, 
-    answers: {id:string, text: string}[],
+    answers: {id:Schema.Types.ObjectId, text: string}[],
     icon: string,
     type: 'Basic' | 'Advanced'
 }
@@ -144,7 +145,7 @@ export interface PremiumFeatures {
 }
 
 export interface Premium {
-    _id: string,
+    _id: Schema.Types.ObjectId,
     startDate?: Date;
     endDate: Date;
     planType: 'MONTHLY' | 'YEARLY';
@@ -168,7 +169,7 @@ export interface Languages {
 
 export interface Interest { 
     name: string, 
-    category_id: string,
+    category_id: Schema.Types.ObjectId,
     icon: string
 }
 
@@ -178,7 +179,7 @@ export interface Gender {
 }
 
 export interface Pictures { 
-    user_id: string,
+    user_id: Schema.Types.ObjectId,
     url: string,
     blurLevel?: number,
 }
@@ -186,7 +187,7 @@ export interface Pictures {
 
 export interface RefreshToken { 
     token: string,
-    _id:string,
+    _id:Schema.Types.ObjectId,
     issuedAt?: Date,
     expiresAt: Date,
     revoked?: Date,

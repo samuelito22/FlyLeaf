@@ -1,0 +1,188 @@
+[
+  {
+    "question": "Your drinking habits?",
+    "shortForm": "Drinking",
+    "answers": [
+      "64ef57ee75df8c73408bd116",
+      "64ef57ee75df8c73408bd117",
+      "64ef57ee75df8c73408bd118",
+      "64ef57ee75df8c73408bd13b"
+    ],
+    "icon": "https://flyleaf-icons.s3.eu-west-2.amazonaws.com/questions/drink.png",
+    "type": "Advanced"
+  },
+  {
+    "question": "Early bird or night owl?",
+    "shortForm": "Sleep Cycle",
+    "answers": [
+      "64ef57ee75df8c73408bd11a",
+      "64ef57ee75df8c73408bd11b",
+      "64ef57ee75df8c73408bd11c",
+      "64ef57ee75df8c73408bd11d"
+    ],
+    "icon": "https://flyleaf-icons.s3.eu-west-2.amazonaws.com/questions/sleep.png",
+    "type": "Advanced"
+  },
+  {
+    "question": "Your preferred season?",
+    "shortForm": "Season",
+    "answers": [
+      "64ef57ee75df8c73408bd11e",
+      "64ef57ee75df8c73408bd11f",
+      "64ef57ee75df8c73408bd120",
+      "64ef57ee75df8c73408bd121"
+    ],
+    "icon": "https://flyleaf-icons.s3.eu-west-2.amazonaws.com/questions/season.png",
+    "type": "Advanced"
+  },
+  {
+    "question": "At a party, you are?",
+    "shortForm": "Party Behavior",
+    "answers": [
+      "64ef57ee75df8c73408bd122",
+      "64ef57ee75df8c73408bd123",
+      "64ef57ee75df8c73408bd124",
+      "64ef57ee75df8c73408bd125"
+    ],
+    "icon": "https://flyleaf-icons.s3.eu-west-2.amazonaws.com/questions/party.png",
+    "type": "Advanced"
+  },
+  {
+    "question": "Your star sign?",
+    "shortForm": "Zodiac",
+    "answers": [
+      "64ef57ee75df8c73408bd126",
+      "64ef57ee75df8c73408bd127",
+      "64ef57ee75df8c73408bd128",
+      "64ef57ee75df8c73408bd129",
+      "64ef57ee75df8c73408bd12a",
+      "64ef57ee75df8c73408bd12b",
+      "64ef57ee75df8c73408bd12c",
+      "64ef57ee75df8c73408bd12d",
+      "64ef57ee75df8c73408bd12e",
+      "64ef57ee75df8c73408bd12f",
+      "64ef57ee75df8c73408bd130",
+      "64ef57ee75df8c73408bd131"
+    ],
+    "icon": "https://flyleaf-icons.s3.eu-west-2.amazonaws.com/questions/zodiac.png",
+    "type": "Advanced"
+  },
+  {
+    "question": "Smoking habits?",
+    "shortForm": "Smoking",
+    "answers": [
+      "64ef57ee75df8c73408bd132",
+      "64ef57ee75df8c73408bd133",
+      "64ef57ee75df8c73408bd134",
+      "64ef57ee75df8c73408bd135",
+      "64ef57ee75df8c73408bd136"
+    ],
+    "icon": "https://flyleaf-icons.s3.eu-west-2.amazonaws.com/questions/smoking.png",
+    "type": "Advanced"
+  },
+  {
+    "question": "Describe your fashion.",
+    "shortForm": "Fashion",
+    "answers": [
+      "64ef57ee75df8c73408bd137",
+      "64ef57ee75df8c73408bd138",
+      "64ef57ee75df8c73408bd139",
+      "64ef57ee75df8c73408bd13a"
+    ],
+    "icon": "https://flyleaf-icons.s3.eu-west-2.amazonaws.com/questions/fashion.png",
+    "type": "Advanced"
+  },
+  {
+    "question": "Visit the gym?",
+    "shortForm": "Gym",
+    "answers": [
+      "64ef57ee75df8c73408bd13b",
+      "64ef57ee75df8c73408bd13c",
+      "64ef57ee75df8c73408bd13d",
+      "64ef57ee75df8c73408bd13e"
+    ],
+    "icon": "https://flyleaf-icons.s3.eu-west-2.amazonaws.com/questions/gym.png",
+    "type": "Advanced"
+  },
+  {
+    "question": "Highest education level?",
+    "shortForm": "Education",
+    "answers": [
+      "64ef57ee75df8c73408bd13f",
+      "64ef57ee75df8c73408bd140",
+      "64ef57ee75df8c73408bd141",
+      "64ef57ee75df8c73408bd142",
+      "64ef57ee75df8c73408bd143",
+      "64ef57ee75df8c73408bd144",
+      "64ef57ee75df8c73408bd145"
+    ],
+    "icon": "https://flyleaf-icons.s3.eu-west-2.amazonaws.com/questions/education.png",
+    "type": "Advanced"
+  },
+  {
+    "question": "Relationship goal?",
+    "shortForm": "Goal",
+    "answers": [
+      "64ef57ee75df8c73408bd146",
+      "64ef57ee75df8c73408bd147",
+      "64ef57ee75df8c73408bd148"
+    ],
+    "icon": "https://flyleaf-icons.s3.eu-west-2.amazonaws.com/questions/objective.png",
+    "type": "Basic"
+  },
+  {
+    "question": "Sexual orientation?",
+    "shortForm": "Orientation",
+    "answers": [
+      "64ef57ee75df8c73408bd149",
+      "64ef57ee75df8c73408bd14a",
+      "64ef57ee75df8c73408bd14b",
+      "64ef57ee75df8c73408bd14c",
+      "64ef57ee75df8c73408bd14d",
+      "64ef57ee75df8c73408bd14e",
+      "64ef57ee75df8c73408bd14f",
+      "64ef57ee75df8c73408bd150",
+      "64ef57ee75df8c73408bd151",
+      "64ef57ee75df8c73408bd152",
+      "64ef57ee75df8c73408bd153"
+    ],
+    "icon": "https://flyleaf-icons.s3.eu-west-2.amazonaws.com/questions/sexual-orientation.png",
+    "type": "Basic"
+  },
+  {
+    "question": "Want children?",
+    "shortForm": "Children",
+    "answers": [
+      "64ef57ee75df8c73408bd154",
+      "64ef57ee75df8c73408bd155",
+      "64ef57ee75df8c73408bd156",
+      "64ef57ee75df8c73408bd157"
+    ],
+    "icon": "https://flyleaf-icons.s3.eu-west-2.amazonaws.com/questions/babies.png",
+    "type": "Advanced"
+  },
+  {
+    "question": "Your ethnicity?",
+    "shortForm": "Ethnicity",
+    "answers": [
+      "64ef57ee75df8c73408bd158",
+      "64ef57ee75df8c73408bd159",
+      "64ef57ee75df8c73408bd15a",
+      "64ef57ee75df8c73408bd15b",
+      "64ef57ee75df8c73408bd15c"
+    ],
+    "icon": "https://flyleaf-icons.s3.eu-west-2.amazonaws.com/questions/ethnicity.png",
+    "type": "Basic"
+  },
+  {
+    "question": "COVID vaccination?",
+    "shortForm": "Vaccine",
+    "answers": [
+      "64ef57ee75df8c73408bd15d",
+      "64ef57ee75df8c73408bd15e",
+      "64ef57ee75df8c73408bd15f"
+    ],
+    "icon": "https://flyleaf-icons.s3.eu-west-2.amazonaws.com/questions/vaccine.png",
+    "type": "Basic"
+  }
+]

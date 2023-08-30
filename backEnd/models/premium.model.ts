@@ -3,7 +3,7 @@ import { Premium } from "../../types";
 
 const PremiumSchema = new Schema<Premium>({
     _id: { 
-        type: String, 
+        type: Schema.Types.ObjectId, 
         ref: 'User' // Assuming you have a User model
     },
     startDate: { 

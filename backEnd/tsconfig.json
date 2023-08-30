@@ -1,5 +1,5 @@
 {
-  "include": ["./**/*.ts", "models/spotify.model.js", "server.mjs"],
+  "include": ["./**/*.ts", "models/spotify.model.js", "server.mjs", "data/asok.js", "models/questions.model.js"],
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig to read more about this file */
 

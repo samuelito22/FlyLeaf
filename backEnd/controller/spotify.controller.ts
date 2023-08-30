@@ -1,4 +1,4 @@
-import { SPOTIFY_IN_USE } from "../errors";
+import { SPOTIFY_IN_USE } from "../constants/errors";
 import SpotifyServices from "../services/spotify.services";
 import UserServices from "../services/user.services";
 import { validateId } from "../validators/auth.validator";
@@ -49,7 +49,7 @@ async function refetchSpotify(req:express.Request, res: express.Response) {
 
         const result = await SpotifyServices.refetchSpotifyData(_id);
 
-        const artists = await SpotifyServices.fetchTopArtists(result.accessToken, result.spotify_id);
+        const artists = result.spotify_id && await SpotifyServices.fetchTopArtists(result.accessToken, result.spotify_id);
 
         if(artists === "access-denied"){
           const result =  await SpotifyServices.disconnectSpotifyService(_id)

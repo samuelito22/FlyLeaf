@@ -15,7 +15,6 @@ const SafetySchema = new Schema<Safety>({
 
 const FilterSchema = new Schema<Filter>({
     preferredRelationshipGoal: {type: String, enum: ['Friendship', 'Relationship', 'Exploring', 'All']},
-  seeking: {type: [String]},
   ageMax: {
     type: Number,
     default: 100,
@@ -30,29 +29,29 @@ const FilterSchema = new Schema<Filter>({
   distanceRadius: {type: Number, default: 50, enum:Array.from({ length: 101 }, (_, i) => i)},
   showProfilesWithPhotos: {type: Number, default: 2, enum:Array.from({ length: 7 }, (_, i) => i)},
   showVerifiedProfilesOnly: {type: Boolean, default: false},
-})
+}, {_id:false})
 
 const PrivacySchema = new Schema<Privacy>({
     showOnlineStatus: {type: Boolean, default: true},
   showLastActive: {type: Boolean, default: true},
-})
+}, {_id:false})
 
 const AccountSchema = new Schema<Account>({
-    deactivateAccountAfterInactivity: {type: [Number], enum: [-1, ...Array.from({ length: 7 }, (_, i) => i)], default: 30 },
+    deactivateAccountAfterInactivity: {type: [Number], enum: [-1, ...Array.from({ length: 365 }, (_, i) => i)], default: 30 },
     discoverable: {type: Boolean, default: true}
 
-})
+}, {_id:false})
 
 const SettingsSchema = new Schema<Settings>({
-    _id: { type: String, ref: 'User' },
+    _id: { type: Schema.Types.ObjectId, ref: 'User' },
     
   distanceInKm: {type: Boolean, default: false},
   
-  notification: {type:NotificationSchema},
-    safety: {type: SafetySchema},
-  filter: {type: FilterSchema},
-  privacy: {type: PrivacySchema},  
-  account: {type: AccountSchema}
+  notification: {type:NotificationSchema, default:{}},
+    safety: {type: SafetySchema, default:{}},
+  filter: {type: FilterSchema,  default:{}},
+  privacy: {type: PrivacySchema,  default:{}},  
+  account: {type: AccountSchema, default:{}}
 });
 
 const SettingsModel = mongoose.model('Settings', SettingsSchema);

@@ -2,16 +2,16 @@ import mongoose, {Schema} from "mongoose";
 import { Gender } from "../../types";
 
 const genderSchema = new Schema<Gender>({
-    gender: {
+    primary: {
         type: String, 
         required: true,
     },
-    extra: {
-        type: [String],
+    secondary: {
+        type: [{text: String}],
         required: true
     }
 
 });
 
-const GenderModel = mongoose.model('gender', genderSchema);
+const GenderModel = mongoose.models.gender || mongoose.model('genders', genderSchema);
 export default GenderModel;

@@ -3,7 +3,7 @@ import { Pictures } from "../../types";
 
 const PicturesSchema = new Schema<Pictures>({
   user_id: {
-    type: String,
+    type: Schema.Types.ObjectId,
     required: true,
     ref: 'User',
   },

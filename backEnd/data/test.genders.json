@@ -1,0 +1,26 @@
+[
+  {
+    "question": "Open to dating?",
+    "shortForm": "Dating",
+    "answers": [
+      { "text": "Male" },
+      { "text": "Female" },
+      { "text": "Non-Binary" }
+    ],
+    "icon": "https://flyleaf-icons.s3.eu-west-2.amazonaws.com/questions/gender.png",
+    "type": "Basic"
+  },
+  {
+    "question": "Gender identity?",
+    "shortForm": "Gender",
+    "answers": null,
+    "icon": "https://flyleaf-icons.s3.eu-west-2.amazonaws.com/questions/gender.png",
+    "type": "Basic"
+  },
+  {
+    "question": "Languages spoken?",
+    "shortForm": "Languages",
+    "icon": "https://flyleaf-icons.s3.eu-west-2.amazonaws.com/questions/languages.png",
+    "type": "Basic"
+  }
+]

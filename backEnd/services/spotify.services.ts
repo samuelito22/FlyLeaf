@@ -1,7 +1,7 @@
 import User from "../models/user.model";
 import Spotify from "../models/spotify.model";
 import axios from "axios";
-import { USER_NOT_FOUND_ERR } from "../errors";
+import { USER_NOT_FOUND_ERR } from "../constants/errors";
 
 const REDIRECT_URI = process.env.SPOTIFY_REDIRECT_URI;
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
@@ -92,7 +92,7 @@ async function refetchSpotifyData(uid:string) {
 
     if (!user) throw new Error(USER_NOT_FOUND_ERR);
 
-    const spotify_id = user.profile.spotify.spotify_id;
+    const spotify_id = user?.spotify;
     const spotifyDoc = await Spotify.findOne({ _id: spotify_id });
 
     if (!spotifyDoc) throw new Error("Spotify field not found");
@@ -127,7 +127,7 @@ async function disconnectSpotifyService(uid:string) {
     const user = await User.findOne({ _id: uid });
     if (!user) throw new Error("User not found.");
 
-    const storedSpotifyId = user.profile.spotify.spotify_id;
+    const storedSpotifyId = user.spotify;
 
     if(!storedSpotifyId) throw new Error("User is already disconnected from spotify")
     

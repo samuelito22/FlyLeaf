@@ -3,7 +3,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors"
 import {  NODE_ENV } from "./config/config";
-import { API_ENDPOINT_NOT_FOUND_ERR } from "./errors";
+import { API_ENDPOINT_NOT_FOUND_ERR } from "./constants/errors";
 import mainRoutes from "./routes/index"
 import { expressParams } from "./types";
 

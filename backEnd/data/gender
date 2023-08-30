@@ -1,42 +1,42 @@
 [
   {
-    "gender": "Male",
-    "extra": [
-      "Intersex man",
-      "Trans man",
-      "Transmasculine",
-      "Man and Nonbinary",
-      "Cis man"
+    "primary": "Male",
+    "secondary": [
+      {"text":"Intersex man"},
+      {"text": "Trans man"},
+      {"text" : "Transmasculine"},
+      {"text":"Man and Nonbinary"},
+      {"text":"Cis man"}
     ]
   },
   {
-    "gender": "Female",
-    "extra": [
-      "Intersex woman",
-      "Trans woman",
-      "Transfeminine",
-      "Woman and Nonbinary",
-      "Cis woman"
+    "primary": "Female",
+    "secondary": [
+      {"text":"Intersex woman"},
+      {"text": "Trans woman"},
+      {"text":"Transfeminine"},
+      {"text":"Woman and Nonbinary"},
+      {"text": "Cis woman"}
     ]
   },
   {
-    "gender": "Non-Binary",
-    "extra": [
-      "Agender",
-      "Bigender",
-      "Genderfluid",
-      "Genderqueer",
-      "Gender nonconforming",
-      "Gender questioning",
-      "Gendervariant",
-      "Intersex",
-      "Neutrois",
-      "Nonbinary man",
-      "Nonbinary woman",
-      "Pangender",
-      "Polygender",
-      "Transgender",
-      "Two-spirit"
+    "primary": "Non-Binary",
+    "secondary": [
+      {"text":"Agender"},
+      {"text":"Bigender"},
+      {"text": "Genderfluid"},
+      {"text":"Genderqueer"},
+      {"text": "Gender nonconforming"},
+      {"text": "Gender questioning"},
+      {"text": "Gendervariant"},
+      {"text": "Intersex"},
+      {"text":"Neutrois"},
+      {"text":"Nonbinary man"},
+      {"text":"Nonbinary woman"},
+      {"text":"Pangender"},
+      {"text":"Polygender"},
+      {"text":"Transgender"},
+      {"text":"Two-spirit"}
     ]
   }
 ]

@@ -1,6 +1,9 @@
 import mongoose from 'mongoose';
 const { Schema } = mongoose;
 import { Profession, Gender, Location, AdditionalInformation, User} from "../../types"
+import QuestionModel from './questions.model';
+import GenderModel from './gender.model';
+const ObjectId =  Schema.Types.ObjectId
 
 const ProfessionSchema = new Schema<Profession>({
   jobTitle: {type: String },
@@ -8,8 +11,8 @@ const ProfessionSchema = new Schema<Profession>({
 }, { _id : false, timestamps:false })
 
 const GenderSchema = new Schema<Gender>({
-  general: { type: String, required: true, ref:'gender' },
-  specific: { type: String }
+  primary: { type:  ObjectId, required: true, ref:GenderModel},
+  secondary: { type: ObjectId, ref: GenderModel }
 }, { _id : false });
 
 const LocationSchema = new Schema<Location>({
@@ -17,34 +20,24 @@ const LocationSchema = new Schema<Location>({
   city: { type: String },
 }, { _id : false });
 
-const AdditionalInformationSchema = new Schema<AdditionalInformation>({
-  question_id: { type: String, required: true, ref:'questions_list' },
-  answer: { type: String, required: true },
-}, { _id : false });
-
 const UserSchema = new Schema<User>({
-  _id: { type: String, alias: 'uid' },
+  _id: { type: ObjectId, alias: 'uid' },
   username: { type: String, required: true},
   profession: {type: ProfessionSchema},
   gender: {type: GenderSchema, required: true},
   phoneNumber: { type: String, trim: true, sparse: true, unique: true},
   email: { type: String, unique: true, sparse: true },
   location: {type: LocationSchema},
-  interests: {type: [String], required: true, ref: 'interests'},
-  languages: {type: [String], ref:'languages'},
+  interests: {type: [ ObjectId], required: true, ref: 'interests'},
+  languages: {type: [ ObjectId], ref:'languages'},
   bio: {type: String},
-  additionalInformation: {type: [AdditionalInformationSchema], required: true},
   height: {type: {feets: String, inches: String},    _id: false,  },
-  relationshipGoal: { type: String, required: true },
-  sexualOrientation: {type: [String]},
-  religion: {type: [String]},
-  seeking: {type: [String], required: true, ref:'gender'},
-  pictures: {type: [String], required: true},
+  relationshipGoal: { type:  ObjectId, required: true, ref: QuestionModel },
+  seeking: {type: [ ObjectId], required: true, ref:GenderModel},
+  pictures: {type: [ ObjectId], required: true, ref:'pictures'},
   dateOfBirth: { type: Date, required: true },
-  instagram: {type: String, ref:'instagrams'},
-  spotify: {type: String, ref:'spotifies'},
-  covidVaccination: { type: String },
-  ethnicity: { type: String },
+  instagram: {type:  ObjectId, ref:'instagrams'},
+  spotify: {type: ObjectId, ref:'spotifies'},
   lastActive: { type: Date, default: Date.now }, 
   connects: { type: Number, default: 40 },
   isPremiumMember: {type: Boolean, default: false},
@@ -53,6 +46,6 @@ const UserSchema = new Schema<User>({
   timestamps: true
 });
 
-const User = mongoose.models.User || mongoose.model("User", UserSchema);
+const UserModel = mongoose.models.users || mongoose.model("users", UserSchema);
 
-export default User;
+export default UserModel;

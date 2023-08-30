@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
-import {Artist, SpotifyDocument} from "../../SpotifyDocument"
+import {Artist, SpotifyDocument} from "../../types"
 
-interface SpotifyModel extends Model<SpotifyDocument> {}
+const ObjectId =  mongoose.Types.ObjectId
 
 const ArtistSchema = new Schema<Artist>({
     id: { type: String, required: true },
@@ -17,10 +17,10 @@ const ArtistSchema = new Schema<Artist>({
 
 const SpotifySchema = new Schema<SpotifyDocument>({
     refreshToken: { type: String, required: true },
-    _id: { type: String, alias: 'spotify_id' },
+    _id: { type: ObjectId, alias: 'spotify_id' },
     artists: [ArtistSchema]
 });
 
-const SpotifyModel: SpotifyModel = mongoose.model<SpotifyDocument, SpotifyModel>('Spotify', SpotifySchema);
+const SpotifyModel = mongoose.model('spotifies', SpotifySchema);
 
 export default SpotifyModel;

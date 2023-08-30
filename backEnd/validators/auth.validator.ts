@@ -1,60 +1,29 @@
 import Joi from 'joi';
-import { User } from '../../types';
+import { objectIdRegex } from '../constants/regex';
 
-interface ValidationUserResult {
-  value: User;
-  error?: Joi.ValidationError;
-}
-
-const validateUser = (data:User): ValidationUserResult => {
+const validateUser = (data:any) => {
   const schema = Joi.object({
-      _id: Joi.string().required(),
+      _id: Joi.string().required().pattern(objectIdRegex),
       username: Joi.string().required(),
-      profession: Joi.object({
-          jobTitle: Joi.string().optional(),
-          employer: Joi.string().optional(),
-      }),
       gender: Joi.object({
-          general: Joi.string().required(),
-          specific: Joi.string().optional(),
+          primary: Joi.string().required().pattern(objectIdRegex),
+          secondary: Joi.string().optional().pattern(objectIdRegex),
       }).required(),
-      phoneNumber: Joi.string(),
+      phoneNumber: Joi.string().required(),
       email: Joi.string().email().optional(),
-      location: Joi.object({
-          coordinates: Joi.object({
-              longitude: Joi.number().required(),
-              latitude: Joi.number().required(),
-          }),
-          city: Joi.string().optional(),
-      }).optional(),
-      interests: Joi.array().items(Joi.string()).required(),
-      languages: Joi.array().items(Joi.string()).optional(),
-      bio: Joi.string().optional(),
+      interests: Joi.array().items(Joi.string().pattern(objectIdRegex)).required(),
       additionalInformation: Joi.array().items(Joi.object({
-          question_id: Joi.string().required(),
-          answer: Joi.string().required(),
+          questionId: Joi.string().required().pattern(objectIdRegex),
+          answerId: Joi.string().required().pattern(objectIdRegex),
       })).required(),
-      height: Joi.object({
-          feets: Joi.string().optional(),
-          inches: Joi.string().optional(),
-      }).optional(),
-      relationshipGoal: Joi.string().required(),
-      sexualOrientation: Joi.array().items(Joi.string()).optional(),
-      religion: Joi.array().items(Joi.string()).optional(),
-      seeking: Joi.array().items(Joi.string()).required(),
-      pictures: Joi.array().items(Joi.string()).required(),
+      relationshipGoal: Joi.string().required().pattern(objectIdRegex),
+      seeking: Joi.array().items(Joi.string().pattern(objectIdRegex)).required(),
+      pictures: Joi.array().items(Joi.string().required()).required(),
       dateOfBirth: Joi.date().required(),
-      instagram: Joi.string().optional(),
-      spotify: Joi.string().optional(),
-      covidVaccination: Joi.string().optional(),
-      ethnicity: Joi.string().optional(),
-      lastActive: Joi.date().optional(),
-      connects: Joi.number().default(40),
-      isPremiumMember: Joi.boolean().default(false),
       verified: Joi.boolean().default(false),
   });
 
-  return schema.validate(data) as ValidationUserResult
+  return schema.validate(data)
 };
 
 const validateToken = (data:{token:string}) => {
