@@ -1,4 +1,4 @@
-import { Schema } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import * as TYPES from "../../types";
 import {
   EMAIL_NOT_EXIST,
@@ -62,6 +62,25 @@ async function addUserRefreshTokenToDB(
   return connectedRefreshToken;
 }
 
+async function updateUserRefreshTokenInDB(userId: mongoose.Types.ObjectId, refreshToken: string ,  session?: any ){
+  let tokenDoc = await RefreshTokenModel.findById(userId).session(session);
+  
+      if (tokenDoc) {
+        tokenDoc.revoked = undefined
+        tokenDoc.token = refreshToken;
+        tokenDoc.expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);  // expires in 30 days
+        await tokenDoc.save({ session });
+      } else {
+        const newTokenDoc = new RefreshTokenModel({
+          _id: userId,
+          token: refreshToken,
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),  // expires in 30 days
+        });
+  
+        await newTokenDoc.save({ session });
+      }
+}
+
 async function deactivateRefreshToken(refreshToken: string) {
   const tokenDoc = await RefreshTokenModel.findOne({ token: refreshToken });
   if (!tokenDoc) {
@@ -104,7 +123,8 @@ const AuthServices = {
   addUserSettingsToDB,
   addUserToDB,
   deactivateRefreshToken,
-  addUserResponsesToDB
+  addUserResponsesToDB,
+  updateUserRefreshTokenInDB
 };
 
 export default AuthServices;

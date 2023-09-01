@@ -28,14 +28,15 @@ router.post('/log-in/send-otp', authController.sendOTP);
   
 router.post('/log-in/verify-otp', authController.verifyOTP)
 
-
-
-// Generate Email Link Endpoint
 router.post('/log-in/request-login-link', authController.sendLink)
+
 router.get('/log-in/verify-login-link/:token', authController.verifyLink)
+
 router.get('/log-in/authCode', authController.validateAuthCodeAndFetchTokens)
 
-  
+router.post('/log-in/google', authController.googleSignIn);
+
+router.post('/log-in/facebook', authController.facebookSignIn);
 
 
 export default router;

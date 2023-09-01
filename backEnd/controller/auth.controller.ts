@@ -51,10 +51,12 @@ import OTPModel from "../models/otp.model";
 import Joi from "joi";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer"
-import { NODEMAILER_SECRET } from "../config/config";
+import { GOOGLE_CLIENT_ID, NODEMAILER_SECRET } from "../config/config";
 import EmailTokenModel from "../models/emailToken.model";
 import AuthCodeModel from "../models/authCode.model";
 import crypto from "crypto"
+import axios from "axios";
+import { OAuth2Client } from "google-auth-library";
 
 
 // @route POST auth/users/register
@@ -589,30 +591,8 @@ async function verifyOTP(req: express.Request, res: express.Response) {
       if(userDoc){
         const accessToken = createAccessToken(userDoc._id) as string
         const refreshToken = createRefreshToken(userDoc._id) as string
-        let tokenDoc = await RefreshTokenModel.findById(userDoc._id)
-        if (tokenDoc) {
-          tokenDoc.revoked = undefined;  // You set default as null in schema
-          const currentDate = new Date();
-          const expiresAt = new Date(currentDate);
-          expiresAt.setDate(currentDate.getDate() + 30);
-      
-          tokenDoc.replacedByToken = tokenDoc.token;
-          tokenDoc.token = refreshToken;
-          tokenDoc.expiresAt = expiresAt;
-      
-          await tokenDoc.save();
-        } else {
-          // Create a new RefreshToken document if not found
-          const newTokenDoc = new RefreshTokenModel({
-            _id: userDoc._id,
-            token: refreshToken,
-            expiresAt: new Date(Date.now() + 2592000000),  // for example, token expires in 30 days
-            revoked: null,
-            replacedByToken: null
-          });
-      
-          await newTokenDoc.save();
-        }
+        await AuthServices.updateUserRefreshTokenInDB(userDoc._id, refreshToken, session)
+
       
         await session.commitTransaction();
         session.endSession();
@@ -791,21 +771,7 @@ async function verifyOTP(req: express.Request, res: express.Response) {
       const refreshToken = createRefreshToken(userId.toString()) as string;
   
       // Create or update refreshToken in database
-      let tokenDoc = await RefreshTokenModel.findById(userId).session(session);
-  
-      if (tokenDoc) {
-        tokenDoc.token = refreshToken;
-        tokenDoc.expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);  // expires in 30 days
-        await tokenDoc.save({ session });
-      } else {
-        const newTokenDoc = new RefreshTokenModel({
-          _id: userId,
-          token: refreshToken,
-          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),  // expires in 30 days
-        });
-  
-        await newTokenDoc.save({ session });
-      }
+      await AuthServices.updateUserRefreshTokenInDB(userId, refreshToken, session)
   
       // Remove the used authCode
       await AuthCodeModel.findByIdAndRemove(authCodeDoc._id).session(session);
@@ -826,6 +792,95 @@ async function verifyOTP(req: express.Request, res: express.Response) {
     }
   }
 
+  // Google Sign-In
+  async function googleSignIn(req: express.Request, res: express.Response) {
+
+    try {
+      const { grantType } = req.body;
+      validateGrantType(grantType, 'access_token');
+  
+      const accessToken = extractTokenFromHeader(req) as string;
+      const { error, value } = validateToken({ token: accessToken });
+  
+      if (error) {
+        return sendErrorResponse(res, 400, error.details[0].message);
+      }
+  
+      const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
+  
+      const ticket = await googleClient.verifyIdToken({
+        idToken: accessToken,
+        audience: GOOGLE_CLIENT_ID,
+      });
+  
+      const payload = ticket.getPayload();
+  
+      if (!payload || !payload.email) {
+        return sendErrorResponse(res, 400, 'Invalid token payload');
+      }
+  
+      const { email } = payload;
+  
+      // Find or create a user based on their email
+      const user = await UserModel.findOne({ email })
+    if(user){
+      const accessToken = createAccessToken(user._id.toString()) as string;
+      const refreshToken = createRefreshToken(user._id.toString()) as string;
+  
+      // Create or update refreshToken in database
+      await AuthServices.updateUserRefreshTokenInDB(user._id, refreshToken)
+      return sendSuccessResponse(res, 200, 'Logged in with Google', {user, accessToken, refreshToken} )
+    } else{
+      return sendSuccessResponse(res, 202, 'Logged in with Google', {email} )
+    }
+    } catch (error) {
+      const errorMessage = (error as Error).message;
+  
+      const status = centralizedErrorHandler(errorMessage);
+  
+      return sendErrorResponse(res, status, status !== 500 ? errorMessage : SERVER_ERR);
+    }
+  }
+  
+
+// Facebook Sign-In
+async function facebookSignIn(req: express.Request, res: express.Response)  {
+
+  try {
+    const {grantType} = req.body
+    validateGrantType(grantType , 'access_token')
+
+    const accessToken = extractTokenFromHeader(req) as string
+    const { error, value } = validateToken({ token: accessToken });
+
+    if (error) {
+      return sendErrorResponse(res,400, error.details[0].message)
+
+    }
+    const fbResponse = await axios.get(`https://graph.facebook.com/me?fields=id,email&access_token=${accessToken}`);
+    const { email } = fbResponse.data;
+
+    // Find or create a user based on their email
+    const user = await UserModel.findOne({ email })
+    if(user){
+      const accessToken = createAccessToken(user._id.toString()) as string;
+      const refreshToken = createRefreshToken(user._id.toString()) as string;
+  
+      // Create or update refreshToken in database
+      await AuthServices.updateUserRefreshTokenInDB(user._id, refreshToken)
+      return sendSuccessResponse(res, 200, 'Logged in with Facebook', {user, accessToken, refreshToken} )
+    } else{
+      return sendSuccessResponse(res, 200, 'Logged in with Facebook', {email} )
+    }
+  } catch (error) {
+    const errorMessage = (error as Error).message;
+  
+    const status = centralizedErrorHandler(errorMessage);
+
+    return sendErrorResponse(res, status, status !== 500 ? errorMessage : SERVER_ERR);
+  }
+}
+
 const authController = {
   idExist,
   phoneNumberExist,
@@ -841,6 +896,8 @@ const authController = {
   verifyOTP,
   sendLink,
   verifyLink,
-  validateAuthCodeAndFetchTokens
+  validateAuthCodeAndFetchTokens,
+  googleSignIn,
+  facebookSignIn
 };
 export default authController;
