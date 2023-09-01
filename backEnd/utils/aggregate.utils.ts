@@ -1,12 +1,12 @@
-export const COLLECT_PICTURES = [{
+export const COLLECT_USER_PICTURES = [{
     $lookup: {
       from: "pictures",
-      let: { picturesId: "$pictures" },
+      let: { userId: "$_id" },
       pipeline: [
         {
           $match: {
             $expr: {
-              $in: ["$_id", "$$picturesId"],
+              $eq: ["$user_id", "$$userId"],
             },
           },
         },
@@ -22,7 +22,7 @@ export const COLLECT_PICTURES = [{
     },
   }]
   
-export  const COLLECT_INTERESTS = [{
+export  const COLLECT_USER_INTERESTS = [{
     $lookup: {
       from: "interests",
       let: { interestsId: "$interests" },
@@ -46,7 +46,7 @@ export  const COLLECT_INTERESTS = [{
     },
   }]
   
-export  const COLLECT_SEEKING = [{
+export  const COLLECT_USER_SEEKING = [{
     $lookup: {
       from: "genders",
       let: { seekingId: "$seeking" },
@@ -75,7 +75,7 @@ export  const COLLECT_SEEKING = [{
     },
   }]
   
- export const COLLECT_ADDITIONAL_INFORMATION = [
+ export const COLLECT_USER_ADDITIONAL_INFORMATION = [
     {
       $lookup: {
         from: "userresponses",
@@ -122,7 +122,7 @@ export  const COLLECT_SEEKING = [{
     }
   ];
   
- export const COLLECT_LANGUAGES = [{
+ export const COLLECT_USER_LANGUAGES = [{
     $lookup: {
       from: "languages",
       let: { languagesId: "$languages" },
@@ -146,7 +146,7 @@ export  const COLLECT_SEEKING = [{
   }]
   
   
- export const COLLECT_GENDER = [
+ export const COLLECT_USER_GENDER = [
     {
       $lookup: {
         from: "genders",
@@ -192,7 +192,7 @@ export  const COLLECT_SEEKING = [{
     }
   ];
   
- export const COLLECT_SETTINGS =[
+ export const COLLECT_USER_SETTINGS =[
     {
       $lookup: {
         from: "settings",
@@ -217,7 +217,7 @@ export  const COLLECT_SEEKING = [{
     }
   ]
 
-export const COLLECT_INSTAGRAM = [
+export const COLLECT_USER_INSTAGRAM = [
     {
         $lookup: {
             from: "instagrams",
@@ -225,10 +225,18 @@ export const COLLECT_INSTAGRAM = [
             foreignField: "_id",
             as: "instagram"
         }
-    }
+    },
+    {
+        $addFields: {
+          "instagram": "$instagram.images",
+        }
+      },
+      {
+        $unwind: "$instagram"
+      },
 ]
 
-export const COLLECT_SPOTIFY = [
+export const COLLECT_USER_SPOTIFY = [
     {
         $lookup: {
             from: "spotifies",
@@ -236,10 +244,19 @@ export const COLLECT_SPOTIFY = [
             foreignField: "_id",
             as: "spotify"
         }
-    }
+    },
+    {
+        $addFields: {
+          "spotify": "$spotify.artists",
+        }
+      },
+      {
+        $unwind: "$spotify"
+      },
+    
 ]
 
-export const COLLECT_PREMIUM_FEATURES =[
+export const COLLECT_USER_PREMIUM_FEATURES =[
     {
       $lookup: {
         from: "premiums",
@@ -264,3 +281,59 @@ export const COLLECT_PREMIUM_FEATURES =[
       }
     }
   ]
+
+  export const COLLECT_INTERESTS = [
+    {
+        $lookup: {
+            from: "interest_categories",
+            localField: "category_id",
+            foreignField: "_id",
+            as: "category"
+        }
+    },
+    {
+        $match: {
+            category: { $ne: [] }
+        }
+    },
+    {
+        $project: {
+            category_id: 0
+        }
+    },
+    {
+        $addFields: {
+            "category": "$category.name",
+        }
+    },
+    {
+        $unwind: "$category"
+    }
+];
+
+export const COLLECT_QUESTIONS = [
+    {
+        $lookup: {
+            from: "answers",
+            localField: "answers",
+            foreignField: "_id",
+            as: "answersData"
+        }
+    },{
+        $unwind: {
+            path: "$answersData",
+            preserveNullAndEmptyArrays: true
+        }
+    },
+    {
+        $group: {
+            _id: "$_id",
+            question: { $first: "$question" },
+            shortForm: { $first: "$shortForm" },
+            icon: { $first: "$icon" },
+            type: { $first: "$type" },
+            __v: { $first: "$__v" },
+            answers: { $push: "$answersData.text" }
+        }
+    }
+]

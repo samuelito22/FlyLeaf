@@ -198,3 +198,17 @@ export interface jwtPayload {
   sub: string,
   type: string
 }
+
+export interface OTPSchema {
+  _id: Schema.Types.ObjectId
+  phoneNumber: string;
+  otp: string;
+  used: boolean;
+  createdAt: Date;
+}
+
+export interface EmailTokenSchema {
+  email: string;
+  token: string;
+  createdAt?: Date;
+}

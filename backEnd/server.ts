@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import app from "./app";
-import { DB_URI, PORT } from "./config/config";
+import { DB_URI, PORT, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY  } from "./config/config";
+import AWS from "aws-sdk"
 
 export async function main() {
   try {
@@ -14,6 +15,13 @@ export async function main() {
     app.listen(PORT, () =>
       console.log(`📡 Server up and running on port ${PORT} !`)
     );
+
+    AWS.config.update({
+      region: 'eu-west-2',
+      accessKeyId: AWS_ACCESS_KEY_ID,
+      secretAccessKey: AWS_SECRET_ACCESS_KEY
+  });
+  
   } catch (e) {
     console.log(e);
     process.exit(1);

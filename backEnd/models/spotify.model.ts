@@ -1,8 +1,6 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 import {Artist, SpotifyDocument} from "../../types"
 
-const ObjectId =  mongoose.Types.ObjectId
-
 const ArtistSchema = new Schema<Artist>({
     id: { type: String, required: true },
     name: { type: String, required: true },
@@ -17,7 +15,7 @@ const ArtistSchema = new Schema<Artist>({
 
 const SpotifySchema = new Schema<SpotifyDocument>({
     refreshToken: { type: String, required: true },
-    _id: { type: ObjectId, alias: 'spotify_id' },
+    _id: { type: String, alias: 'spotify_id' },
     artists: [ArtistSchema]
 });
 

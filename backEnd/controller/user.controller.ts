@@ -1,17 +1,19 @@
 import express from "express";
 import {
   EXPIRED_TOKEN,
-  UNAUTHORIZED_REQUEST,
   USER_NOT_FOUND_ERR,
 } from "../constants/errors";
 import UserModel from "../models/user.model";
 import { decodeAccessToken, extractTokenFromHeader, validateGrantType } from "../utils/token.utils";
-import { validateToken } from "../validators/auth.validator";
+import { validateId, validateToken } from "../validators/auth.validator";
 import centralizedErrorHandler from "../utils/centralizedErrorHandler.utils";
-import { sendErrorResponse } from "../utils/response.utils";
-import { COLLECT_ADDITIONAL_INFORMATION, COLLECT_GENDER, COLLECT_INSTAGRAM, COLLECT_INTERESTS, COLLECT_LANGUAGES, COLLECT_PICTURES, COLLECT_PREMIUM_FEATURES, COLLECT_SEEKING, COLLECT_SETTINGS, COLLECT_SPOTIFY } from "../utils/aggregate.utils";
+import { sendErrorResponse, sendSuccessResponse } from "../utils/response.utils";
+import { buildUserProfilePipeline } from "../utils/buildUserProfilePipeline.utils";
+import { userProfileValidationSchema } from "../validators/user.validator";
+import Joi from "joi";
+import PicturesModel from "../models/pictures.model";
 
-async function getProfile(req: express.Request, res: express.Response) {
+async function getMyProfile(req: express.Request, res: express.Response) {
   try {
     const {grantType} = req.body
     validateGrantType(grantType , 'access_token')
@@ -20,10 +22,8 @@ async function getProfile(req: express.Request, res: express.Response) {
     const { error, value } = validateToken({ token: accessToken });
 
     if (error) {
-      return res.status(400).json({
-        type: "error",
-        message: error.details[0].message,
-      });
+      return sendErrorResponse(res,400, error.details[0].message)
+
     }
 
     const decode = decodeAccessToken(accessToken);
@@ -36,33 +36,7 @@ async function getProfile(req: express.Request, res: express.Response) {
 
     await user.save();
 
-    const pipeline = [
-      {
-        $match: { _id: decode.sub } // to filter out the specific user
-      },
-      ...COLLECT_PICTURES,
-      ...COLLECT_SEEKING,  
-      ...COLLECT_INTERESTS ,
-      ...COLLECT_GENDER   ,
-      ...COLLECT_SETTINGS,
-      ...COLLECT_ADDITIONAL_INFORMATION,
-    ];
-
-    if (user.languages && user.languages.length > 0) {
-      pipeline.push(...COLLECT_LANGUAGES as any) ;
-    }
-
-    if (user.spotify) {
-      pipeline.push(...COLLECT_SPOTIFY as any) ;
-    }
-
-    if (user.instagram) {
-      pipeline.push(...COLLECT_INSTAGRAM as any) ;
-    }
-
-    if (user.premium) {
-      pipeline.push(...COLLECT_PREMIUM_FEATURES as any) ;
-    }
+    const pipeline = buildUserProfilePipeline(decode.sub, user, true);
 
   
     user = await UserModel.aggregate(pipeline)
@@ -73,6 +47,7 @@ async function getProfile(req: express.Request, res: express.Response) {
       message: "User's profile successfully fetched",
       user,
     });
+
   } catch (error) {
     const errorMessage = (error as Error).message;
 
@@ -82,7 +57,92 @@ async function getProfile(req: express.Request, res: express.Response) {
   }
 }
 
+async function getUserProfile(req: express.Request, res: express.Response) {
+  try {
+    const { _id } = req.params
+    const { error, value } = validateId({_id});
+
+    if (error) {
+      return sendErrorResponse(res,400, error.details[0].message)
+
+    }
+
+    let user = await UserModel.findById(_id);
+    if (!user) throw new Error(USER_NOT_FOUND_ERR);
+
+    const pipeline = buildUserProfilePipeline(user._id, user, false);
+  
+    user = await UserModel.aggregate(pipeline)
+
+
+    return sendSuccessResponse(res, 200, "User's profile successfully fetched", {user})
+  } catch (error) {
+    const errorMessage = (error as Error).message;
+
+    const status = centralizedErrorHandler(errorMessage)
+
+    return sendErrorResponse(res, status, errorMessage)
+  }
+}
+
+async function updateUserProfile(req: express.Request, res: express.Response) {
+  try {
+
+    const {grantType, pictures, ...otherFields} = req.body;
+
+    const validationResult = userProfileValidationSchema.validate(otherFields);
+
+    if (validationResult.error) {
+      return sendErrorResponse(res,400, validationResult.error.details[0].message)
+    }
+
+    if(pictures){
+      const validationResult = Joi.object({pictures: Joi.array().items(Joi.string()).max(6).optional()}).validate({pictures})
+      if (validationResult.error) {
+        return sendErrorResponse(res,400, validationResult.error.details[0].message)
+      }
+    }
+
+
+
+    // The rest of your logic stays the same
+    validateGrantType(grantType, 'access_token');
+    
+    const accessToken = extractTokenFromHeader(req) as string;
+    const { error, value } = validateToken({ token: accessToken });
+
+    if (error) {
+      return sendErrorResponse(res,400, error.details[0].message)
+
+    }
+
+    const decode = decodeAccessToken(accessToken);
+    if (!decode) throw new Error(EXPIRED_TOKEN);
+
+    let user = await UserModel.findById(decode.sub);
+    if (!user) throw new Error(USER_NOT_FOUND_ERR);
+
+
+    Object.assign(user, validationResult.value);
+
+    if(pictures){
+      await PicturesModel.deleteMany({ user_id: decode.sub });
+
+    }
+
+    //await user.save();
+
+    return sendSuccessResponse(res, 200, "User's profile successfully updated", {user});
+  } catch (error) {
+    const errorMessage = (error as Error).message;
+    const status = centralizedErrorHandler(errorMessage);
+    return sendErrorResponse(res, status, errorMessage);
+  }
+}
+
 const userController = {
-  getProfile,
+  getMyProfile,
+  getUserProfile,
+  updateUserProfile
 };
 export default userController;

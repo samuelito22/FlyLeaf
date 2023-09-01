@@ -10,7 +10,7 @@ const ImageSchema = new Schema<Image>({
 
 const InstagramSchema = new Schema<InstagramDocument>({
     accessToken: { type: String, required: true },
-    _id: { type: Schema.Types.ObjectId, alias: 'instagram_id', required: true },
+    _id: { type: String, alias: 'instagram_id', required: true },
     images: [ImageSchema],
     expiryDate: { type: Date, required: true }
 });

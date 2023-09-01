@@ -1,9 +1,12 @@
 import {
   BAD_REQUEST,
   EMAIL_NOT_EXIST,
+  EXPIRED_OR_INCORRECT_OTP,
   EXPIRED_TOKEN,
   FAILED_CREATION_ACCESS_AND_REFRESH_TOKEN,
+  FAILED_SEND_OTP,
   INVALID_TOKEN,
+  OTP_ALREADY_USED,
   PHONE_NUMBER_NOT_EXIST,
   REVOKED_TOKEN,
   SERVER_ERR,
@@ -43,6 +46,15 @@ import centralizedErrorHandler from "../utils/centralizedErrorHandler.utils";
 import { sendErrorResponse, sendSuccessResponse } from "../utils/response.utils";
 import { convertToObjectIdRecursive } from "../utils/converter.utils";
 import UserResponse from "../models/response.model";
+import AWS from "aws-sdk"
+import OTPModel from "../models/otp.model";
+import Joi from "joi";
+import jwt from "jsonwebtoken";
+import nodemailer from "nodemailer"
+import { NODEMAILER_SECRET } from "../config/config";
+import EmailTokenModel from "../models/emailToken.model";
+import AuthCodeModel from "../models/authCode.model";
+import crypto from "crypto"
 
 
 // @route POST auth/users/register
@@ -493,6 +505,327 @@ async function removeEmail(req: express.Request, res: express.Response) {
   }
 }
 
+async function sendOTP(req: express.Request, res: express.Response) {
+  try {
+    const {phoneNumber} = req.body
+    const { error, value } = validatePhoneNumber({ phoneNumber });
+
+    if (error) {
+      return sendErrorResponse(res,400, error.details[0].message)
+
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    const expiresAt = new Date();
+  expiresAt.setMinutes(expiresAt.getMinutes() + 15); // OTP will expire in 15 minutes
+  await OTPModel.findOneAndRemove({ phoneNumber });
+
+
+  // Create a new OTP document
+  const otpDocument = new OTPModel({
+    phoneNumber,
+    otp,
+    expiresAt,
+  });  
+
+    const sns = new AWS.SNS();
+
+  
+    const params = {
+      Message: `Your OTP code is ${otp}`,
+      PhoneNumber: phoneNumber,
+    };
+
+
+    sns.publish(params,async (err, data) => {
+      if (err) {
+        throw new Error(FAILED_SEND_OTP)
+      }
+      await otpDocument.save()
+      return  sendSuccessResponse(res, 200, 'OTP sent successfully')
+
+    });
+
+  } catch (error) {
+    const errorMessage = (error as Error).message;
+
+    const status = centralizedErrorHandler(errorMessage)
+
+    return sendErrorResponse(res,status, status != 500 ? errorMessage : SERVER_ERR)
+  }
+}
+
+
+async function verifyOTP(req: express.Request, res: express.Response) {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const {phoneNumber, otp} = req.body
+    const { error, value } = Joi.object({
+      phoneNumber: Joi.string().required(),
+      otp: Joi.string().required()
+    }).validate({ phoneNumber, otp });
+    
+    if (error) {
+      return sendErrorResponse(res,400, error.details[0].message)
+
+    }
+
+    const otpDocument = await OTPModel.findOne({phoneNumber}).session(session);
+
+    if (!otpDocument) {
+      throw new Error(SERVER_ERR);
+    }
+
+    if (otpDocument.otp !== otp) {
+      throw new Error(EXPIRED_OR_INCORRECT_OTP);
+    }
+
+    await OTPModel.findByIdAndRemove(otpDocument._id).session(session);
+
+    const userDoc = await UserModel.findOne({phoneNumber}).session(session);
+
+      if(userDoc){
+        const accessToken = createAccessToken(userDoc._id) as string
+        const refreshToken = createRefreshToken(userDoc._id) as string
+        let tokenDoc = await RefreshTokenModel.findById(userDoc._id)
+        if (tokenDoc) {
+          tokenDoc.revoked = undefined;  // You set default as null in schema
+          const currentDate = new Date();
+          const expiresAt = new Date(currentDate);
+          expiresAt.setDate(currentDate.getDate() + 30);
+      
+          tokenDoc.replacedByToken = tokenDoc.token;
+          tokenDoc.token = refreshToken;
+          tokenDoc.expiresAt = expiresAt;
+      
+          await tokenDoc.save();
+        } else {
+          // Create a new RefreshToken document if not found
+          const newTokenDoc = new RefreshTokenModel({
+            _id: userDoc._id,
+            token: refreshToken,
+            expiresAt: new Date(Date.now() + 2592000000),  // for example, token expires in 30 days
+            revoked: null,
+            replacedByToken: null
+          });
+      
+          await newTokenDoc.save();
+        }
+      
+        await session.commitTransaction();
+        session.endSession();
+        return  sendSuccessResponse(res, 200, 'OTP verified and correct.', {newUser: userDoc, accessToken, refreshToken})
+      }
+
+     
+      await session.commitTransaction();
+      session.endSession();
+      return sendSuccessResponse(res, 200, 'OTP verified and correct.', {newUser: !userDoc});
+  
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      const errorMessage = (error as Error).message;
+      const status = centralizedErrorHandler(errorMessage);
+      return sendErrorResponse(res, status, status !== 500 ? errorMessage : SERVER_ERR);
+    }
+  }
+
+  async function sendLink(req: express.Request, res: express.Response) {
+    try {
+      const {email} = req.body
+      const { error, value } = validateEmail({ email });
+  
+      if (error) {
+        return sendErrorResponse(res,400, error.details[0].message)
+  
+      }
+
+      await UserModel.findOne({email}).then(result => {
+        if(!result) throw new Error(USER_NOT_FOUND_ERR)
+      })
+
+      if (!NODEMAILER_SECRET) {
+        return res.status(500).json({ error: SERVER_ERR });
+      }
+  
+      const token = jwt.sign({ email }, NODEMAILER_SECRET, { expiresIn: '15m' });
+
+      const expiresAt = new Date();
+  expiresAt.setMinutes(expiresAt.getMinutes() + 15); // OTP will expire in 15 minutes
+  
+  await EmailTokenModel.findOneAndRemove({ email });
+
+      const EmailTokenDoc = new EmailTokenModel({
+        token,
+        email,
+        expiresAt
+      })
+
+      await EmailTokenDoc.save()
+  
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: 'flyleaf.dev@gmail.com',
+          pass: 'nzriccfimllfmuhx'
+        },
+        tls: {
+          rejectUnauthorized: false
+        }
+      });
+  
+      const info = await transporter.sendMail({
+        from: '"Flyleaf Team" <no-reply@flyleaf.com>',
+        to: email,
+        subject: 'Secure Login Link from Flyleaf',
+        html: `
+  <p>Hello,</p>
+  <p>Thank you for choosing Flyleaf! We're excited to help you make meaningful connections.</p>
+  <p>For your security, please use the link below to log in to your Flyleaf account:</p>
+  <a href="http://localhost:4000/api/auth/log-in/verify-login-link/${token}">Log in to Flyleaf</a>
+  <p>This link will expire in 15 minutes. If you did not request this link, you can safely ignore this email.</p>
+  <p>Best regards,</p>
+  <p>The Flyleaf Team</p>
+`
+
+      });
+  
+      return  sendSuccessResponse(res, 200, 'Email link sent successfully.')
+
+    } catch (error) {
+      const errorMessage = (error as Error).message;
+  
+      const status = centralizedErrorHandler(errorMessage)
+  
+      return sendErrorResponse(res,status, status != 500 ? errorMessage : SERVER_ERR)
+    }
+  }
+
+  async function verifyLink(req: express.Request, res: express.Response) {
+    const session = await mongoose.startSession();
+  session.startTransaction();
+    try {
+      const {token} = req.params
+      const { error, value } = validateToken({ token });
+  
+      if (error) {
+        return sendErrorResponse(res,400, error.details[0].message)
+  
+      }
+
+      if (!NODEMAILER_SECRET) {
+        return res.status(500).json({ error: SERVER_ERR });
+      }
+  
+      let decoded;
+    try {
+      decoded = jwt.verify(token, NODEMAILER_SECRET) as { email: string };
+    } catch (error) {
+      if (error instanceof jwt.TokenExpiredError) {
+        throw new Error(EXPIRED_TOKEN);
+      } else {
+        throw new Error(INVALID_TOKEN);
+      }
+    }
+
+    await EmailTokenModel.findOneAndRemove({email: decoded.email}).session(session);
+
+
+    const userDoc = await UserModel.findOne({email: decoded.email}).session(session);
+
+      if(userDoc){
+        const authCode = crypto.randomBytes(16).toString('hex');
+
+      // You can create a new model for storing this one-time use code or use existing models
+      const authCodeDoc = new AuthCodeModel({
+        code: authCode,
+        userId: userDoc._id,
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000) // expires in 5 minutes
+      });
+
+      await authCodeDoc.save({session})
+      await session.commitTransaction();
+      session.endSession();
+      return res.redirect(`flyleaf://login/verify?authCode=${authCode}`);
+      
+      }
+
+
+
+  
+    } catch (error) {
+      const errorMessage = (error as Error).message;
+    
+  
+      const status = centralizedErrorHandler(errorMessage)
+  
+      return sendErrorResponse(res,status, status != 500 ? errorMessage : SERVER_ERR)
+    }
+  }
+
+  async function validateAuthCodeAndFetchTokens(req: express.Request, res: express.Response) {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+  
+    try {
+      const { authCode } = req.query;
+  
+      // Validate that an authCode was actually sent in the request
+      if (!authCode) {
+        return sendErrorResponse(res, 400, "Missing authCode");
+      }
+  
+      // Search for the authCode in the database
+      const authCodeDoc = await AuthCodeModel.findOne({ code: authCode }).session(session);
+  
+      if (!authCodeDoc) {
+        return sendErrorResponse(res, 400, "Invalid or expired authCode");
+      }
+  
+      // If the code is valid, fetch or create the accessToken and refreshToken
+      const userId = authCodeDoc.userId;
+      const accessToken = createAccessToken(userId.toString()) as string;
+      const refreshToken = createRefreshToken(userId.toString()) as string;
+  
+      // Create or update refreshToken in database
+      let tokenDoc = await RefreshTokenModel.findById(userId).session(session);
+  
+      if (tokenDoc) {
+        tokenDoc.token = refreshToken;
+        tokenDoc.expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);  // expires in 30 days
+        await tokenDoc.save({ session });
+      } else {
+        const newTokenDoc = new RefreshTokenModel({
+          _id: userId,
+          token: refreshToken,
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),  // expires in 30 days
+        });
+  
+        await newTokenDoc.save({ session });
+      }
+  
+      // Remove the used authCode
+      await AuthCodeModel.findByIdAndRemove(authCodeDoc._id).session(session);
+  
+      await session.commitTransaction();
+      session.endSession();
+  
+      return sendSuccessResponse(res, 200, "Tokens fetched successfully", { accessToken, refreshToken });
+  
+    } catch (error) {
+      const errorMessage = (error as Error).message;
+  
+      const status = centralizedErrorHandler(errorMessage);
+      await session.abortTransaction();
+      session.endSession();
+  
+      return sendErrorResponse(res, status, status !== 500 ? errorMessage : SERVER_ERR);
+    }
+  }
+
 const authController = {
   idExist,
   phoneNumberExist,
@@ -504,5 +837,10 @@ const authController = {
   changePhoneNumber,
   changeEmail,
   removeEmail,
+  sendOTP,
+  verifyOTP,
+  sendLink,
+  verifyLink,
+  validateAuthCodeAndFetchTokens
 };
 export default authController;

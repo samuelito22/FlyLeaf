@@ -15,3 +15,7 @@ export const CLIENT_PRIVATE_URL = process.env.CLIENT_PRIVATE_URL;
 
 export const REFRESH_SECRET = process.env.REFRESH_JWT_SECRET;
 export const ACCESS_SECRET = process.env.ACCESS_JWT_SECRET;
+export const NODEMAILER_SECRET = process.env.NODEMAILER_JWT_SECRET;
+
+export const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID
+export const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY

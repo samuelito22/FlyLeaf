@@ -4,8 +4,8 @@ import spotifyController from "../controller/spotify.controller";
 
 const router = express.Router();
 
-router.put("/authenticateAndFetch/:uid", spotifyController.authenticateAndFetchSpotify)
-router.delete('/disconnect/:uid', spotifyController.disconnectFromSpotify)
-router.put('/refetch', spotifyController.refetchSpotify)
+router.put("/authenticateAndFetch", spotifyController.authenticateAndFetchSpotify)
+router.delete('/disconnect', spotifyController.disconnectFromSpotify)
+router.put('/refretch', spotifyController.refetchSpotify)
 
 export default router;

@@ -41,3 +41,7 @@ export const EXPIRED_TOKEN = "Expired token."
 export const UNAUTHORIZED_REQUEST = "Unauthorized request."
 export const BAD_REQUEST = "Passed data is not correct."
 export const INVALID_GRANT_TYPE = "Invalid grant type."
+
+export const FAILED_SEND_OTP = "Failed to send OTP."
+export const OTP_ALREADY_USED = "Otp already used."
+export const EXPIRED_OR_INCORRECT_OTP = "Expired or incorrect token."
