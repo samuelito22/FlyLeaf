@@ -64,7 +64,7 @@ import { OAuth2Client } from "google-auth-library";
 // @access Public
 async function registerUser(req: express.Request, res: express.Response) {
   const session = await mongoose.startSession();
-
+  const newUserId = new mongoose.Types.ObjectId();
   try {
     session.startTransaction();
 
@@ -76,6 +76,7 @@ async function registerUser(req: express.Request, res: express.Response) {
     }
 
     value = await convertToObjectIdRecursive(value)
+    value._id = newUserId;
 
     // Check if user already exists
     const userExist = await UserModel.findOne({ _id: value._id }, null, {

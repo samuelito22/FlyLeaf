@@ -6,6 +6,7 @@ const router = express.Router();
 
 router.get("/me", userController.getMyProfile)
 router.put("/me/update-profile", userController.updateUserProfile)
+router.put("/me/update-settings", userController.updateSettingsAndPremium)
 router.get("/:_id", userController.getUserProfile)
 
 

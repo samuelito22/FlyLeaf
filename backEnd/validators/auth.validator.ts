@@ -3,7 +3,6 @@ import { objectIdRegex } from '../constants/regex';
 
 const validateUser = (data:any) => {
   const schema = Joi.object({
-      _id: Joi.string().required().pattern(objectIdRegex),
       username: Joi.string().required(),
       gender: Joi.object({
           primary: Joi.string().required().pattern(objectIdRegex),
