@@ -1,10 +1,12 @@
 import { INSTAGRAM_IN_USE, USER_NOT_FOUND_ERR } from "../constants/errors";
 import InstagramServices from "../services/instagram.services";
 import { validateId } from "../validators/auth.validator";
-import { validateUidAndCode } from "../validators/media.validator";
+import { validateIdAndCode } from "../validators/media.validator";
 import User from "../models/user.model";
 import instagramModel from "../models/instagram.model";
 import express from 'express';
+import centralizedErrorHandler from "../utils/centralizedErrorHandler.utils";
+import { sendErrorResponse } from "../utils/response.utils";
 
 
 const sendError = (res:express.Response, message:string, status = 500) => {
@@ -15,17 +17,17 @@ const sendError = (res:express.Response, message:string, status = 500) => {
 
 async function authenticateAndFetchInstagram(req:express.Request, res: express.Response) {
     try {
-      const { uid } = req.params;
+      const { _id } = req.params;
       const { code } = req.body;
   
-      const { error } = validateUidAndCode({ uid, code });
+      const { error } = validateIdAndCode({ _id, code });
   
       if (error) return sendError(res, error.details[0].message, 400);
   
       const resultToken = await InstagramServices.obtainInstagramTokens(code);
       
       if(resultToken){
-      const userAlreadyConnectedToInstagramId = await InstagramServices.storeUserInstagramData(uid,resultToken.userId,resultToken.accessToken,resultToken.expiryDate)
+      const userAlreadyConnectedToInstagramId = await InstagramServices.storeUserInstagramData(_id,resultToken.userId,resultToken.accessToken,resultToken.expiryDate)
 
       const images = await InstagramServices.fetchInstagramImages(resultToken.accessToken, resultToken.userId)
   
@@ -41,8 +43,9 @@ async function authenticateAndFetchInstagram(req:express.Request, res: express.R
       return sendError(res, "Failed to get a refreshToken", 400);
     }
     } catch (error) {
-      console.error("Error authenticating with Instagram:", error);
-      return sendError(res, "Internal Server Error");
+        const errorMessage = (error as Error).message;
+        const status = centralizedErrorHandler(errorMessage);
+        return sendErrorResponse(res, status, errorMessage);
     }
   }
 
@@ -89,8 +92,9 @@ async function refetchInstagram(req:express.Request, res: express.Response) {
             message: "New access token created and fetched user's instagram data successfully",
         });
     } catch (error) {
-        console.error("Error refreshing access token:", error);
-        return sendError(res, "Internal Server Error");
+        const errorMessage = (error as Error).message;
+    const status = centralizedErrorHandler(errorMessage);
+    return sendErrorResponse(res, status, errorMessage);
     }
 }
 
@@ -110,8 +114,9 @@ async function disconnectFromInstagram(req:express.Request, res: express.Respons
             message: "Disconnected from Instagram successfully",
         });
     } catch (error) {
-        console.error("Error disconnecting from Instagram:", error);
-        return sendError(res, "Internal Server Error");
+        const errorMessage = (error as Error).message;
+    const status = centralizedErrorHandler(errorMessage);
+    return sendErrorResponse(res, status, errorMessage);
     }
 }
 
