@@ -1,7 +1,8 @@
 import User from "../models/user.model";
 import Spotify from "../models/spotify.model";
 import axios from "axios";
-import { USER_NOT_FOUND_ERR } from "../constants/errors";
+import { SERVER_ERR, USER_NOT_FOUND_ERR } from "../constants/errors";
+import mongoose from "mongoose";
 
 const REDIRECT_URI = process.env.SPOTIFY_REDIRECT_URI;
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
@@ -40,55 +41,60 @@ async function getSpotifyUserProfile(accessToken:string) {
     return userProfileResponse.data.id;
 }
 
-async function storeUserSpotifyData(uid:string, spotifyUserId:string, refreshToken:string) {
-    const userAlreadyConnectedToSpotifyId = await User.findOneAndUpdate(
-        { "profile.spotify.spotify_id": spotifyUserId, _id: { $ne: uid } },
+async function storeUserSpotifyData(_id: string, spotifyUserId: string, refreshToken: string) {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+      const userAlreadyConnectedToSpotifyId = await User.findOneAndUpdate(
+        { "spotify": spotifyUserId, _id: { $ne: _id } },
         {
-            $set: {
-                "profile.spotify": {
-                    isConnected: false,
-                    spotify_id: null,
-                },
-            },
+          $unset: {
+            "spotify": 0
+          },
         },
-        { new: true }
-    );
-
-    await User.findOneAndUpdate(
-        { _id: uid },
+        { session, new: true }
+      );
+  
+      await User.findOneAndUpdate(
+        { _id: _id },
         {
-            $set: {
-                "profile.spotify": {
-                    isConnected: true,
-                    spotify_id: spotifyUserId,
-                },
-            },
+          $set: {
+            "spotify": spotifyUserId
+          },
         },
-        { new: true }
-    );
-
-    if (userAlreadyConnectedToSpotifyId) {
+        { session, new: true }
+      );
+  
+      if (userAlreadyConnectedToSpotifyId) {
         await Spotify.findOneAndUpdate(
-            { _id: spotifyUserId },
-            {
-                $set: {
-                    refreshToken: refreshToken,
-                },
+          { _id: spotifyUserId },
+          {
+            $set: {
+              refreshToken: refreshToken,
             },
-            { new: true }
+          },
+          { session, new: true }
         );
-    } else {
+      } else {
         await new Spotify({
-            refreshToken: refreshToken,
-            _id: spotifyUserId,
-        }).save();
+          refreshToken: refreshToken,
+          _id: spotifyUserId,
+        }).save({ session });
+      }
+  
+      await session.commitTransaction();
+      session.endSession();
+      return userAlreadyConnectedToSpotifyId;
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      throw error; // or handle the error as you see fit
     }
+  }
+  
 
-    return userAlreadyConnectedToSpotifyId
-}
-
-async function refetchSpotifyData(uid:string) {
-    const user = await User.findOne({ _id: uid });
+async function refetchSpotifyData(_id:string) {
+    const user = await User.findOne({ _id });
 
     if (!user) throw new Error(USER_NOT_FOUND_ERR);
 
@@ -123,29 +129,36 @@ async function refetchSpotifyData(uid:string) {
     return {accessToken, spotify_id};
 }
 
-async function disconnectSpotifyService(uid:string) {
-    const user = await User.findOne({ _id: uid });
-    if (!user) throw new Error("User not found.");
 
-    const storedSpotifyId = user.spotify;
+async function disconnectSpotifyService(_id:string) {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+        const user = await User.findOne({ _id }, { session });
+        if (!user) throw new Error(USER_NOT_FOUND_ERR);
 
-    if(!storedSpotifyId) throw new Error("User is already disconnected from spotify")
-    
-    await Spotify.deleteOne({ _id: storedSpotifyId });
+        const storedSpotifyId = user.spotify;
 
-    const updatedUser = await User.findOneAndUpdate(
-        { _id: uid },
-        {
-            $set: {
-                "profile.spotify.isConnected": false,
-                "profile.spotify.spotify_id": null,
-            },
-        },
-        { new: true }
-    );
-    if (!updatedUser) throw new Error("Internal Server Error");
-    return updatedUser;
+        if (!storedSpotifyId) throw new Error("User is already disconnected from spotify");
+        
+        await Spotify.deleteOne({ _id: storedSpotifyId }, { session });
+
+        await User.findOneAndUpdate(
+            { _id },
+            { $unset: { "spotify": 0 } },
+            { new: true, session }
+        );
+
+        await session.commitTransaction();
+        session.endSession();
+        return true;
+    } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+        throw error;
+    }
 }
+  
 
 async function fetchTopArtists(accessToken:string, spotify_id:string) {
     try {

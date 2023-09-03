@@ -2,6 +2,8 @@ import User from "../models/user.model";
 import axios from "axios";
 import instagramModel from "../models/instagram.model";
 import qs from "qs"
+import { SERVER_ERR, USER_NOT_FOUND_ERR } from "../constants/errors";
+import mongoose from "mongoose";
 
 const REDIRECT_URI = process.env.INSTAGRAM_REDIRECT_URI;
 const CLIENT_ID = process.env.INSTAGRAM_CLIENT_ID;
@@ -96,63 +98,49 @@ async function refreshInstagramToken(accessToken:string) {
   }
 }
 
-async function storeUserInstagramData(
-  uid:string,
-  instagram_id:string,
-  accessToken:string,
-  expiryDate:Date
-) {
-  const userAlreadyConnectedToInstagramId = await User.findOneAndUpdate(
-    { "profile.instagram.instagram_id": instagram_id, _id: { $ne: uid } },
-    {
-      $set: {
-        "profile.instagram": {
-          isConnected: false,
-          instagram_id: null,
-        },
-      },
-    },
-    { new: true }
-  );
+async function storeUserInstagramData(_id:string, instagram_id:string, accessToken:string, expiryDate:Date) {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+      const userAlreadyConnectedToInstagramId = await User.findOneAndUpdate(
+          { "instagram": instagram_id, _id: { $ne: _id } },
+          { $unset: { "instagram": 0 } },
+          { new: true, session }
+      );
 
-  await User.findOneAndUpdate(
-    { _id: uid },
-    {
-      $set: {
-        "profile.instagram": {
-          isConnected: true,
-          instagram_id: instagram_id,
-        },
-      },
-    },
-    { new: true }
-  );
+      await User.findOneAndUpdate(
+          { _id },
+          { $set: { "instagram": instagram_id } },
+          { new: true, session }
+      );
 
-  if (userAlreadyConnectedToInstagramId) {
-    await instagramModel.findOneAndUpdate(
-      { _id: instagram_id },
-      {
-        $set: {
-          accessToken: accessToken,
-          expiryDate: expiryDate,
-        },
-      },
-      { new: true }
-    );
-  } else {
-    await new instagramModel({
-      accessToken: accessToken,
-      expiryDate: expiryDate,
-      _id: instagram_id
-    }).save();
+      if (userAlreadyConnectedToInstagramId) {
+          await instagramModel.findOneAndUpdate(
+              { _id: instagram_id },
+              { $set: { accessToken: accessToken, expiryDate: expiryDate } },
+              { new: true, session }
+          );
+      } else {
+          await new instagramModel({
+              accessToken: accessToken,
+              expiryDate: expiryDate,
+              _id: instagram_id
+          }).save({ session });
+      }
+
+      await session.commitTransaction();
+      session.endSession();
+      return userAlreadyConnectedToInstagramId;
+  } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      throw error;
   }
-
-  return userAlreadyConnectedToInstagramId;
 }
 
-async function disconnectInstagram(uid:string) {
-  const user = await User.findOne({ _id: uid });
-  if (!user) throw new Error("User not found.");
+async function disconnectInstagram(_id:string) {
+  const user = await User.findOne({ _id });
+  if (!user) throw new Error(USER_NOT_FOUND_ERR);
 
   const instagram_id = user.instagram;
 
@@ -162,16 +150,15 @@ async function disconnectInstagram(uid:string) {
   await instagramModel.deleteOne({ _id: instagram_id });
 
   const updatedUser = await User.findOneAndUpdate(
-    { _id: uid },
+    { _id },
     {
-      $set: {
-        "profile.instagram.isConnected": false,
-        "profile.instagram.instagram_id": null,
+      $unset: {
+        "instagram": 0
       },
     },
     { new: true }
   );
-  if (!updatedUser) throw new Error("Internal Server Error");
+  if (!updatedUser) throw new Error(SERVER_ERR);
   return updatedUser;
 }
 

@@ -1,8 +1,10 @@
 import { SPOTIFY_IN_USE } from "../constants/errors";
 import SpotifyServices from "../services/spotify.services";
 import UserServices from "../services/user.services";
+import centralizedErrorHandler from "../utils/centralizedErrorHandler.utils";
+import { sendErrorResponse } from "../utils/response.utils";
 import { validateId } from "../validators/auth.validator";
-import { validateUidAndCode } from "../validators/media.validator";
+import { validateIdAndCode } from "../validators/media.validator";
 import express from 'express';
 
 const sendError = (res:express.Response, message:string, status = 500) => {
@@ -13,17 +15,17 @@ const sendError = (res:express.Response, message:string, status = 500) => {
 
 async function authenticateAndFetchSpotify(req:express.Request, res: express.Response) {
     try {
-      const { uid } = req.params;
+      const { _id } = req.params;
       const { code } = req.body;
   
-      const { error } = validateUidAndCode({ uid, code });
+      const { error } = validateIdAndCode({ _id, code });
   
       if (error) return sendError(res, error.details[0].message, 400);
   
       const { accessToken, refreshToken } = await SpotifyServices.obtainSpotifyTokens(code);
       const spotifyUserId = await SpotifyServices.getSpotifyUserProfile(accessToken);
 
-      const userAlreadyConnectedToSpotifyId = await SpotifyServices.storeUserSpotifyData(uid, spotifyUserId, refreshToken);
+      const userAlreadyConnectedToSpotifyId = await SpotifyServices.storeUserSpotifyData(_id, spotifyUserId, refreshToken);
 
 
       const artists = await SpotifyServices.fetchTopArtists(accessToken, spotifyUserId);
@@ -36,8 +38,9 @@ async function authenticateAndFetchSpotify(req:express.Request, res: express.Res
         artists: artists
       });
     } catch (error) {
-      console.error("Error authenticating with Spotify:", error);
-      return sendError(res, "Internal Server Error");
+      const errorMessage = (error as Error).message;
+    const status = centralizedErrorHandler(errorMessage);
+    return sendErrorResponse(res, status, errorMessage);
     }
   }
 
@@ -63,8 +66,9 @@ async function refetchSpotify(req:express.Request, res: express.Response) {
             message: "Refresh token created successfully",
         });
     } catch (error) {
-        console.error("Error refreshing access token:", error);
-        return sendError(res, "Internal Server Error");
+      const errorMessage = (error as Error).message;
+      const status = centralizedErrorHandler(errorMessage);
+      return sendErrorResponse(res, status, errorMessage);
     }
 }
 
@@ -80,8 +84,9 @@ async function disconnectFromSpotify(req:express.Request, res: express.Response)
             message: "Disconnected from Spotify successfully",
         });
     } catch (error) {
-        console.error("Error disconnecting from Spotify:", error);
-        return sendError(res, "Internal Server Error");
+      const errorMessage = (error as Error).message;
+      const status = centralizedErrorHandler(errorMessage);
+      return sendErrorResponse(res, status, errorMessage);
     }
 }
 
