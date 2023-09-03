@@ -13,7 +13,7 @@ export const COLLECT_USER_PICTURES = [{
         {
           $project: {
             _id: 1,
-            url: 1,
+            name: 1,
             blurLevel: 1,
           },
         },

@@ -57,6 +57,7 @@ import AuthCodeModel from "../models/authCode.model";
 import crypto from "crypto"
 import axios from "axios";
 import { OAuth2Client } from "google-auth-library";
+import awsServices from "../services/aws.services";
 
 
 // @route POST auth/users/register
@@ -67,6 +68,13 @@ async function registerUser(req: express.Request, res: express.Response) {
   const newUserId = new mongoose.Types.ObjectId();
   try {
     session.startTransaction();
+
+    const files = req.files
+  
+    if (!files || !Array.isArray(files) || files.length < 2) {
+      return sendErrorResponse(res, 400, "None or less than two pictures have been uploaded.")
+    }
+    
 
     // Check if the req body is valid
     let { error, value } = validateUser(req.body);
@@ -92,18 +100,6 @@ async function registerUser(req: express.Request, res: express.Response) {
     // Create the user's settings model
     await AuthServices.addUserSettingsToDB({ _id: value._id }, session);
 
-    // Create the user's photo model
-    const picturePromises = value.pictures.map((pic: any) =>
-      AuthServices.addUserPicturesToDB(
-        { user_id: value._id, url: pic },
-        session
-      )
-    );
-    const pictureResponses = await Promise.all(picturePromises);
-    value.pictures = pictureResponses.map((response) =>
-      response._id
-    );
-
     // Create the user's user model
     await AuthServices.addUserToDB(value, session);
 
@@ -123,14 +119,28 @@ async function registerUser(req: express.Request, res: express.Response) {
       session
     );
 
+    value.pictures = await awsServices.addUserPicturesToS3(files, newUserId.toString() )
+    // Create the user's photo model
+    const picturePromises = value.pictures.map((pic: any) => {
+      return AuthServices.addUserPicturesToDB(
+        { user_id: value._id, name: pic },
+        session
+      );
+    });
+    
+     await Promise.all(picturePromises);
     await session.commitTransaction();
+  session.endSession();
 
-    return res.status(200).json({
+
+
+    return res.status(202).json({
       type: "success",
       message: USER_CREATED,
       accessToken,
       refreshToken,
     });
+
   } catch (error) {
     if (session.inTransaction()) {
       await session.abortTransaction();
@@ -229,6 +239,8 @@ async function deleteUser(req: express.Request, res: express.Response) {
 
     await session.commitTransaction();
 
+    await awsServices.deleteUserFolderFromS3(decode.sub.toString())
+
     return sendSuccessResponse(res, 200,"User's account successfully deleted.")
 
   } catch (error) {
@@ -244,7 +256,6 @@ async function deleteUser(req: express.Request, res: express.Response) {
   }
 }
 
-async function logInUser(req: express.Request, res: express.Response) {}
 
 async function refreshToken(req: express.Request, res: express.Response) {
   try {
@@ -541,7 +552,7 @@ async function sendOTP(req: express.Request, res: express.Response) {
     };
 
 
-    sns.publish(params,async (err, data) => {
+    sns.publish(params,async (err:any, data:any) => {
       if (err) {
         throw new Error(FAILED_SEND_OTP)
       }

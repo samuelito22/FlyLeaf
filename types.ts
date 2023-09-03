@@ -180,7 +180,7 @@ export interface Gender {
 
 export interface Pictures { 
     user_id: Schema.Types.ObjectId,
-    url: string,
+    name: string,
     blurLevel?: number,
 }
 

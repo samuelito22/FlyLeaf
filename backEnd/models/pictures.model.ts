@@ -7,7 +7,7 @@ const PicturesSchema = new Schema<Pictures>({
     required: true,
     ref: 'User',
   },
-  url: {
+  name: {
     type: String,
     required: true,
   },

@@ -1,10 +1,11 @@
 import express from "express";
 
 import authController from "../controller/auth.controller";
+import upload from "../config/multerConfig";
 
 const router = express.Router();
 
-router.post("/register", authController.registerUser);
+router.post("/register", upload.array('images', 6) ,authController.registerUser);
 
 router.post("/log-out", authController.logOutUser);
 

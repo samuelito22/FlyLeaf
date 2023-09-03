@@ -1,5 +1,5 @@
 import Joi from 'joi';
-import { objectIdRegex } from '../constants/regex';
+import { objectIdRegex, phoneNumberRegex } from '../constants/regex';
 
 const validateUser = (data:any) => {
   const schema = Joi.object({
@@ -8,7 +8,7 @@ const validateUser = (data:any) => {
           primary: Joi.string().required().pattern(objectIdRegex),
           secondary: Joi.string().optional().pattern(objectIdRegex),
       }).required(),
-      phoneNumber: Joi.string().required(),
+      phoneNumber: Joi.string().pattern(new RegExp(phoneNumberRegex)).required(),
       email: Joi.string().email().optional(),
       interests: Joi.array().items(Joi.string().pattern(objectIdRegex)).required(),
       additionalInformation: Joi.array().items(Joi.object({
@@ -17,7 +17,6 @@ const validateUser = (data:any) => {
       })).required(),
       relationshipGoal: Joi.string().required().pattern(objectIdRegex),
       seeking: Joi.array().items(Joi.string().pattern(objectIdRegex)).required(),
-      pictures: Joi.array().items(Joi.string().required()).required(),
       dateOfBirth: Joi.date().required(),
       verified: Joi.boolean().default(false),
   });

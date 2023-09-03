@@ -14,7 +14,6 @@ import {
       ...COLLECT_USER_SEEKING,  
       ...COLLECT_USER_INTERESTS ,
       ...COLLECT_USER_GENDER   ,
-      ...COLLECT_USER_SETTINGS,
       ...COLLECT_USER_ADDITIONAL_INFORMATION,
     ];
 
@@ -23,6 +22,8 @@ import {
     if (user.spotify) pipeline.push(...COLLECT_USER_SPOTIFY as any);
     if (user.instagram) pipeline.push(...COLLECT_USER_INSTAGRAM as any);
     if (user.isPremiumMember && isSelf) pipeline.push(...COLLECT_USER_PREMIUM_FEATURES as any); // Only for self
+    if (isSelf) pipeline.push(...COLLECT_USER_SETTINGS as any); // Only for self
+
   
     if (!isSelf) {
       pipeline.push({

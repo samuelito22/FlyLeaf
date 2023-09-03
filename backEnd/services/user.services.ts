@@ -3,6 +3,7 @@ import PremiumModel from "../models/premium.model";
 import SettingsModel from "../models/settings.model";
 import User from "../models/user.model";
 
+
 async function updateUserLocation(uid:string, locationData:{coordinates: {longitude: number, latitude:number}, city: string}) {
 
   const updateObj = {
