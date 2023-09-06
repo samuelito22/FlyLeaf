@@ -17,7 +17,8 @@ export const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'column',
     paddingTop: verticalScale(40),
-    maxWidth: 325,
+    maxWidth: 425,
+    paddingHorizontal: 20,
     width: '100%',
   },
   alignNextButtonContainer: {
@@ -58,21 +59,19 @@ export const styles = StyleSheet.create({
   },
   galleryButtonContainer: {
     borderRadius: BORDER_RADIUS.medium,
-    backgroundColor:PALETTE.LIGHT200,
-    width: "50%",
+    backgroundColor: PALETTE.LIGHT200,
+    width: '50%',
     aspectRatio: 1,
     position: 'relative',
     overflow: 'hidden',
     marginRight: 15,
-    justifyContent:"center",
-    alignItems:"center"
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   galleryButtonImage: {
     height: '50%',
     width: '50%',
-    tintColor:PALETTE.GRAY500
-
-    
+    tintColor: PALETTE.GRAY500,
   },
   extraGenderModal_button: {
     height: 60,
@@ -86,16 +85,19 @@ export const styles = StyleSheet.create({
   requirement: {
     ...themeText.bodyMediumSix,
     color: PALETTE.GRAY300,
+    textAlign: 'center',
   },
   title: {
     ...themeText.headingTwo,
     color: THEME_COLORS.dark,
     marginBottom: verticalScale(12),
+    textAlign: 'center',
   },
   paragraph: {
     ...themeText.bodyRegularFive,
     color: THEME_COLORS.dark,
     marginBottom: verticalScale(17),
+    textAlign: 'center',
   },
   extraInformation: {
     ...themeText.bodyRegularSeven,
@@ -151,7 +153,7 @@ export const styles = StyleSheet.create({
   skipContainer: {
     position: 'absolute',
     top: 30,
-    right: 0,
+    right: 15,
   },
   extraIcon: {
     height: 100,

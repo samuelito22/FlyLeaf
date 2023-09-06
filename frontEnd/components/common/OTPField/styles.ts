@@ -18,9 +18,9 @@ export const styles = StyleSheet.create({
     height: 55,
     width: 44.23,
     marginHorizontal: 5,
-    backgroundColor: "white",
-    borderBottomWidth:2,
-    borderColor: PALETTE.GHOSTWHITE
+    backgroundColor: 'white',
+    borderBottomWidth: 2,
+    borderColor: PALETTE.GHOSTWHITE,
   },
   OTPField__box__input: {
     ...themeText.headingOne,

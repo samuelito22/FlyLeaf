@@ -5,7 +5,7 @@ import upload from "../config/multerConfig";
 
 const router = express.Router();
 
-router.post("/register", upload.array('images', 6) ,authController.registerUser);
+router.post("/register", upload.array('pictures', 6) ,authController.registerUser);
 
 router.post("/log-out", authController.logOutUser);
 
@@ -33,7 +33,7 @@ router.post('/log-in/request-login-link', authController.sendLink)
 
 router.get('/log-in/verify-login-link/:token', authController.verifyLink)
 
-router.get('/log-in/authCode', authController.validateAuthCodeAndFetchTokens)
+router.put('/log-in/authCode', authController.validateAuthCodeAndFetchTokens)
 
 router.post('/log-in/google', authController.googleSignIn);
 

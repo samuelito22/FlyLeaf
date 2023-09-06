@@ -1,4 +1,4 @@
-import { combineReducers } from 'redux';
+import {combineReducers} from 'redux';
 import registerReducer from './registerReducer';
 import appStatusReducer from './appStatusReducer';
 import usersReducer from './usersReducer';

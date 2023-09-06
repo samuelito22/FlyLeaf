@@ -1,9 +1,9 @@
 {
   "extends": "@tsconfig/react-native/tsconfig.json",
-    "compilerOptions": {
-      "target": "es5",
-      "module": "commonjs",
-      "esModuleInterop": true,
-      "strict": true
-    }
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "strict": true
+  }
 }

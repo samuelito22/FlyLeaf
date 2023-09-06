@@ -11,7 +11,9 @@ interface BackButtonProps {
 const BackButton: React.FC<BackButtonProps> = ({onPress}) => {
   return (
     <ButtonImage
-      style={styles.backIcon}
+      contentContainerStyle={styles.backIcon}
+      width={25}
+      height={25}
       imgUrl={icons.arrowLeft}
       tintColor={THEME_COLORS.dark}
       onPress={onPress}
@@ -24,10 +26,11 @@ export default BackButton;
 const styles = StyleSheet.create({
   backIcon: {
     position: 'absolute',
-    top: 30,
-    left: 20,
-    width: 25,
-    height: 25,
+    width: 60,
+    height: 60,
+    borderRadius: 120,
+    top: 10,
+    left: 10,
     zIndex: 9999,
   },
 });

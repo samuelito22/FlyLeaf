@@ -2,9 +2,9 @@ import {createStore, applyMiddleware} from 'redux';
 import thunk from 'redux-thunk';
 import {persistStore, persistReducer, PURGE} from 'redux-persist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import combineReducer from "./reducers"
+import combineReducer from './reducers';
 
-export const rootReducer = combineReducer
+export const rootReducer = combineReducer;
 
 const persistConfig = {
   type: PURGE,

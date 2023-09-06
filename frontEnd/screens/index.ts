@@ -1,13 +1,12 @@
 // AUTH
 import EmailVerificationScreen from './auth/EmailVerificationScreen';
-import LocationScreen from './auth/LocationScreen';
 import BlockedScreen from './auth/BlockedScreen';
 import WelcomeScreen from './auth/register/WelcomeScreen';
 
 // Register
 import DateOfBirthScreen from './auth/register/DateOfBirthScreen';
-import FirstNameEntryScreen from './auth/register/FirstNameEntryScreen';
-import GenderPreferenceScreen from './auth/register/GenderPreferenceScreen';
+import UsernameEntryScreen from './auth/register/UsernameEntryScreen';
+import SeekingScreen from './auth/register/SeekingScreen';
 import GenderSelectionScreen from './auth/register/GenderSelectionScreen';
 import PictureUploadScreen from './auth/register/PictureUploadScreen';
 import RecoveryEmailScreen from './auth/register/RecoveryEmailScreen';
@@ -51,8 +50,8 @@ export {
   EditGenderScreen,
   EmailVerificationScreen,
   DateOfBirthScreen,
-  FirstNameEntryScreen,
-  GenderPreferenceScreen,
+  UsernameEntryScreen,
+  SeekingScreen,
   GenderSelectionScreen,
   PictureUploadScreen,
   RecoveryEmailScreen,
@@ -60,7 +59,6 @@ export {
   TermsAndConditionsScreen,
   LoginStartScreen,
   OTPScreen,
-  LocationScreen,
   ChatsScreen,
   HomeScreen,
   LikesScreen,
@@ -68,5 +66,5 @@ export {
   MultipleQuestionsScreen,
   UserProfileScreen,
   PublicProfileScreen,
-  BlockedScreen
+  BlockedScreen,
 };

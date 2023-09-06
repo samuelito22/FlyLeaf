@@ -1,8 +1,15 @@
 import React from 'react';
-import {View, ActivityIndicator, StyleSheet, Modal, Text, ViewStyle} from 'react-native';
+import {
+  View,
+  ActivityIndicator,
+  StyleSheet,
+  Modal,
+  Text,
+  ViewStyle,
+} from 'react-native';
 import {BORDER_RADIUS, COMPONENT_COLORS, themeText} from '../../../constants';
 
-const LoadingSpinner = ({modalBackground}:{modalBackground?: ViewStyle}) => {
+const LoadingSpinner = ({modalBackground}: {modalBackground?: ViewStyle}) => {
   return (
     <Modal transparent={true}>
       <View style={[styles.modalBackground, modalBackground]}>

@@ -6,51 +6,58 @@ import RegisterNavigator from './auth/Register';
 import BottomTabNavigator from './BottomTabNavigator';
 import {cardSlideLeftAnimation} from '../utils/navigatorSlideAnimation';
 import {useSelector} from 'react-redux';
-import {firebase} from '@react-native-firebase/auth';
 import ProfileNavigator from './ProfileNavigator';
+import {retrieveTokensFromKeychain} from '../utils/keychain';
+import {useEffect, useState} from 'react';
+import { navigationRef } from '../App';
 
 const Stack = createStackNavigator();
 
 const MainNavigator = () => {
-  const isLoggedIn = useSelector(
-    (state: TYPES.AppState) => state.appStatusReducer.isLoggedIn,
+  const currentScreen = useSelector(
+    (state: TYPES.AppState) => state.appStatusReducer.currentScreen,
   );
 
-  const isRegisterCompleted = useSelector(
-    (state: TYPES.AppState) => state.registerReducer.isRegisterCompleted,
-  );
-
-  const initialRouteNameDecider = () => {
-    if (isLoggedIn) {
-      //suppose to be without the exlamation mark
-      return ROUTES.BOTTOM_TAB_NAVIGATOR;
-    } else {
-      if (isRegisterCompleted.currentScreen) {
-        return ROUTES.REGISTER_NAVIGATOR;
-      } else {
-        return ROUTES.LOGIN_NAVIGATOR;
-      }
-    }
-  };
+  
 
   const linking = {
-    prefixes: ['https://91db-90-242-236-229.ngrok-free.app'],
+    prefixes: ['flyleaf://'],
     config: {
       screens: {
-        InstagramOAuthScreen: 'instagram/oauth/',
+        [ROUTES.LOGIN_NAVIGATOR]: {
+          path: 'login',
+          screens: {
+            [ROUTES.EMAIL_VERIFICATION_SCREEN]: {
+              path: 'verify',
+              parse: {
+                emailVerified: (value: string) => value === 'true',
+                authCode: (authCode: string) => `${authCode}`,
+              },
+            },
+          },
+        },
+        [ROUTES.REGISTER_NAVIGATOR]: {
+          path: 'register',
+          screens: {
+            [ROUTES.EMAIL_VERIFICATION_SCREEN]: {
+              path: 'verify',
+              parse: {
+                emailVerified: (value: string) => value === 'true',
+              },
+            },
+          },
+        },
       },
     },
   };
 
   return (
-    <NavigationContainer linking={linking}>
+    <NavigationContainer linking={linking} ref={navigationRef}>
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
-
-          cardStyleInterpolator: cardSlideLeftAnimation,
         }}
-        initialRouteName={ROUTES.BOTTOM_TAB_NAVIGATOR}>
+        initialRouteName={currentScreen || ROUTES.LOGIN_NAVIGATOR}>
         <Stack.Screen
           name={ROUTES.LOGIN_NAVIGATOR}
           component={LoginNavigator}

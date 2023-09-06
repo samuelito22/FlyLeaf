@@ -92,8 +92,12 @@ const RecoveryEmailScreen = ({
               borderBottomColor: valid
                 ? THEME_COLORS.primary
                 : THEME_COLORS.tertiary,
-                maxHeight: 45
+              maxHeight: 45,
+              maxWidth: 350,
+              width: '100%',
+              alignSelf: 'center',
             }}
+            textAlign="center"
           />
           <View style={styles.alignNextButtonContainer}>
             <Button.PrimaryButton

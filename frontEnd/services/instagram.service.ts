@@ -1,19 +1,25 @@
-import { API_ENDPOINTS } from "../constants";
+import {API_ENDPOINTS} from '../constants';
 
-
-const authenticateAndFetchInstagram = async (uid: string, code:string, signal?: AbortSignal) => {
+const authenticateAndFetchInstagram = async (
+  uid: string,
+  code: string,
+  signal?: AbortSignal,
+) => {
   try {
-    const response = await fetch(`${API_ENDPOINTS.AUTHENTICATE_AND_FETCH_INSTAGRAM}/${uid}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `${API_ENDPOINTS.AUTHENTICATE_AND_FETCH_INSTAGRAM}/${uid}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal,
+        body: JSON.stringify({code}),
       },
-      signal,   
-      body: JSON.stringify({code})
-    });
+    );
     const data = await response.json();
     return data;
-  } catch (error:any) {
+  } catch (error: any) {
     console.log('Error message:', error.message);
   }
 };
@@ -25,12 +31,12 @@ const disconnectFromInstagram = async (uid: string, signal?: AbortSignal) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      signal,  
-      body: JSON.stringify({uid}) 
+      signal,
+      body: JSON.stringify({uid}),
     });
     const data = await response.json();
     return data;
-  } catch (error:any) {
+  } catch (error: any) {
     console.log('Error message:', error.message);
   }
 };
@@ -42,23 +48,22 @@ const refetchInstagram = async (uid: string, signal?: AbortSignal) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      signal,  
-      body: JSON.stringify({uid}) 
+      signal,
+      body: JSON.stringify({uid}),
     });
-    
+
     const data = await response.json();
-    console.log(data)
+    console.log(data);
     return data;
-  } catch (error:any) {
+  } catch (error: any) {
     console.log('Error message:', error.message);
   }
 };
 
-
 export const InstagramService = () => {
-    return{
+  return {
     authenticateAndFetchInstagram,
     disconnectFromInstagram,
-    refetchInstagram
-    }
-}
+    refetchInstagram,
+  };
+};

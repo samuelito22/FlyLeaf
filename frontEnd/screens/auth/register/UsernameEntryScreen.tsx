@@ -11,48 +11,32 @@ import {
   LoadingSpinner,
 } from '../../../components';
 
-import {
-  RegisterActions
-} from '../../../redux';
+import {RegisterActions} from '../../../redux';
 import {ROUTES, THEME_COLORS, TYPES} from '../../../constants';
 
 import {styles} from './styles';
 import {usePreventBackHandler, useDispatch} from '../../../utils/hooks';
 
-const FirstNameEntryScreen = ({
+const UserNameEntryScreen = ({
   navigation,
 }: {
   navigation: NavigationProp<TYPES.RootStackParamList>;
 }) => {
-  // To prevent user from going back
   usePreventBackHandler();
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const [text, setText] = useState(''); // For first name
+  const [text, setText] = useState(''); // For username
 
-  // Local state to store the formatted first name
-  const [formattedFirstName, setFormattedFirstName] = useState(text);
-
-  // Dispatch function from Redux to update the firstName value
+  const [formattedUsername, setFormattedUsername] = useState(text);
   const dispatch = useDispatch();
 
-  // State variables for the alert visibility and validity of the input
   const [isAlertVisible, setAlertVisible] = useState(false);
   const [valid, setValid] = useState(false);
 
   useEffect(() => {
-    // Update the validity based on the length of the firstName
-    setValid(text.length > 1);
-
-    // Format the firstName with proper capitalization
-    const nameParts = text.split(' ');
-    for (let i = 0; i < nameParts.length; i++) {
-      nameParts[i] =
-        nameParts[i].charAt(0).toUpperCase() +
-        nameParts[i].slice(1).toLowerCase();
-    }
-    setFormattedFirstName(nameParts.join(' '));
+    setValid(text.length > 1 && text.length < 11);
+    setFormattedUsername(text);
   }, [text]);
 
   useEffect(
@@ -60,7 +44,7 @@ const FirstNameEntryScreen = ({
       dispatch(
         RegisterActions.setIsRegisterCompleted({
           status: false,
-          currentScreen: ROUTES.REGISTER_FIRST_NAME_SCREEN,
+          currentScreen: ROUTES.REGISTER_USERNAME_SCREEN,
         }),
       ),
     [],
@@ -80,13 +64,8 @@ const FirstNameEntryScreen = ({
     setIsLoading(true);
     try {
       setAlertVisible(false);
-      // Dispatch the action to update the firstName in Redux
-      dispatch(RegisterActions.setFirstName(formattedFirstName));
-
-      // Navigate to the next screen
+      dispatch(RegisterActions.setUsername(formattedUsername));
       navigation.navigate(ROUTES.REGISTER_DATE_OF_BIRTH_SCREEN);
-
-      // Update the progress using the setProgress function
       dispatch(RegisterActions.setProgressBarValue(14));
     } catch (err) {
       console.error(err);
@@ -101,12 +80,12 @@ const FirstNameEntryScreen = ({
         {isLoading && <LoadingSpinner />}
         <View style={styles.container}>
           <Text style={styles.requirement}>Required</Text>
-          <Text style={styles.title}>What’s your first name?</Text>
+          <Text style={styles.title}>What's your username?</Text>
           <Text style={styles.paragraph}>
-            Please enter your first name in the field below
+            Please enter your username of maximum of 10 characters in the field below.
           </Text>
           <TextField
-            placeholder="Type your first name"
+            placeholder="Type your username"
             text={text}
             setText={text => setText(text)}
             keyboardType="default"
@@ -115,8 +94,12 @@ const FirstNameEntryScreen = ({
               borderBottomColor: valid
                 ? THEME_COLORS.primary
                 : THEME_COLORS.tertiary,
-                maxHeight:45
+              maxHeight: 45,
+              maxWidth: 350,
+              width: '100%',
+              alignSelf: 'center',
             }}
+            textAlign="center"
           />
           <View style={styles.alignNextButtonContainer}>
             <Button.PrimaryButton
@@ -131,13 +114,15 @@ const FirstNameEntryScreen = ({
             </Button.PrimaryButton>
           </View>
           <Text style={styles.extraInformation}>
-            Your first name promotes authenticity in the Flyleaf community. It's
-            visible to others and unchangeable
+            Usernames promote individuality and privacy in the Flyleaf
+            community. It allows members to maintain their privacy while
+            interacting with others. Please note, your username is visible to
+            others and unchangeable.
           </Text>
 
           <Alert
             title="Confirmation"
-            message={`You've entered your name as ${formattedFirstName}. Is that correct?`}
+            message={`You've entered your username as ${formattedUsername}. Is that correct?`}
             visible={isAlertVisible}
             onClose={handleAlertClose}
             onConfirm={handleAlertConfirm}
@@ -148,4 +133,4 @@ const FirstNameEntryScreen = ({
   );
 };
 
-export default FirstNameEntryScreen;
+export default UserNameEntryScreen;

@@ -1,39 +1,48 @@
-import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import dynamicLinks from '@react-native-firebase/dynamic-links';
 import {LoginManager, AccessToken} from 'react-native-fbsdk-next';
-import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import {API_ENDPOINTS, TYPES} from '../constants';
+import {GoogleSignin} from "../googleConfig"
 
-interface ConfirmationResult {
-  success: boolean;
-  userCredential?: FirebaseAuthTypes.UserCredential | null;
-  error?: string;
-}
 
 const PhoneAuthService = () => {
   const sendVerificationCode = async (
     phoneNumber: string,
-  ): Promise<FirebaseAuthTypes.ConfirmationResult> => {
-    const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
-    return confirmation;
+    signal?: AbortSignal,
+  ): Promise<any> => {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.SEND_OTP}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal,
+        body: JSON.stringify({phoneNumber}),
+      });
+      const data = await response.json();
+      return data;
+    } catch (error: any) {
+      console.log('Error message:', error.message);
+    }
   };
 
   const confirmVerificationCode = async (
-    confirmation: FirebaseAuthTypes.ConfirmationResult,
-    code: string,
-  ): Promise<ConfirmationResult> => {
+    otp: string,
+    phoneNumber: string,
+    signal?: AbortSignal,
+  ): Promise<any> => {
     try {
-      const result = await confirmation.confirm(code);
-      if (result) {
-        return {success: true, userCredential: result};
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        return {success: false, error: error.message};
-      }
+      const response = await fetch(`${API_ENDPOINTS.VERIFY_OTP}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal,
+        body: JSON.stringify({otp, phoneNumber}),
+      });
+      const data = await response.json();
+      return data;
+    } catch (error: any) {
+      console.log('Error message:', error.message);
     }
-    return {success: false, error: 'Unexpected error during confirmation.'};
   };
 
   return {
@@ -43,125 +52,100 @@ const PhoneAuthService = () => {
 };
 
 const EmailLinkAuthService = () => {
-  const sendSignInLinkToEmail = async (email: string, dynamicLink: string) => {
-    const actionCodeSettings = {
-      url: dynamicLink,
-      handleCodeInApp: true,
-      android: {
-        packageName: 'com.flyleaf.frontend',
-        installApp: true,
-        minimumVersion: '12',
-      },
-      dynamicLinkDomain: 'flyleaf.page.link',
-    };
-
+  const sendEmailVerificationLink = async (
+    email: string,
+    grantType: string,
+    signal?: AbortSignal,
+  ) => {
     try {
-      await auth().sendSignInLinkToEmail(email, actionCodeSettings);
-      await AsyncStorage.setItem('emailForSignIn', email);
-    } catch (error) {
-      console.log('Error sending sign in link', error);
+      const response = await fetch(`${API_ENDPOINTS.REQUEST_LOGIN_LINK}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal,
+        body: JSON.stringify({email, grantType}),
+      });
+      const data = await response.json();
+      return data;
+    } catch (error: any) {
+      console.log('Error message:', error.message);
     }
   };
 
-  const signInWithEmailLink = async (emailLink: string) => {
-    const email = await AsyncStorage.getItem('emailForSignIn');
-    if (email === null) {
-      return {success: false, error: 'No email found for sign in.'};
+  const verifyAuthCode = async (authCode: string, signal?: AbortSignal) => {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.VALIDATE_AUTH_CODE}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal,
+        body: JSON.stringify({authCode}),
+      });
+      const data = await response.json();
+      return data;
+    } catch (error: any) {
+      console.log('Error message:', error.message);
     }
-
-    if (auth().isSignInWithEmailLink(emailLink)) {
-      return auth()
-        .signInWithEmailLink(email, emailLink)
-        .then(result => {
-          AsyncStorage.removeItem('emailForSignIn');
-          return {success: true, user: result.user};
-        })
-        .catch(error => {
-          return {success: false, error: error.message};
-        });
-    }
-
-    return {success: false, error: 'Invalid email link.'};
-  };
-
-  const handleDynamicLink = async () => {
-    const unsubscribe = dynamicLinks().onLink(async link => {
-      if (auth().isSignInWithEmailLink(link.url)) {
-        const email = await AsyncStorage.getItem('emailForSignIn');
-        if (email !== null) {
-          const result = await signInWithEmailLink(link.url);
-          if ('user' in result) {
-            console.log('User signed in with email link!');
-            // We assume that a signed-in user exists before this line
-            const currentUser = auth().currentUser;
-
-            // If we have a current user and the sign in with the email link was successful,
-            // we link the current user with the new email credential
-            if (currentUser) {
-              const emailCredential = auth.EmailAuthProvider.credentialWithLink(
-                email,
-                link.url,
-              );
-              await currentUser.linkWithCredential(emailCredential);
-            }
-          } else if ('error' in result) {
-            console.log('Error signing in with email link', result.error);
-          }
-        }
-      }
-    });
-
-    unsubscribe();
-  };
-
-  const createDynamicLink = async () => {
-    const link = await dynamicLinks().buildLink({
-      link: 'https://flyleaf.page.link/verifyEmail', // Your dynamic link URL
-      // domainUriPrefix is created in your Firebase console (Dynamic Links section)
-      domainUriPrefix: 'https://flyleaf.page.link',
-      android: {
-        packageName: 'com.flyleaf.frontend',
-        fallbackUrl:
-          'https://play.google.com/store/apps/details?id=com.flyleaf.frontend',
-      },
-      ios: {
-        bundleId: 'com.example.ios',
-        fallbackUrl: 'https://apps.apple.com/app/id123456789',
-      },
-    });
-
-    return link;
   };
 
   return {
-    sendSignInLinkToEmail,
-    handleDynamicLink,
-    signInWithEmailLink,
-    createDynamicLink,
+    sendEmailVerificationLink,
+    verifyAuthCode,
   };
 };
 
 const OAuthService = () => {
   const onFacebookButtonPress = async () => {
-    const result = await LoginManager.logInWithPermissions(['email']);
-    if (result.isCancelled) {
-      throw 'User cancelled the login process';
+    try {
+      const result = await LoginManager.logInWithPermissions(['email']);
+      if (result.isCancelled) {
+        throw new Error('User cancelled the login process');
+      }
+      const data = await AccessToken.getCurrentAccessToken();
+      if (!data) {
+        throw new Error('Something went wrong obtaining access token');
+      }
+
+      // Send token to your backend for validation and user management
+      const response = await fetch(`${API_ENDPOINTS.FACEBOOK_SIGN_IN}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${data.accessToken}`
+        },
+        body: JSON.stringify({
+          grantType: "access_token",
+        }),
+      });
+
+      return await response.json();
+    } catch (error:any) {
+      console.log(error)
     }
-    const data = await AccessToken.getCurrentAccessToken();
-    if (!data) {
-      throw 'Something went wrong obtaining access token';
-    }
-    const facebookCredential = auth.FacebookAuthProvider.credential(
-      data.accessToken,
-    );
-    return auth().signInWithCredential(facebookCredential);
   };
 
   const onGoogleButtonPress = async () => {
-    await GoogleSignin.hasPlayServices({showPlayServicesUpdateDialog: true});
-    const {idToken} = await GoogleSignin.signIn();
-    const googleCredential = auth.GoogleAuthProvider.credential(idToken);
-    return auth().signInWithCredential(googleCredential);
+    try {
+      await GoogleSignin.hasPlayServices({showPlayServicesUpdateDialog: true});
+      const {idToken} = await GoogleSignin.signIn();
+      // Send token to your backend for validation and user management
+      const response = await fetch(`${API_ENDPOINTS.GOOGLE_SIGN_IN}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({
+          grantType: "access_token",
+        }),
+      });
+
+      return await response.json();
+    } catch (error:any) {
+      console.log(error)
+    }
   };
 
   return {
@@ -182,7 +166,7 @@ const UserExistService = () => {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: formData.toString(),
-        signal
+        signal,
       });
       const data = await response.json();
       return data;
@@ -192,7 +176,10 @@ const UserExistService = () => {
     }
   };
 
-  const phoneNumberExist = async (phoneNumber: string, signal?: AbortSignal) => {
+  const phoneNumberExist = async (
+    phoneNumber: string,
+    signal?: AbortSignal,
+  ) => {
     const formData = new URLSearchParams();
     formData.append('phoneNumber', phoneNumber);
 
@@ -203,7 +190,7 @@ const UserExistService = () => {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: formData.toString(),
-        signal
+        signal,
       });
       const data = await response.json();
       return data;
@@ -218,13 +205,13 @@ const UserExistService = () => {
     formData.append('uid', uid);
 
     try {
-      const response = await fetch(API_ENDPOINTS.UID_EXIST, {
+      const response = await fetch(API_ENDPOINTS.ID_EXIST, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: formData.toString(),
-        signal
+        signal,
       });
       const data = await response.json();
       return data;
@@ -241,16 +228,46 @@ const UserExistService = () => {
   };
 };
 
-const userRegister = async (userData: TYPES.UserRegisterParams, signal?: AbortSignal) => {
+const userRegister = async (
+  userData: TYPES.UserRegisterParams,
+  coordinates: { longitude: number, latitude: number },
+  signal?: AbortSignal,
+) => {
   try {
+    // Initialize a new FormData object
+    const formData = new FormData();
+
+    for (let key in userData) {
+      if (userData.hasOwnProperty(key)) {
+        const value = userData[key as keyof TYPES.UserRegisterParams];
+
+        // Check if the value is an object or an array and needs stringifying
+        if (key !== 'pictures' && value && typeof value === 'object') {
+          formData.append(key, JSON.stringify(value));
+        } else if (key !== 'pictures' && value) {
+          formData.append(key, value.toString());
+        }
+      }
+    }
+
+    formData.append("coordinates", JSON.stringify(coordinates));
+
+    if (userData.pictures) {
+      for (const uri of userData.pictures) {
+        const fileType = uri.slice(((uri.lastIndexOf('.') - 1) >>> 0) + 2); // Extracting file extension
+        const formDataFile = {
+          uri: uri,
+          type: `image/${fileType}`,
+          name: uri.split('/').pop()!,
+        };
+        formData.append('pictures', formDataFile as any);
+      }
+    }
+
     const response = await fetch(API_ENDPOINTS.REGISTER, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(userData),
-      signal
-      
+      body: formData,
+      signal,
     });
 
     const data = await response.json();
@@ -261,12 +278,10 @@ const userRegister = async (userData: TYPES.UserRegisterParams, signal?: AbortSi
   }
 };
 
-
 export const AuthService = {
   ...PhoneAuthService(),
-  ...EmailLinkAuthService(),
   ...OAuthService(),
   ...UserExistService(),
   userRegister,
+  ...EmailLinkAuthService(),
 };
-

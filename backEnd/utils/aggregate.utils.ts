@@ -74,6 +74,24 @@ export  const COLLECT_USER_SEEKING = [{
       },
     },
   }]
+
+  export  const COLLECT_USER_RELATIONSHIP_STATUS = [{
+    $lookup: {
+      from: "answers",
+      localField:"relationshipGoal",
+      foreignField: "_id",
+      as: "relationshipGoal",
+    },
+  },
+  {
+    $addFields: {
+      "relationshipGoal": "$relationshipGoal.text",
+    }
+  },
+  {
+    $unwind: "$relationshipGoal"
+  }
+]
   
  export const COLLECT_USER_ADDITIONAL_INFORMATION = [
     {
@@ -113,6 +131,7 @@ export  const COLLECT_USER_SEEKING = [{
               question: { $arrayElemAt: ["$questionInfo.question", 0] },
               questionShortForm: { $arrayElemAt: ["$questionInfo.shortForm", 0] },
               questionIcon: { $arrayElemAt: ["$questionInfo.icon", 0] },
+              questionType: { $arrayElemAt: ["$questionInfo.type", 0] },
               answer: { $arrayElemAt: ["$answerInfo.text", 0] },
             }
           }
@@ -312,28 +331,32 @@ export const COLLECT_USER_PREMIUM_FEATURES =[
 ];
 
 export const COLLECT_QUESTIONS = [
-    {
-        $lookup: {
-            from: "answers",
-            localField: "answers",
-            foreignField: "_id",
-            as: "answersData"
-        }
-    },{
-        $unwind: {
-            path: "$answersData",
-            preserveNullAndEmptyArrays: true
-        }
-    },
-    {
-        $group: {
-            _id: "$_id",
-            question: { $first: "$question" },
-            shortForm: { $first: "$shortForm" },
-            icon: { $first: "$icon" },
-            type: { $first: "$type" },
-            __v: { $first: "$__v" },
-            answers: { $push: "$answersData.text" }
-        }
-    }
+  {
+      $lookup: {
+          from: "answers",
+          localField: "answers",
+          foreignField: "_id",
+          as: "answersData"
+      }
+  },{
+      $unwind: {
+          path: "$answersData",
+          preserveNullAndEmptyArrays: true
+      }
+  },
+  {
+      $group: {
+          _id: "$_id",
+          question: { $first: "$question" },
+          shortForm: { $first: "$shortForm" },
+          icon: { $first: "$icon" },
+          type: { $first: "$type" },
+          answers: {
+              $push: {
+                  text: "$answersData.text",
+                  _id: "$answersData._id"
+              }
+          }
+      }
+  }
 ]

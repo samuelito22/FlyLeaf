@@ -21,7 +21,7 @@ const LocationSchema = new Schema<Location>({
 }, { _id : false });
 
 const UserSchema = new Schema<User>({
-  _id: { type: ObjectId, alias: 'uid' },
+  _id: { type: ObjectId },
   username: { type: String, required: true},
   profession: {type: ProfessionSchema},
   gender: {type: GenderSchema, required: true},

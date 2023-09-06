@@ -17,13 +17,13 @@ import {
   useImagePicker,
   useDispatch,
 } from '../../../utils/hooks';
-import {
-  RegisterActions
-} from '../../../redux';
+import {RegisterActions} from '../../../redux';
 import {TYPES, THEME_COLORS, ROUTES} from '../../../constants';
 import {icons} from '../../../assets';
 import {styles} from './styles';
 import {NavigationProp} from '@react-navigation/native';
+import {ActiveIndicator} from '../../../components/common/Loading';
+import { useSelector } from 'react-redux';
 
 const PictureUploadScreen = ({
   navigation,
@@ -31,6 +31,10 @@ const PictureUploadScreen = ({
   navigation: NavigationProp<TYPES.RootStackParamList>;
 }) => {
   const dispatch = useDispatch();
+
+  const {
+    email,
+  } = useSelector((state: TYPES.AppState) => state.registerReducer);
 
   const [isAlertVisible, setAlertVisible] = useState(false);
   const [isFirstButtonPressed, setIsFirstButtonPressed] = useState(false);
@@ -51,7 +55,7 @@ const PictureUploadScreen = ({
 
         dispatch(RegisterActions.setProgressBarValue(84));
 
-        navigation.navigate(ROUTES.REGISTER_RECOVERY_EMAIL_SCREEN);
+        email ? navigation.navigate(ROUTES.REGISTER_MULTIPLE_QUESTIONS_SCREEN) : navigation.navigate(ROUTES.REGISTER_RECOVERY_EMAIL_SCREEN);
       } catch (error) {
         console.error(error);
       } finally {
@@ -59,12 +63,7 @@ const PictureUploadScreen = ({
       }
     }
   }, [valid, imageOne, imageTwo, dispatch]);
-
-  const handleSkipPress = () => {
-    dispatch(RegisterActions.setProgressBarValue(84));
-    navigation.navigate(ROUTES.REGISTER_RECOVERY_EMAIL_SCREEN);
-  };
-
+  
   const handleAlertClose = () => {
     setAlertVisible(false);
   };
@@ -108,44 +107,44 @@ const PictureUploadScreen = ({
   return (
     <SafeContainer>
       <View style={styles.container}>
-        {isLoading && <LoadingSpinner />}
+        {isLoading && <ActiveIndicator />}
         <Text style={styles.requirement}>Optional</Text>
-        <Text style={styles.title}>Add your first 2 photos</Text>
+        <Text style={styles.title}>Add your first 2 pictures</Text>
         <View style={styles.galleryButtonsContainer}>
           <TouchableNativeFeedback
             onPress={() => {
               setAlertVisible(true);
               setIsFirstButtonPressed(true);
             }}>
-              <View
-                style={[
-                  styles.galleryButtonContainer,
-                  imageOne ? null : {padding: 23},
-                ]}>
-                <Image
-                  source={imageOne ? {uri: imageOne} : icons.plus}
-                  style={
-                    imageOne
-                      ? styles.imageInGalleryButtonContainer
-                      : styles.galleryButtonImage
-                  }
-                />
+            <View
+              style={[
+                styles.galleryButtonContainer,
+                imageOne ? null : {padding: 23},
+              ]}>
+              <Image
+                source={imageOne ? {uri: imageOne} : icons.plus}
+                style={
+                  imageOne
+                    ? styles.imageInGalleryButtonContainer
+                    : styles.galleryButtonImage
+                }
+              />
             </View>
           </TouchableNativeFeedback>
           <TouchableNativeFeedback onPress={() => setAlertVisible(true)}>
-              <View
-                style={[
-                  styles.galleryButtonContainer,
-                  imageTwo ? null : {padding: 23},
-                ]}>
-                <Image
-                  source={imageTwo ? {uri: imageTwo} : icons.plus}
-                  style={
-                    imageTwo
-                      ? styles.imageInGalleryButtonContainer
-                      : styles.galleryButtonImage
-                  }
-                />
+            <View
+              style={[
+                styles.galleryButtonContainer,
+                imageTwo ? null : {padding: 23},
+              ]}>
+              <Image
+                source={imageTwo ? {uri: imageTwo} : icons.plus}
+                style={
+                  imageTwo
+                    ? styles.imageInGalleryButtonContainer
+                    : styles.galleryButtonImage
+                }
+              />
             </View>
           </TouchableNativeFeedback>
         </View>

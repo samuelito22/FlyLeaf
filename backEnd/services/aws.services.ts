@@ -1,10 +1,10 @@
 import sharp from "sharp";
 import { s3 } from "../config/awsConfig";
 
+const allowedMimeTypes = ["image/jpeg", "image/png", "image/jpg"];
 
 const addUserPicturesToS3 = async (files: any, userId: string) => {
   let pictureNames: string[] = [];
-  const allowedMimeTypes = ["image/jpeg", "image/png"]; 
 
   if (files) {
     for (const [index, file] of files.entries()) {
@@ -17,7 +17,7 @@ const addUserPicturesToS3 = async (files: any, userId: string) => {
       const compressedBuffer = await sharp(file.buffer)
          .rotate()
         .resize({ width: 800 }) 
-        .jpeg({ quality: 80 }) 
+        .jpeg({ quality: 100 }) 
         .toBuffer();
 
 
@@ -43,7 +43,6 @@ const addUserPicturesToS3 = async (files: any, userId: string) => {
 };
 
 const addUserPictureToS3 = async (file: any, userId: string) => {
-  const allowedMimeTypes = ["image/jpeg", "image/png"];
   let pictureName = '';
 
   if (file) {

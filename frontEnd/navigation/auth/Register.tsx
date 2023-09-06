@@ -3,21 +3,24 @@ import React from 'react';
 import {
   DateOfBirthScreen,
   EmailVerificationScreen,
-  FirstNameEntryScreen,
-  GenderPreferenceScreen,
   GenderSelectionScreen,
   InterestScreen,
   MultipleQuestionsScreen,
   PictureUploadScreen,
   RecoveryEmailScreen,
   RelationshipGoalScreen,
+  SeekingScreen,
   TermsAndConditionsScreen,
   WelcomeScreen,
 } from '../../screens';
 import {ProgressBar} from '../../components';
 import {THEME_COLORS, ROUTES, TYPES} from '../../constants';
 import {cardSlideLeftAnimation} from '../../utils/navigatorSlideAnimation';
-import {useSelector} from 'react-redux';
+import { useSelector} from 'react-redux';
+import UserNameEntryScreen from '../../screens/auth/register/UsernameEntryScreen';
+import { UserActions } from '../../redux';
+import { UserService } from '../../services';
+import { useDispatch } from '../../utils/hooks';
 
 const Stack = createStackNavigator();
 
@@ -25,15 +28,28 @@ const RegisterNavigator = () => {
   const {isRegisterCompleted, progressBarValue} = useSelector(
     (state: TYPES.AppState) => state.registerReducer,
   );
-  const initialRouteNameDecider = () => {
-    if (isRegisterCompleted.currentScreen) {
-      //suppose to be without the exlamation mark
-      return isRegisterCompleted.currentScreen;
-    } else {
-      return ROUTES.REGISTER_WELCOME_SCREEN;
-    }
-  };
-  
+  const dispatch = useDispatch()
+
+  const [initialRouteName, setInitialRouteName] = React.useState<string>(
+    ROUTES.REGISTER_WELCOME_SCREEN
+  );
+
+  React.useEffect(() => {
+    const fetchInitialRouteName = async () => {
+      if (isRegisterCompleted.currentScreen) {
+        const result = await UserService.getOverviewEn();
+        if (result.type === 'success') {
+          dispatch(UserActions.setQuestionsList(result.questions));
+          dispatch(UserActions.setInterestsList(result.interests));
+          dispatch(UserActions.setLanguagesList(result.languages));
+          dispatch(UserActions.setGendersList(result.genders));
+        }
+        setInitialRouteName(isRegisterCompleted.currentScreen);
+      }
+    };
+
+    fetchInitialRouteName();
+  }, [isRegisterCompleted.currentScreen, dispatch]);
 
   return (
     <>
@@ -46,15 +62,15 @@ const RegisterNavigator = () => {
         />
       ) : null}
       <Stack.Navigator
-        initialRouteName={ROUTES.REGISTER_INTEREST_SCREEN}
+        initialRouteName={initialRouteName}
         screenOptions={{
           headerShown: false,
 
           cardStyleInterpolator: cardSlideLeftAnimation,
         }}>
         <Stack.Screen
-          name={ROUTES.REGISTER_FIRST_NAME_SCREEN}
-          component={FirstNameEntryScreen}
+          name={ROUTES.REGISTER_USERNAME_SCREEN}
+          component={UserNameEntryScreen}
         />
         <Stack.Screen
           name={ROUTES.REGISTER_DATE_OF_BIRTH_SCREEN}
@@ -65,8 +81,8 @@ const RegisterNavigator = () => {
           component={GenderSelectionScreen}
         />
         <Stack.Screen
-          name={ROUTES.REGISTER_GENDER_PREFERENCE_SCREEN}
-          component={GenderPreferenceScreen}
+          name={ROUTES.REGISTER_SEEKING_SCREEN}
+          component={SeekingScreen}
         />
         <Stack.Screen
           name={ROUTES.REGISTER_RELATIONSHIP_GOAL_SCREEN}
@@ -93,12 +109,13 @@ const RegisterNavigator = () => {
           component={TermsAndConditionsScreen}
         />
         <Stack.Screen
-        name={ROUTES.REGISTER_WELCOME_SCREEN}
-        component={WelcomeScreen}
+          name={ROUTES.REGISTER_WELCOME_SCREEN}
+          component={WelcomeScreen}
         />
         <Stack.Screen
-        name={ROUTES.REGISTER_INTEREST_SCREEN}
-        component={InterestScreen}/>
+          name={ROUTES.REGISTER_INTEREST_SCREEN}
+          component={InterestScreen}
+        />
       </Stack.Navigator>
     </>
   );

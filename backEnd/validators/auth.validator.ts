@@ -8,7 +8,7 @@ const validateUser = (data:any) => {
           primary: Joi.string().required().pattern(objectIdRegex),
           secondary: Joi.string().optional().pattern(objectIdRegex),
       }).required(),
-      phoneNumber: Joi.string().pattern(new RegExp(phoneNumberRegex)).required(),
+      phoneNumber: Joi.string().pattern(new RegExp(phoneNumberRegex)),
       email: Joi.string().email().optional(),
       interests: Joi.array().items(Joi.string().pattern(objectIdRegex)).required(),
       additionalInformation: Joi.array().items(Joi.object({
@@ -19,6 +19,7 @@ const validateUser = (data:any) => {
       seeking: Joi.array().items(Joi.string().pattern(objectIdRegex)).required(),
       dateOfBirth: Joi.date().required(),
       verified: Joi.boolean().default(false),
+      coordinates: Joi.object({longitude: Joi.number().required(), latitude: Joi.number().required()}),
   });
 
   return schema.validate(data)

@@ -5,33 +5,32 @@ export const style = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'white',
-    width:"100%",
+    width: '100%',
     maxWidth: 420,
   },
-  profileCard:{
+  profileCard: {
     position: 'relative',
-    overflow:'visible',
-    paddingBottom: 10
+    overflow: 'visible',
+    paddingBottom: 10,
   },
-  editIcon:{
-    width:30,
+  editIcon: {
+    width: 30,
     height: 30,
     position: 'absolute',
     right: 10,
     bottom: 0,
-    backgroundColor:'transparent'
+    backgroundColor: 'transparent',
   },
-  button:{
+  button: {
     marginHorizontal: 10,
-    borderRadius: BORDER_RADIUS.extraLarge
+    borderRadius: BORDER_RADIUS.extraLarge,
   },
   text: {
     ...themeText.bodyBoldSix,
-    paddingHorizontal: 8
+    paddingHorizontal: 8,
   },
   icon: {
     width: 30,
-    height: 30
+    height: 30,
   },
-
 });

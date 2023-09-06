@@ -5,7 +5,7 @@ import upload from "../config/multerConfig";
 
 const router = express.Router();
 
-router.get("/me", userController.getMyProfile)
+router.put("/me", userController.getMyProfile)
 router.put("/me/update-profile",upload.fields([
     { name: 'picture-1', maxCount: 1 }, 
     { name: 'picture-2', maxCount: 1 }, 

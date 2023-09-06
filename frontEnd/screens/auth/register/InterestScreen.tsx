@@ -7,11 +7,7 @@ import {
   ThreeDotsLoader,
   Loading,
 } from '../../../components';
-import {
-  RegisterActions,
-  AppStatusActions,
-  UserActions
-} from '../../../redux';
+import {RegisterActions, AppStatusActions, UserActions} from '../../../redux';
 import {
   THEME_COLORS,
   ROUTES,
@@ -23,18 +19,22 @@ import {NavigationProp} from '@react-navigation/native';
 import {usePreventBackHandler, useDispatch} from '../../../utils/hooks';
 import {useSelector} from 'react-redux';
 import {AuthService} from '../../../services';
-import auth from '@react-native-firebase/auth';
 import editUserReducer from '../../../redux/reducers/editUserReducer';
+import {ObjectId} from 'mongodb';
+import { storeTokensInKeychain } from '../../../utils/keychain';
+import { getData } from '../../../utils/storage';
 
 const styles = StyleSheet.create({
   interest_title: {
     ...themeText.bodyBoldFour,
     color: THEME_COLORS.dark,
     paddingVertical: 10,
+    textAlign: 'center',
   },
   interest_buttonsContainer: {
     flexWrap: 'wrap',
     flexDirection: 'row',
+    justifyContent: 'center',
   },
   interest_button: {
     marginVertical: 10,
@@ -48,188 +48,215 @@ const styles = StyleSheet.create({
   },
 });
 
-const InterestScreen = ({
-  navigation,
-}: {
+const MAX_INTERESTS = 5;
+
+type Interest = {
+  _id: ObjectId;
+  category: string;
+  icon: string;
+  name: string;
+};
+
+type GroupedInterests = {
+  [key: string]: Interest[];
+};
+
+type Props = {
   navigation: NavigationProp<TYPES.RootStackParamList>;
-}) => {
+};
+
+const InterestScreen: React.FC<Props> = ({navigation}) => {
   usePreventBackHandler();
   const dispatch = useDispatch();
   const {
     email,
-    firstName,
+    username,
     dateOfBirth,
-    genderPreferences,
+    seeking,
     gender,
     pictures,
     relationshipGoal,
     phoneNumber,
     additionalInformation,
-    interests,
-    interestsList
   } = useSelector((state: TYPES.AppState) => state.registerReducer);
 
+  const {interestsList} = useSelector(
+    (state: TYPES.AppState) => state.usersReducer,
+  );
+
+  const groupedInterests = interestsList?.reduce<GroupedInterests>(
+    (accumulator, interest) => {
+      accumulator[interest.category] = accumulator[interest.category] || [];
+      accumulator[interest.category].push(interest);
+      return accumulator;
+    },
+    {},
+  );
+
+  // Local states
   const [valid, setValid] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [answer, setAnswer] = useState<Array<string>>([]);
+  const [answer, setAnswer] = useState<Set<ObjectId>>(new Set());
 
+  // Handlers
 
-  const registration = async () => {
-    if (!firstName || !dateOfBirth || !genderPreferences || !gender || !pictures || !relationshipGoal || !phoneNumber || !additionalInformation || !interests) {
-      // Handle missing data
-      console.error("Missing data for registration");
-      return;
-  }
-    const currentUser = auth().currentUser;
-    if (currentUser) {
-      const uid = currentUser.uid;
-      let userRegisterParams: TYPES.UserRegisterParams = {
-        uid,
-        profile: {
-          firstName,
-          dateOfBirth,
-          gender
-        },
-        preferences: {
-          genderPreferences,
-          relationshipGoal,
-        },
-        contact: {
-          phoneNumber,
-        },
-        interests: {
-          interests: interests || answer,
-          additionalInformation,
-        },
-      };
-
-      if (email) {
-        userRegisterParams.contact.email = email;
+  const handleInterestPress = useCallback((interestId: ObjectId) => {
+    setAnswer(prevState => {
+      const newAnswer = new Set(prevState);
+      if (newAnswer.has(interestId)) {
+        newAnswer.delete(interestId);
+      } else {
+        // If maximum interests haven't been reached, add the new interest.
+        if (newAnswer.size < MAX_INTERESTS) {
+          newAnswer.add(interestId);
+        }
       }
-
-      if (pictures.length > 0) {
-        userRegisterParams.profile.pictures = pictures;
-      }
-
-      if(!gender.specific){
-        userRegisterParams.profile.gender = {general: userRegisterParams.profile.gender.general}
-      }
-
-      try {
-        setIsLoading(true);
-        await AuthService.userRegister(
-          userRegisterParams,
-        ).then(result => {
-          if (result.type === 'error') {
-            console.log(result.message);
-          } else {
-            dispatch(AppStatusActions.setIsLoggedIn(true));
-            dispatch(UserActions.setCurrentUserId(uid))
-            dispatch(RegisterActions.resetRegister());
-            navigation.navigate(ROUTES.BOTTOM_TAB_NAVIGATOR);
-          }
-        });
-      } catch (error) {
-        console.error('Error during registration', error);
-      }
-      setIsLoading(false);
-
-    }
-  };
+      return newAnswer;
+    });
+  }, []);
 
   const handlePress = () => {
     if (valid) {
-      dispatch(RegisterActions.setInterests(answer));
-      registration()
+      //dispatch(RegisterActions.setInterests(Array.from(answer)));
+      registration();
     }
   };
 
-  const handleInterestPress = useCallback((interest: string) => {
-    setAnswer(prevState => {
-      let newAnswer;
-      if (Array.isArray(prevState) && prevState.includes(interest)) {
-        newAnswer = prevState.filter(item => item !== interest);
-      } else {
-        if (prevState.length === 5) return prevState;
-        else newAnswer = [...prevState, interest];
-      }
-      setValid(newAnswer.length === 5);
-      return newAnswer;
-    });
-}, []);
+  const registration = async () => {
+    if (
+      !username ||
+      !dateOfBirth ||
+      !seeking ||
+      !gender ||
+      !pictures ||
+      !relationshipGoal ||
+      !additionalInformation ||
+      !Array.from(answer)
+    ) {
+      // Handle missing data
+      console.error('Missing data for registration');
+      return;
+    }
 
+    let userRegisterParams: TYPES.UserRegisterParams = {
+      username,
+      dateOfBirth,
+      seeking,
+      gender: {primary: gender.primary},
+      relationshipGoal,
+      additionalInformation,
+      interests: Array.from(answer),
+      pictures,
+    };
 
+    if (email) {
+      userRegisterParams.email = email;
+    }
+
+    if (phoneNumber) {
+      userRegisterParams.phoneNumber = phoneNumber;
+    }
+
+    if (gender.secondary) {
+      userRegisterParams.gender = {
+        primary: gender.primary,
+        secondary: gender.secondary,
+      };
+    }
+
+    try {
+      setIsLoading(true);
+      const coordinates = await getData("coordinates")
+      if(coordinates)
+      await AuthService.userRegister(userRegisterParams,JSON.parse(coordinates) as {longitude: number, latitude: number}).then(async result => {
+        if (result.type === 'error') {
+          console.log(result.message);
+        } else {
+          await storeTokensInKeychain(
+            result.accessToken,
+            result.refreshToken,
+          );
+
+          dispatch(RegisterActions.resetRegister());
+          navigation.navigate(ROUTES.BOTTOM_TAB_NAVIGATOR);
+        }
+      });
+    } catch (error) {
+      console.error('Error during registration', error);
+    }
+    setIsLoading(false);
+  };
+
+  // Effects
   useEffect(() => {
-    setValid(answer.length === 5);
+    setValid(answer.size === MAX_INTERESTS);
   }, [answer]);
 
-  useEffect(
-    () =>
-      dispatch(
-        RegisterActions.setIsRegisterCompleted({
-          status: false,
-          currentScreen: ROUTES.REGISTER_INTEREST_SCREEN,
-        }),
-      ),
-    [],
-  );
-
+  useEffect(() => {
+    dispatch(
+      RegisterActions.setIsRegisterCompleted({
+        status: false,
+        currentScreen: ROUTES.REGISTER_INTEREST_SCREEN,
+      }),
+    );
+  }, []);
 
   return (
     <SafeContainer>
-      {isLoading && <Loading.ActiveIndicator modalBackground={{backgroundColor:'white'}} />}
-        <View style={generalStyles.container}>
-          <Text style={generalStyles.title}>
-            {interestsList?.question}
-          </Text>
-          <Text style={generalStyles.paragraph}>
-              Please select 5 interests
-            </Text>
+      {isLoading && (
+        <Loading.ActiveIndicator modalBackground={{backgroundColor: 'white'}} />
+      )}
+      <View style={generalStyles.container}>
+        <Text style={generalStyles.title}>What are your interests?</Text>
+        <Text style={generalStyles.paragraph}>Please select 5 interests</Text>
 
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            overScrollMode={'never'}
-            contentContainerStyle={{flexGrow: 1}}>
-            {interestsList?.answers.map((category, index) => (
-                  <View
-                    key={category.title + index}
-                    style={styles.interest_section}>
-                    <Text style={styles.interest_title}>{category.title}</Text>
-                    <View style={styles.interest_buttonsContainer}>
-                      {category.interests.map((interest, idx) => {
-                        return (
-                          <Button.interestsButton
-                            active={answer.includes(interest.title)}
-                            key={interest.title + idx}
-                            style={styles.interest_button}
-                            icon={interest.icon}
-                            onPress={() => handleInterestPress(interest.title)}>
-                            {interest.title}
-                          </Button.interestsButton>
-                        );
-                      })}
-                    </View>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          overScrollMode={'never'}
+          contentContainerStyle={{flexGrow: 1}}>
+          {groupedInterests &&
+            Object.entries(groupedInterests as GroupedInterests).map(
+              ([categoryTitle, interests]: [string, Interest[]], index) => (
+                <View
+                  key={categoryTitle + index}
+                  style={styles.interest_section}>
+                  <Text style={styles.interest_title}>{categoryTitle}</Text>
+                  <View style={styles.interest_buttonsContainer}>
+                    {interests.map((interest, idx) => {
+                      return (
+                        <Button.interestsButton
+                          active={answer.has(interest._id)}
+                          key={interest.name + idx}
+                          style={styles.interest_button}
+                          icon={interest.icon}
+                          onPress={() => handleInterestPress(interest._id)}>
+                          {interest.name}
+                        </Button.interestsButton>
+                      );
+                    })}
                   </View>
-                ))}
-          </ScrollView>
-          <View style={generalStyles.alignNextButtonContainer}>
-            <Button.PrimaryButton
-              onPress={handlePress}
-              style={{
-                ...generalStyles.nextButtonContainer,
-                backgroundColor: valid
-                  ? THEME_COLORS.primary
-                  : THEME_COLORS.tertiary,
-              }}>
-              CONTINUE
-            </Button.PrimaryButton>
-          </View>
-          <Text style={generalStyles.extraInformation}>
-            Sharing more about yourself helps you in getting more people
-            interested in you
-          </Text>
+                </View>
+              ),
+            )}
+        </ScrollView>
+        <View style={generalStyles.alignNextButtonContainer}>
+          <Button.PrimaryButton
+            onPress={handlePress}
+            style={{
+              ...generalStyles.nextButtonContainer,
+              backgroundColor: valid
+                ? THEME_COLORS.primary
+                : THEME_COLORS.tertiary,
+            }}>
+            CONTINUE
+          </Button.PrimaryButton>
         </View>
+        <Text style={generalStyles.extraInformation}>
+          Sharing more about yourself helps you in getting more people
+          interested in you
+        </Text>
+      </View>
     </SafeContainer>
   );
 };

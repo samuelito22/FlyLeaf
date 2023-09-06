@@ -30,11 +30,18 @@ import {
 } from '../../constants';
 import {useSelector} from 'react-redux';
 import {icons} from '../../assets';
-import { LongPressGestureHandler, ScrollView} from 'react-native-gesture-handler';
+import {
+  LongPressGestureHandler,
+  ScrollView,
+} from 'react-native-gesture-handler';
 import {TouchableRipple} from 'react-native-paper';
-import {useNavigation, NavigationProp, useFocusEffect} from '@react-navigation/native';
+import {
+  useNavigation,
+  NavigationProp,
+  useFocusEffect,
+} from '@react-navigation/native';
 import {useDispatch, useImagePicker} from '../../utils/hooks';
-import { EditProfileActions, UserActions} from '../../redux';
+import {EditProfileActions, UserActions} from '../../redux';
 import {InstagramService, SpotifyService, UserService} from '../../services';
 
 const styles = StyleSheet.create({
@@ -115,7 +122,7 @@ const styles = StyleSheet.create({
   callToActionInnerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    flexGrow: 1
+    flexGrow: 1,
   },
   paragraphStyle: {
     flex: 2,
@@ -135,8 +142,7 @@ interface ModalSelectionProps extends SectionProps {
 
 type NavigationProps = {
   navigation?: NavigationProp<TYPES.RootStackParamList>;
-}
-
+};
 
 const useUserProfile = (uid: string | null) => {
   const dispatch = useDispatch();
@@ -147,7 +153,9 @@ const useUserProfile = (uid: string | null) => {
 
     const fetchData = async () => {
       try {
-        const result = await UserService.getQuestionsAndInterests(controller.signal);
+        const result = await UserService.getQuestionsAndInterests(
+          controller.signal,
+        );
         if (result.type) {
           dispatch(EditProfileActions.setQuestionsList(result.questions));
           dispatch(EditProfileActions.setInterestsList(result.interests));
@@ -157,22 +165,23 @@ const useUserProfile = (uid: string | null) => {
         console.error(error);
         // You can set some state here to show an error message to the user if needed
       }
-    }
-    if(uid)
-    fetchData();
+    };
+    if (uid) fetchData();
 
     return () => {
       controller.abort();
     };
   }, [dispatch]);
 
-  return { loading, setLoading };
+  return {loading, setLoading};
 };
 
-const EdiScreen: React.FC<NavigationProps> = ({ navigation }) => {
+const EdiScreen: React.FC<NavigationProps> = ({navigation}) => {
   const state = useSelector((state: TYPES.AppState) => state.editUserReducer);
-  const uid = useSelector((state: TYPES.AppState) => state.usersReducer.currentUserId);
-  const { loading, setLoading } = useUserProfile(uid);
+  const uid = useSelector(
+    (state: TYPES.AppState) => state.usersReducer.currentUserId,
+  );
+  const {loading, setLoading} = useUserProfile(uid);
   const dispatch = useDispatch();
 
   const handleBackPress = async () => {
@@ -180,7 +189,7 @@ const EdiScreen: React.FC<NavigationProps> = ({ navigation }) => {
       if (uid) {
         setLoading(true);
         const result = await UserService.updateProfile(uid, state);
-        if (result.type === "success") {
+        if (result.type === 'success') {
           dispatch(UserActions.setUserProfile(uid, result.profile));
         }
         setLoading(false);
@@ -191,7 +200,6 @@ const EdiScreen: React.FC<NavigationProps> = ({ navigation }) => {
     }
   };
 
-
   useFocusEffect(
     React.useCallback(() => {
       const backAction = () => {
@@ -199,23 +207,26 @@ const EdiScreen: React.FC<NavigationProps> = ({ navigation }) => {
         return false;
       };
 
-      const backHandler = BackHandler.addEventListener("hardwareBackPress", backAction);
+      const backHandler = BackHandler.addEventListener(
+        'hardwareBackPress',
+        backAction,
+      );
 
       return () => {
         backHandler.remove();
       };
-    }, [handleBackPress])
+    }, [handleBackPress]),
   );
-
 
   return (
     <KeyboardAvoidingViewWrapper>
       <SafeContainer>
-        {loading && <Loading.ActiveIndicator modalBackground={{backgroundColor:"white"}}/>}
-        <EditProfileHeader
-          onBackPress={handleBackPress}
-          leftIconText="Edit"
-        />
+        {loading && (
+          <Loading.ActiveIndicator
+            modalBackground={{backgroundColor: 'white'}}
+          />
+        )}
+        <EditProfileHeader onBackPress={handleBackPress} leftIconText="Edit" />
 
         <BiographySection state={state} dispatch={dispatch} />
 
@@ -228,15 +239,11 @@ const EdiScreen: React.FC<NavigationProps> = ({ navigation }) => {
 
         <View style={styles.section}>
           <Text style={styles.section_header}>Connected account</Text>
-          <Text style={[styles.section_subHeader, {marginBottom: 15}]}>Showcase your instagram pictures and artists you enjoy listening to.</Text>
-        <SpotifySection
-          state={state}
-          dispatch={dispatch}
-        />
-        <InstagramSection
-          state={state}
-          dispatch={dispatch}
-        />
+          <Text style={[styles.section_subHeader, {marginBottom: 15}]}>
+            Showcase your instagram pictures and artists you enjoy listening to.
+          </Text>
+          <SpotifySection state={state} dispatch={dispatch} />
+          <InstagramSection state={state} dispatch={dispatch} />
         </View>
       </SafeContainer>
     </KeyboardAvoidingViewWrapper>
@@ -253,26 +260,37 @@ const BasicInformation = ({state, dispatch}: SectionProps) => {
     icon: string;
     onPress: () => void;
   }
-  
-  const CallToAction: React.FC<CallToActionProps> = React.memo(({ header, paragraph, icon, onPress }) => {
-    return (
-      <TouchableRipple
-        style={styles.section_withBorder}
-        onPress={onPress}
-        rippleColor={PALETTE.GHOSTWHITE}>
-        <View style={styles.callToActionContainer}>
-          <View style={styles.callToActionInnerContainer}>
-            <Image source={Number(icon)} style={styles.section_withBorder_icon} resizeMode="contain" />
-            <Text style={styles.section_withBorder_header}>{header}</Text>
+
+  const CallToAction: React.FC<CallToActionProps> = React.memo(
+    ({header, paragraph, icon, onPress}) => {
+      return (
+        <TouchableRipple
+          style={styles.section_withBorder}
+          onPress={onPress}
+          rippleColor={PALETTE.GHOSTWHITE}>
+          <View style={styles.callToActionContainer}>
+            <View style={styles.callToActionInnerContainer}>
+              <Image
+                source={Number(icon)}
+                style={styles.section_withBorder_icon}
+                resizeMode="contain"
+              />
+              <Text style={styles.section_withBorder_header}>{header}</Text>
+            </View>
+            <Text
+              style={[
+                styles.paragraphStyle,
+                styles.section_withBorder_paragraph,
+              ]}
+              numberOfLines={1}
+              ellipsizeMode="tail">
+              {paragraph}
+            </Text>
           </View>
-          <Text style={[styles.paragraphStyle, styles.section_withBorder_paragraph]} numberOfLines={1} ellipsizeMode="tail">
-            {paragraph}
-          </Text>
-        </View>
-      </TouchableRipple>
-    );
-  });
-  
+        </TouchableRipple>
+      );
+    },
+  );
 
   return (
     <View style={styles.section}>
@@ -281,9 +299,7 @@ const BasicInformation = ({state, dispatch}: SectionProps) => {
       <CallToAction
         header="Gender"
         paragraph={
-          state.gender?.specific
-            ? state.gender.specific
-            : state.gender?.general
+          state.gender?.specific ? state.gender.specific : state.gender?.general
         }
         icon={icons.gender}
         onPress={() => navigation.navigate(ROUTES.EDIT_GENDER_SCREEN)}
@@ -301,8 +317,7 @@ const BasicInformation = ({state, dispatch}: SectionProps) => {
       <CallToAction
         header="Sexual Orientation"
         paragraph={
-          state.sexualOrientation &&
-          state.sexualOrientation.length !== 0
+          state.sexualOrientation && state.sexualOrientation.length !== 0
             ? state.sexualOrientation.join(', ')
             : 'Add'
         }
@@ -339,14 +354,19 @@ const BasicInformation = ({state, dispatch}: SectionProps) => {
   );
 };
 
-const AdditionalInformation = React.memo(({ state, dispatch }: SectionProps) => {
+const AdditionalInformation = React.memo(({state, dispatch}: SectionProps) => {
   const [result, setResult] = useState<any>(null);
 
-  const onPress = useCallback((text: string) => {
-    let foundResult = state.questionsList?.find(item => item.question.includes(text));
-    setResult(foundResult);
-    dispatch(EditProfileActions.updateUserProfile('modalVisible', true));
-  }, [state.questionsList, dispatch]);
+  const onPress = useCallback(
+    (text: string) => {
+      let foundResult = state.questionsList?.find(item =>
+        item.question.includes(text),
+      );
+      setResult(foundResult);
+      dispatch(EditProfileActions.updateUserProfile('modalVisible', true));
+    },
+    [state.questionsList, dispatch],
+  );
 
   const renderTouchableRipple = useCallback(
     (field: any, index: number) => (
@@ -355,7 +375,7 @@ const AdditionalInformation = React.memo(({ state, dispatch }: SectionProps) => 
         style={styles.section_withBorder}
         onPress={() => onPress(field.question)}
         rippleColor={PALETTE.GHOSTWHITE}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <View style={{flexDirection: 'row', alignItems: 'center'}}>
           <Image
             source={Number(field.icon)}
             style={styles.section_withBorder_icon}
@@ -372,13 +392,13 @@ const AdditionalInformation = React.memo(({ state, dispatch }: SectionProps) => 
         </View>
       </TouchableRipple>
     ),
-    [onPress]
+    [onPress],
   );
 
   return (
     <View style={styles.section}>
       <Text style={styles.section_header}>Additional information</Text>
-      <Text style={[styles.section_subHeader, { paddingBottom: 10 }]}>
+      <Text style={[styles.section_subHeader, {paddingBottom: 10}]}>
         Make your adjustments here, and let others know more about yourself
       </Text>
       {state.additionalInformation.map(renderTouchableRipple)}
@@ -389,16 +409,13 @@ const AdditionalInformation = React.memo(({ state, dispatch }: SectionProps) => 
   );
 });
 
-
-
-const HeightSection = React.memo(({ state, dispatch }: SectionProps) => {
-
+const HeightSection = React.memo(({state, dispatch}: SectionProps) => {
   const [heightState, setHeightState] = useState({
     feets: state?.height?.feets || '',
     inches: state?.height?.inches || '',
-    active: { feet: 0, inches: 0 },
+    active: {feet: 0, inches: 0},
     showFeetError: false,
-    showInchesError: false
+    showInchesError: false,
   });
 
   const onFeetBlur = useCallback(() => {
@@ -410,7 +427,11 @@ const HeightSection = React.memo(({ state, dispatch }: SectionProps) => {
           error = true;
         }
       }
-      return { ...prevState, active: { ...prevState.active, feet: 0 }, showFeetError: error };
+      return {
+        ...prevState,
+        active: {...prevState.active, feet: 0},
+        showFeetError: error,
+      };
     });
   }, []);
 
@@ -423,16 +444,20 @@ const HeightSection = React.memo(({ state, dispatch }: SectionProps) => {
           error = true;
         }
       }
-      return { ...prevState, active: { ...prevState.active, inches: 0 }, showInchesError: error };
+      return {
+        ...prevState,
+        active: {...prevState.active, inches: 0},
+        showInchesError: error,
+      };
     });
   }, []);
 
   useEffect(() => {
-    setHeightState(prevState => ({ ...prevState, showFeetError: false }));
+    setHeightState(prevState => ({...prevState, showFeetError: false}));
   }, [heightState.feets]);
 
   useEffect(() => {
-    setHeightState(prevState => ({ ...prevState, showInchesError: false }));
+    setHeightState(prevState => ({...prevState, showInchesError: false}));
   }, [heightState.inches]);
 
   useEffect(() => {
@@ -451,15 +476,13 @@ const HeightSection = React.memo(({ state, dispatch }: SectionProps) => {
       dispatch(
         EditProfileActions.updateUserProfile('height', {
           feets: heightState.feets,
-          inches: heightState.inches || '0'
-        })
+          inches: heightState.inches || '0',
+        }),
       );
     } else {
       dispatch(EditProfileActions.updateUserProfile('height', undefined));
     }
-
   }, [heightState.feets, heightState.inches]);
-
 
   return (
     <View style={styles.section}>
@@ -468,7 +491,12 @@ const HeightSection = React.memo(({ state, dispatch }: SectionProps) => {
         <View style={styles.section_height}>
           <Text style={styles.section_height_header}>Feets</Text>
           <TextInput
-            onFocus={() => setHeightState(prevState => ({...prevState, active: { ...prevState.active, feet: 1 }}))}
+            onFocus={() =>
+              setHeightState(prevState => ({
+                ...prevState,
+                active: {...prevState.active, feet: 1},
+              }))
+            }
             onBlur={onFeetBlur}
             style={[
               styles.section_height_boxInput,
@@ -479,7 +507,9 @@ const HeightSection = React.memo(({ state, dispatch }: SectionProps) => {
               },
             ]}
             value={heightState.feets}
-            onChangeText={text => setHeightState(prevState => ({...prevState, feets: text}))}
+            onChangeText={text =>
+              setHeightState(prevState => ({...prevState, feets: text}))
+            }
             placeholder="ft"
             placeholderTextColor={THEME_COLORS.tertiary}
             keyboardType="number-pad"
@@ -493,7 +523,12 @@ const HeightSection = React.memo(({ state, dispatch }: SectionProps) => {
         <View style={styles.section_height}>
           <Text style={styles.section_height_header}>Inches</Text>
           <TextInput
-            onFocus={() => setHeightState(prevState => ({...prevState, active: { ...prevState.active, inches: 1 }}))}
+            onFocus={() =>
+              setHeightState(prevState => ({
+                ...prevState,
+                active: {...prevState.active, inches: 1},
+              }))
+            }
             onBlur={onInchesBlur}
             style={[
               styles.section_height_boxInput,
@@ -504,7 +539,9 @@ const HeightSection = React.memo(({ state, dispatch }: SectionProps) => {
               },
             ]}
             value={heightState.inches}
-            onChangeText={text => setHeightState(prevState => ({...prevState, inches: text}))}
+            onChangeText={text =>
+              setHeightState(prevState => ({...prevState, inches: text}))
+            }
             placeholder="in"
             placeholderTextColor={THEME_COLORS.tertiary}
             keyboardType="number-pad"
@@ -518,8 +555,7 @@ const HeightSection = React.memo(({ state, dispatch }: SectionProps) => {
       </View>
     </View>
   );
-  
-})
+});
 
 const PicturesSection = React.memo(({state, dispatch}: SectionProps) => {
   const [sectionWidth, setSectionWidth] = useState(0);
@@ -529,124 +565,110 @@ const PicturesSection = React.memo(({state, dispatch}: SectionProps) => {
 
   const [isAlertVisible, setAlertVisible] = useState(false);
   const {handleCameraButtonPress, handleGalleryButtonPress} = useImagePicker();
-  const imageToBeChangedRef = useRef<number>()
+  const imageToBeChangedRef = useRef<number>();
 
-  const picturesWidth = useMemo(() => [
-    (sectionWidth / 3) * 2,
-    ...Array(5).fill(sectionWidth / 3),
-  ], [sectionWidth]);
-  
+  const picturesWidth = useMemo(
+    () => [(sectionWidth / 3) * 2, ...Array(5).fill(sectionWidth / 3)],
+    [sectionWidth],
+  );
 
-  const handleImageSelection = useCallback(async (getImage: () => Promise<string | undefined>) => {
+  const handleImageSelection = useCallback(
+    async (getImage: () => Promise<string | undefined>) => {
+      setAlertVisible(false);
+      const result = await getImage();
+
+      if (result) {
+        setPictures(prevState => {
+          const newState = [...prevState];
+          if (imageToBeChangedRef.current != null)
+            newState[imageToBeChangedRef.current] = result;
+          return newState;
+        });
+      }
+    },
+    [handleGalleryButtonPress, handleCameraButtonPress],
+  );
+
+  const handleAlertClose = () => {
     setAlertVisible(false);
-    const result = await getImage();
+  };
 
+  useEffect(() => {
+    dispatch(EditProfileActions.updateUserProfile('pictures', pictures));
+    // you can return a cleanup function here if needed, like:
+    // return () => { /* cleanup code here */ };
+  }, [pictures]);
 
-    if (result) {
-      setPictures(prevState => {
-        const newState = [...prevState]
-        if(imageToBeChangedRef.current != null) newState[imageToBeChangedRef.current] = result
-        return newState
-      })
-    }
-  }, [handleGalleryButtonPress, handleCameraButtonPress]);
-  
-const handleAlertClose = () => {
-setAlertVisible(false);
-};
-
-useEffect(() => {
-  dispatch(EditProfileActions.updateUserProfile('pictures', pictures));
-  // you can return a cleanup function here if needed, like:
-  // return () => { /* cleanup code here */ };
-}, [pictures]);
-
-
-
-  const PictureField = React.memo(({
-    picture,
-    idx,
-  }: {
-    picture?: string | null;
-    idx: number;
-  }) => {
-
-    return (
-      <LongPressGestureHandler
-        minDurationMs={100}
-        onActivated={() => {
-          setAlertVisible(true)
-          imageToBeChangedRef.current = idx
+  const PictureField = React.memo(
+    ({picture, idx}: {picture?: string | null; idx: number}) => {
+      return (
+        <LongPressGestureHandler
+          minDurationMs={100}
+          onActivated={() => {
+            setAlertVisible(true);
+            imageToBeChangedRef.current = idx;
           }}>
-        <View
-          style={ {justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: PALETTE.LIGHT200,
-          borderRadius: BORDER_RADIUS.large,
-          width: picturesWidth[idx],
-          height: picturesWidth[idx],
-          marginBottom: 5,
-          marginRight:
-            idx === 3 || idx === 4
-              ? 5
-              : idx === 0
-              ? 10
-              : 0,}}>
-              { picture ? (
-                <React.Fragment>
-                  <Animated.Image
-                    source={{uri: picture}}
-                    resizeMode="cover"
-                    style={{
-                      height: '100%',
-                      width: '100%',
-                      borderRadius: BORDER_RADIUS.large,
-                    }}
-                  />
-                  <View
-                    style={{
-                      position: 'absolute',
-                      borderRadius: BORDER_RADIUS.circle,
-                      top: 5,
-                      left: 5,
-                      backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                      height: 20,
-                      minWidth: 20,
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                    }}>
-                    <Text
-                      style={{
-                        textAlign: 'center',
-                        ...themeText.bodyRegularSeven,
-                        flex: 1,
-                        paddingHorizontal:
-                          idx === 0 ? 10 : 0,
-                      }}>
-                      {idx === 0
-                        ? 'main'
-                        : idx + 1}
-                    </Text>
-                  </View>
-                </React.Fragment>
-              ) : (
-                <Image
-                  source={icons.plus}
-                  style={{
-                    tintColor: PALETTE.GRAY500,
-                    height: '50%',
-                    width: '50%',
-                  }}
+          <View
+            style={{
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: PALETTE.LIGHT200,
+              borderRadius: BORDER_RADIUS.large,
+              width: picturesWidth[idx],
+              height: picturesWidth[idx],
+              marginBottom: 5,
+              marginRight: idx === 3 || idx === 4 ? 5 : idx === 0 ? 10 : 0,
+            }}>
+            {picture ? (
+              <React.Fragment>
+                <Animated.Image
+                  source={{uri: picture}}
                   resizeMode="cover"
+                  style={{
+                    height: '100%',
+                    width: '100%',
+                    borderRadius: BORDER_RADIUS.large,
+                  }}
                 />
-              )}
-               
-        </View>
-       
-      </LongPressGestureHandler>
-    );
-  })
-
+                <View
+                  style={{
+                    position: 'absolute',
+                    borderRadius: BORDER_RADIUS.circle,
+                    top: 5,
+                    left: 5,
+                    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                    height: 20,
+                    minWidth: 20,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}>
+                  <Text
+                    style={{
+                      textAlign: 'center',
+                      ...themeText.bodyRegularSeven,
+                      flex: 1,
+                      paddingHorizontal: idx === 0 ? 10 : 0,
+                    }}>
+                    {idx === 0 ? 'main' : idx + 1}
+                  </Text>
+                </View>
+              </React.Fragment>
+            ) : (
+              <Image
+                source={icons.plus}
+                style={{
+                  tintColor: PALETTE.GRAY500,
+                  height: '50%',
+                  width: '50%',
+                }}
+                resizeMode="cover"
+              />
+            )}
+          </View>
+        </LongPressGestureHandler>
+      );
+    },
+  );
 
   const onLayout = (event: TYPES.LayoutChangeEvent) => {
     const {width} = event.nativeEvent.layout;
@@ -667,41 +689,28 @@ useEffect(() => {
           paddingTop: 10,
           overflow: 'hidden',
         }}>
-        <PictureField
-          picture={pictures[0]}
-          idx={0}
-        />
+        <PictureField picture={pictures[0]} idx={0} />
         <View style={{flexDirection: 'column'}}>
-          <PictureField
-            picture={pictures[1]}
-            idx={1}
-          />
-          <PictureField
-            picture={pictures[2]}
-            idx={2}
-          />
+          <PictureField picture={pictures[1]} idx={1} />
+          <PictureField picture={pictures[2]} idx={2} />
         </View>
         <View style={{flexDirection: 'row', flexWrap: 'wrap'}}>
           {[...Array(3)].map((_, index) => (
             <React.Fragment key={index + 3}>
-              <PictureField
-                picture={pictures[index + 3]}
-                idx={index + 3}
-              />
+              <PictureField picture={pictures[index + 3]} idx={index + 3} />
             </React.Fragment>
           ))}
         </View>
       </View>
       <UploadSelectionAlert
-          visible={isAlertVisible}
-          onClose={handleAlertClose}
-          onGalleryPress={() => handleImageSelection(handleGalleryButtonPress)}
-          onTakePhotoPress={() => handleImageSelection(handleCameraButtonPress)}
-        />
+        visible={isAlertVisible}
+        onClose={handleAlertClose}
+        onGalleryPress={() => handleImageSelection(handleGalleryButtonPress)}
+        onTakePhotoPress={() => handleImageSelection(handleCameraButtonPress)}
+      />
     </View>
   );
-})
-
+});
 
 const BiographySection = React.memo(({state, dispatch}: SectionProps) => {
   const [active, setActive] = useState(0);
@@ -729,102 +738,116 @@ const BiographySection = React.memo(({state, dispatch}: SectionProps) => {
       />
     </View>
   );
-})
+});
 
-const ModalSelection = React.memo(({ state, dispatch, data }: ModalSelectionProps) => {
+const ModalSelection = React.memo(
+  ({state, dispatch, data}: ModalSelectionProps) => {
+    const field = useMemo(() => {
+      return state.additionalInformation?.find((field: any) =>
+        field.question.includes(data.question),
+      );
+    }, [data.question, state.additionalInformation]);
 
-  const field = useMemo(() => {
-    return state.additionalInformation?.find((field: any) => 
-      field.question.includes(data.question),
+    const [selectedAnswer, setSelectedAnswer] = useState<
+      null | undefined | string
+    >(null);
+
+    const closeModal = useCallback(() => {
+      dispatch(EditProfileActions.updateUserProfile('modalVisible', false));
+    }, [dispatch]);
+
+    const handleAnswerSelect = useCallback((answer: string) => {
+      setSelectedAnswer(answer);
+    }, []);
+
+    const handleConfirmation = useCallback(() => {
+      const question = state.additionalInformation?.find((field: any) =>
+        field.question.includes(data.question),
+      );
+
+      if (question && selectedAnswer) {
+        question.answer = selectedAnswer;
+      }
+
+      closeModal();
+    }, [
+      data.question,
+      state.additionalInformation,
+      selectedAnswer,
+      closeModal,
+    ]);
+
+    useEffect(() => {
+      if (state.modalVisible) {
+        setSelectedAnswer(field?.answer);
+      } else {
+        setSelectedAnswer(null);
+      }
+    }, [field, state.modalVisible]);
+
+    return (
+      <Modal
+        transparent={true}
+        visible={state.modalVisible}
+        onRequestClose={closeModal}>
+        <Pressable style={{flex: 1}} onPress={closeModal}>
+          <View style={modalSelectionStyles.flexEnd}>
+            <Pressable
+              style={modalSelectionStyles.container}
+              onPress={e => e.stopPropagation()}>
+              <View style={modalSelectionStyles.iconsContainer}>
+                <View
+                  onStartShouldSetResponder={() => true}
+                  onResponderRelease={() =>
+                    dispatch(
+                      EditProfileActions.updateUserProfile(
+                        'modalVisible',
+                        false,
+                      ),
+                    )
+                  }
+                  style={modalSelectionStyles.iconContainer}>
+                  <Image
+                    source={icons.normalCross}
+                    resizeMode="contain"
+                    style={modalSelectionStyles.crossIcon}
+                  />
+                </View>
+                <View
+                  onStartShouldSetResponder={() => true}
+                  onResponderRelease={handleConfirmation}
+                  style={modalSelectionStyles.iconContainer}>
+                  <Image
+                    source={icons.normalTick}
+                    resizeMode="contain"
+                    style={modalSelectionStyles.tickIcon}
+                  />
+                </View>
+              </View>
+              <Text style={modalSelectionStyles.header}>{data.question}</Text>
+              <ScrollView
+                contentContainerStyle={
+                  modalSelectionStyles.ScrollViewContainer
+                }>
+                <View style={modalSelectionStyles.answersContainer}>
+                  {data.answers.map((answer: string, index: number) => (
+                    <Button.interestsButton
+                      onPress={() => handleAnswerSelect(answer)}
+                      active={selectedAnswer === answer}
+                      key={index}
+                      style={modalSelectionStyles.interestButtons}>
+                      {answer}
+                    </Button.interestsButton>
+                  ))}
+                </View>
+              </ScrollView>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Modal>
     );
-  }, [data.question, state.additionalInformation]);
-
-  const [selectedAnswer, setSelectedAnswer] = useState<null | undefined | string>(null);
-
-  const closeModal = useCallback(() => {
-    dispatch(EditProfileActions.updateUserProfile('modalVisible', false));
-  }, [dispatch]);
-
-  const handleAnswerSelect = useCallback((answer: string) => {
-    setSelectedAnswer(answer);
-  }, []);
-
-  const handleConfirmation = useCallback(() => {
-    const question = state.additionalInformation?.find((field: any) => 
-      field.question.includes(data.question),
-    );
-
-    if (question && selectedAnswer) {
-      question.answer = selectedAnswer;
-    }
-
-    closeModal();
-  }, [data.question, state.additionalInformation, selectedAnswer, closeModal]);
-
-  useEffect(() => {
-    if (state.modalVisible) {
-      setSelectedAnswer(field?.answer);
-    } else {
-      setSelectedAnswer(null);
-    }
-  }, [field, state.modalVisible]);
-
-  return (
-    <Modal
-      transparent={true}
-      visible={state.modalVisible}
-      onRequestClose={closeModal}
-    >
-      <Pressable style={{ flex: 1 }} onPress={closeModal}>
-        <View style={modalSelectionStyles.flexEnd}>
-          <Pressable style={modalSelectionStyles.container} onPress={(e) => e.stopPropagation()}>
-            <View style={modalSelectionStyles.iconsContainer}>
-              <View
-                onStartShouldSetResponder={() => true}
-                onResponderRelease={() =>
-                  dispatch(
-                    EditProfileActions.updateUserProfile('modalVisible', false),
-                  )
-                }
-                style={modalSelectionStyles.iconContainer}>
-                <Image
-                  source={icons.normalCross}
-                  resizeMode="contain"
-                  style={modalSelectionStyles.crossIcon}
-                />
-              </View>
-              <View
-                onStartShouldSetResponder={() => true} onResponderRelease={handleConfirmation}
-                style={modalSelectionStyles.iconContainer}>
-                <Image
-                  source={icons.normalTick}
-                  resizeMode="contain"
-                  style={modalSelectionStyles.tickIcon}
-                />
-              </View>
-            </View>
-            <Text style={modalSelectionStyles.header}>{data.question}</Text>
-            <ScrollView
-              contentContainerStyle={modalSelectionStyles.ScrollViewContainer}>
-              <View style={modalSelectionStyles.answersContainer}>
-              {data.answers.map((answer: string, index: number) => (
-                <Button.interestsButton
-                  onPress={() => handleAnswerSelect(answer)}
-                  active={selectedAnswer === answer}
-                  key={index}
-                  style={modalSelectionStyles.interestButtons}
-                >
-                  {answer}
-                </Button.interestsButton>
-              ))}
-              </View>
-            </ScrollView>
-          </Pressable>
-        </View>
-      </Pressable>
-    </Modal>
-  );
-})
+  },
+);
 
 const modalSelectionStyles = StyleSheet.create({
   container: {
@@ -890,51 +913,48 @@ const modalSelectionStyles = StyleSheet.create({
   },
 });
 
-const SpotifySection: React.FC<SectionProps> = ({
-  state,
-  dispatch,
-}) => {
+const SpotifySection: React.FC<SectionProps> = ({state, dispatch}) => {
   const [artists, setArtists] = useState<any>(
     state?.spotify?.artists ? state.spotify.artists : Array(10).fill(null),
   );
-  
+
   const authCodeRef = useRef<string>('');
   const [loading, setLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(
     state.spotify?.isConnected ? true : false,
   );
 
- const [showWebView, setShowWebView] = useState(false);
- const uid = useSelector((state: TYPES.AppState) => state.usersReducer.currentUserId);
+  const [showWebView, setShowWebView] = useState(false);
+  const uid = useSelector(
+    (state: TYPES.AppState) => state.usersReducer.currentUserId,
+  );
 
   const handleFetchArtists = async () => {
     setLoading(true);
 
     if (isConnected) {
-      if(uid) await SpotifyService()
-        .disconnectFromSpotify(uid)
-        .catch(e => console.log(e))
-        .then(result => {
-          if (result.type === 'success') setIsConnected(false);
-        });
+      if (uid)
+        await SpotifyService()
+          .disconnectFromSpotify(uid)
+          .catch(e => console.log(e))
+          .then(result => {
+            if (result.type === 'success') setIsConnected(false);
+          });
       setArtists(Array(10).fill(null));
       authCodeRef.current = '';
     } else {
-      if(uid){
-      setShowWebView(true);
-      await waitForAuthCode();
-      await SpotifyService()
-        .authenticateAndFetchSpotify(
-          uid,
-          authCodeRef.current,
-        )
-        .then(result => {
-          if (result.type === 'success') {
-            setIsConnected(true);
-            setArtists(result.artists);
-          }
-        })
-        .catch(e => console.log(e));
+      if (uid) {
+        setShowWebView(true);
+        await waitForAuthCode();
+        await SpotifyService()
+          .authenticateAndFetchSpotify(uid, authCodeRef.current)
+          .then(result => {
+            if (result.type === 'success') {
+              setIsConnected(true);
+              setArtists(result.artists);
+            }
+          })
+          .catch(e => console.log(e));
       }
     }
 
@@ -1078,47 +1098,46 @@ const SpotifySection: React.FC<SectionProps> = ({
   );
 };
 
-const InstagramSection: React.FC<SectionProps> = ({
-  state,
-  dispatch,
-}) => {
-  const [images, setImages] = useState<any>(state.instagram?.images ? state.instagram.images : Array(10).fill(null),);
+const InstagramSection: React.FC<SectionProps> = ({state, dispatch}) => {
+  const [images, setImages] = useState<any>(
+    state.instagram?.images ? state.instagram.images : Array(10).fill(null),
+  );
   const authCodeRef = useRef<string>('');
   const [loading, setLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(
     state.instagram?.isConnected ? true : false,
   );
   const [showWebView, setShowWebView] = useState(false);
-  const uid = useSelector((state: TYPES.AppState) => state.usersReducer.currentUserId);
+  const uid = useSelector(
+    (state: TYPES.AppState) => state.usersReducer.currentUserId,
+  );
 
   const handleFetchImages = async () => {
     setLoading(true);
 
     if (isConnected) {
-      if(uid) await InstagramService()
-        .disconnectFromInstagram(uid)
-        .catch(e => console.log(e))
-        .then(result => {
-          if (result.type === 'success') setIsConnected(false);
-        });
+      if (uid)
+        await InstagramService()
+          .disconnectFromInstagram(uid)
+          .catch(e => console.log(e))
+          .then(result => {
+            if (result.type === 'success') setIsConnected(false);
+          });
       setImages(Array(10).fill(null));
       authCodeRef.current = '';
     } else {
-      if(uid){
-      setShowWebView(true);
-      await waitForAuthCode();
-      await InstagramService()
-        .authenticateAndFetchInstagram(
-          uid,
-          authCodeRef.current
-        )
-        .then(result => {
-          if (result.type === 'success') {
-            setIsConnected(true);
-            setImages(result.images);
-          }
-        })
-        .catch(e => console.log(e));
+      if (uid) {
+        setShowWebView(true);
+        await waitForAuthCode();
+        await InstagramService()
+          .authenticateAndFetchInstagram(uid, authCodeRef.current)
+          .then(result => {
+            if (result.type === 'success') {
+              setIsConnected(true);
+              setImages(result.images);
+            }
+          })
+          .catch(e => console.log(e));
       }
     }
     setLoading(false);

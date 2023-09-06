@@ -43,22 +43,24 @@ import {
   validateGrantType,
 } from "../utils/token.utils";
 import centralizedErrorHandler from "../utils/centralizedErrorHandler.utils";
-import { sendErrorResponse, sendSuccessResponse } from "../utils/response.utils";
+import {
+  sendErrorResponse,
+  sendSuccessResponse,
+} from "../utils/response.utils";
 import { convertToObjectIdRecursive } from "../utils/converter.utils";
 import UserResponse from "../models/response.model";
-import AWS from "aws-sdk"
+import AWS from "aws-sdk";
 import OTPModel from "../models/otp.model";
 import Joi from "joi";
 import jwt from "jsonwebtoken";
-import nodemailer from "nodemailer"
+import nodemailer from "nodemailer";
 import { GOOGLE_CLIENT_ID, NODEMAILER_SECRET } from "../config/config";
 import EmailTokenModel from "../models/emailToken.model";
 import AuthCodeModel from "../models/authCode.model";
-import crypto from "crypto"
+import crypto from "crypto";
 import axios from "axios";
 import { OAuth2Client } from "google-auth-library";
 import awsServices from "../services/aws.services";
-
 
 // @route POST auth/users/register
 // @desc Register user
@@ -69,22 +71,41 @@ async function registerUser(req: express.Request, res: express.Response) {
   try {
     session.startTransaction();
 
-    const files = req.files
-  
+    const files = req.files;
+
     if (!files || !Array.isArray(files) || files.length < 2) {
-      return sendErrorResponse(res, 400, "None or less than two pictures have been uploaded.")
+      return sendErrorResponse(
+        res,
+        400,
+        "None or less than two pictures have been uploaded."
+      );
     }
-    
+    let parsedBody = req.body;
 
-    // Check if the req body is valid
-    let { error, value } = validateUser(req.body);
+    // Parse specific serialized fields back to objects or arrays
+    parsedBody.gender = JSON.parse(parsedBody.gender);
+    parsedBody.dateOfBirth = JSON.parse(parsedBody.dateOfBirth);
+    parsedBody.seeking = JSON.parse(parsedBody.seeking);
+    parsedBody.interests = JSON.parse(parsedBody.interests);
+    parsedBody.additionalInformation = JSON.parse(parsedBody.additionalInformation);
+    parsedBody.coordinates = JSON.parse(parsedBody.coordinates)
+
+    // Check if the parsedBody is valid
+    let { error, value } = validateUser(parsedBody);
     if (error) {
-      return sendErrorResponse(res,400, error.details[0].message)
-
+      return sendErrorResponse(res, 400, error.details[0].message);
     }
 
-    value = await convertToObjectIdRecursive(value)
+    if(value.email && value.phoneNumber){
+      value.verified = true
+    }
+
+
+    value = await convertToObjectIdRecursive(value);
     value._id = newUserId;
+    value.location = { coordinates: value.coordinates };
+    delete value.coordinates;
+
 
     // Check if user already exists
     const userExist = await UserModel.findOne({ _id: value._id }, null, {
@@ -95,7 +116,10 @@ async function registerUser(req: express.Request, res: express.Response) {
     }
 
     // Create the user's response model
-    await AuthServices.addUserResponsesToDB({_id: value._id, responses: value.additionalInformation}, session)
+    await AuthServices.addUserResponsesToDB(
+      { _id: value._id, responses: value.additionalInformation },
+      session
+    );
 
     // Create the user's settings model
     await AuthServices.addUserSettingsToDB({ _id: value._id }, session);
@@ -119,7 +143,10 @@ async function registerUser(req: express.Request, res: express.Response) {
       session
     );
 
-    value.pictures = await awsServices.addUserPicturesToS3(files, newUserId.toString() )
+    value.pictures = await awsServices.addUserPicturesToS3(
+      files,
+      newUserId.toString()
+    );
     // Create the user's photo model
     const picturePromises = value.pictures.map((pic: any) => {
       return AuthServices.addUserPicturesToDB(
@@ -127,12 +154,10 @@ async function registerUser(req: express.Request, res: express.Response) {
         session
       );
     });
-    
-     await Promise.all(picturePromises);
+
+    await Promise.all(picturePromises);
     await session.commitTransaction();
-  session.endSession();
-
-
+    session.endSession();
 
     return res.status(202).json({
       type: "success",
@@ -140,7 +165,6 @@ async function registerUser(req: express.Request, res: express.Response) {
       accessToken,
       refreshToken,
     });
-
   } catch (error) {
     if (session.inTransaction()) {
       await session.abortTransaction();
@@ -148,10 +172,13 @@ async function registerUser(req: express.Request, res: express.Response) {
 
     const errorMessage = (error as Error).message;
 
-    const status = centralizedErrorHandler(errorMessage)
+    const status = centralizedErrorHandler(errorMessage);
 
-    return sendErrorResponse(res,status, status != 500 ? errorMessage : SERVER_ERR)
-
+    return sendErrorResponse(
+      res,
+      status,
+      status != 500 ? errorMessage : SERVER_ERR
+    );
   } finally {
     session.endSession();
   }
@@ -159,27 +186,29 @@ async function registerUser(req: express.Request, res: express.Response) {
 
 async function logOutUser(req: express.Request, res: express.Response) {
   try {
-    const {grantType} = req.body
-    validateGrantType(grantType , 'refresh_token')
+    const { grantType } = req.body;
+    validateGrantType(grantType, "refresh_token");
 
-
-    const refreshToken = extractTokenFromHeader(req) as string
+    const refreshToken = extractTokenFromHeader(req) as string;
 
     const { error, value } = validateToken({ token: refreshToken });
     if (error) {
-      return sendErrorResponse(res,400, error.details[0].message)
-
+      return sendErrorResponse(res, 400, error.details[0].message);
     }
 
     await AuthServices.deactivateRefreshToken(value.token);
 
-    return sendSuccessResponse(res, 200,"Logged out successfully.")
+    return sendSuccessResponse(res, 200, "Logged out successfully.");
   } catch (error) {
     const errorMessage = (error as Error).message;
 
-    const status = centralizedErrorHandler(errorMessage)
+    const status = centralizedErrorHandler(errorMessage);
 
-    return sendErrorResponse(res,status, status != 500 ? errorMessage : SERVER_ERR)
+    return sendErrorResponse(
+      res,
+      status,
+      status != 500 ? errorMessage : SERVER_ERR
+    );
   }
 }
 
@@ -188,29 +217,26 @@ async function deleteUser(req: express.Request, res: express.Response) {
   session.startTransaction();
 
   try {
-    const {grantType} = req.body
-    validateGrantType(grantType , 'access_token')
+    const { grantType } = req.body;
+    validateGrantType(grantType, "access_token");
 
-
-    const accessToken = extractTokenFromHeader(req) as string
+    const accessToken = extractTokenFromHeader(req) as string;
     const { error, value } = validateToken({ token: accessToken });
 
     if (error) {
-      return sendErrorResponse(res,400, error.details[0].message)
-
+      return sendErrorResponse(res, 400, error.details[0].message);
     }
 
     const decode = decodeAccessToken(value.token);
     if (!decode) throw new Error(EXPIRED_TOKEN);
 
-    
     const user = await UserModel.findById(decode.sub).session(session);
     if (!user) {
       throw new Error(USER_NOT_FOUND_ERR);
     }
 
     // delete user's repsonses
-    await UserResponse.deleteOne({_id: decode.sub}).session(session)
+    await UserResponse.deleteOne({ _id: decode.sub }).session(session);
 
     // delete user's pictures
     await PicturesModel.deleteMany({ user_id: decode.sub }).session(session);
@@ -239,36 +265,40 @@ async function deleteUser(req: express.Request, res: express.Response) {
 
     await session.commitTransaction();
 
-    await awsServices.deleteUserFolderFromS3(decode.sub.toString())
+    await awsServices.deleteUserFolderFromS3(decode.sub.toString());
 
-    return sendSuccessResponse(res, 200,"User's account successfully deleted.")
-
+    return sendSuccessResponse(
+      res,
+      200,
+      "User's account successfully deleted."
+    );
   } catch (error) {
     await session.abortTransaction();
 
     const errorMessage = (error as Error).message;
 
-    const status = centralizedErrorHandler(errorMessage)
+    const status = centralizedErrorHandler(errorMessage);
 
-    return sendErrorResponse(res,status, status != 500 ? errorMessage : SERVER_ERR)
+    return sendErrorResponse(
+      res,
+      status,
+      status != 500 ? errorMessage : SERVER_ERR
+    );
   } finally {
     session.endSession();
   }
 }
 
-
 async function refreshToken(req: express.Request, res: express.Response) {
   try {
-    const {grantType} = req.body
-    validateGrantType(grantType , 'refresh_token')
+    const { grantType } = req.body;
+    validateGrantType(grantType, "refresh_token");
 
-
-    const refreshToken = extractTokenFromHeader(req) as string
+    const refreshToken = extractTokenFromHeader(req) as string;
 
     const { error, value } = validateToken({ token: refreshToken });
     if (error) {
-      return sendErrorResponse(res,400, error.details[0].message)
-
+      return sendErrorResponse(res, 400, error.details[0].message);
     }
 
     const tokenDoc = await RefreshTokenModel.findOne({
@@ -305,19 +335,26 @@ async function refreshToken(req: express.Request, res: express.Response) {
         throw new Error(e.message);
       });
 
-      return sendSuccessResponse(res, 200, "Tokens were refreshed successfully.", {refreshToken, accessToken} )
-    
+      return sendSuccessResponse(
+        res,
+        200,
+        "Tokens were refreshed successfully.",
+        { refreshToken, accessToken }
+      );
     } else {
       throw new Error(INVALID_TOKEN);
     }
   } catch (error) {
     const errorMessage = (error as Error).message;
 
-    const status = centralizedErrorHandler(errorMessage)
+    const status = centralizedErrorHandler(errorMessage);
 
-    return sendErrorResponse(res,status, status != 500 ? errorMessage : SERVER_ERR)
+    return sendErrorResponse(
+      res,
+      status,
+      status != 500 ? errorMessage : SERVER_ERR
+    );
   }
-
 }
 
 // @route GET auth/users/emailExist
@@ -328,23 +365,23 @@ async function emailExist(req: express.Request, res: express.Response) {
     const { error, value } = validateEmail(req.body);
 
     if (error) {
-      return sendErrorResponse(res,400, error.details[0].message)
+      return sendErrorResponse(res, 400, error.details[0].message);
     }
 
     const response = await AuthServices.emailExistService(value);
 
-    if (response)
-     
-      return  sendSuccessResponse(res, 200, USER_ALREADY_EXIST)
-
-    else
-      throw new Error(EMAIL_NOT_EXIST)
+    if (response) return sendSuccessResponse(res, 200, USER_ALREADY_EXIST);
+    else throw new Error(EMAIL_NOT_EXIST);
   } catch (error) {
     const errorMessage = (error as Error).message;
 
-    const status = centralizedErrorHandler(errorMessage)
+    const status = centralizedErrorHandler(errorMessage);
 
-    return sendErrorResponse(res,status, status != 500 ? errorMessage : SERVER_ERR)
+    return sendErrorResponse(
+      res,
+      status,
+      status != 500 ? errorMessage : SERVER_ERR
+    );
   }
 }
 
@@ -356,23 +393,23 @@ async function phoneNumberExist(req: express.Request, res: express.Response) {
     const { error, value } = validatePhoneNumber(req.body);
 
     if (error) {
-      return sendErrorResponse(res,400, error.details[0].message)
-
+      return sendErrorResponse(res, 400, error.details[0].message);
     }
 
     const response = await AuthServices.phoneNumberExistService(value);
 
-    if (response)
-    return  sendSuccessResponse(res, 200, USER_ALREADY_EXIST)
-
-    else
-      throw new Error(PHONE_NUMBER_NOT_EXIST)
+    if (response) return sendSuccessResponse(res, 200, USER_ALREADY_EXIST);
+    else throw new Error(PHONE_NUMBER_NOT_EXIST);
   } catch (error) {
     const errorMessage = (error as Error).message;
 
-    const status = centralizedErrorHandler(errorMessage)
+    const status = centralizedErrorHandler(errorMessage);
 
-    return sendErrorResponse(res,status, status != 500 ? errorMessage : SERVER_ERR)
+    return sendErrorResponse(
+      res,
+      status,
+      status != 500 ? errorMessage : SERVER_ERR
+    );
   }
 }
 
@@ -384,41 +421,40 @@ async function idExist(req: express.Request, res: express.Response) {
     const { error, value } = validateId(req.body);
 
     if (error) {
-      return sendErrorResponse(res,400, error.details[0].message)
-
+      return sendErrorResponse(res, 400, error.details[0].message);
     }
 
     const response = await AuthServices.uidExistService(value);
 
-    if (response)
-    return  sendSuccessResponse(res, 200, USER_ALREADY_EXIST)
-
-    else
-      throw new Error(USER_NOT_FOUND_ERR)
+    if (response) return sendSuccessResponse(res, 200, USER_ALREADY_EXIST);
+    else throw new Error(USER_NOT_FOUND_ERR);
   } catch (error) {
     const errorMessage = (error as Error).message;
 
-    const status = centralizedErrorHandler(errorMessage)
+    const status = centralizedErrorHandler(errorMessage);
 
-    return sendErrorResponse(res,status, status != 500 ? errorMessage : SERVER_ERR)
+    return sendErrorResponse(
+      res,
+      status,
+      status != 500 ? errorMessage : SERVER_ERR
+    );
   }
 }
 
 async function changePhoneNumber(req: express.Request, res: express.Response) {
   try {
-    const {grantType, oldPhoneNumber, newPhoneNumber} = req.body
-    validateGrantType(grantType , 'access_token')
+    const { grantType, oldPhoneNumber, newPhoneNumber } = req.body;
+    validateGrantType(grantType, "access_token");
 
-    const accessToken = extractTokenFromHeader(req) as string
+    const accessToken = extractTokenFromHeader(req) as string;
     const { error, value } = validateChangePhoneNumber({
       accessToken,
       oldPhoneNumber,
-      newPhoneNumber
+      newPhoneNumber,
     });
 
     if (error) {
-      return sendErrorResponse(res,400, error.details[0].message)
-
+      return sendErrorResponse(res, 400, error.details[0].message);
     }
 
     const decode = decodeAccessToken(value.accessToken);
@@ -430,33 +466,45 @@ async function changePhoneNumber(req: express.Request, res: express.Response) {
     if (user.phoneNumber != value.oldPhoneNumber) throw new Error(BAD_REQUEST);
     user.phoneNumber = value.newPhoneNumber;
 
-    const UserWithPhoneNumber = await UserModel.findOne({phoneNumber: newPhoneNumber})
-    if(UserWithPhoneNumber) throw new Error(USER_ALREADY_EXIST)
+    const UserWithPhoneNumber = await UserModel.findOne({
+      phoneNumber: newPhoneNumber,
+    });
+    if (UserWithPhoneNumber) throw new Error(USER_ALREADY_EXIST);
 
     await user.save();
 
-    return  sendSuccessResponse(res, 200,  "User's phone number has been updated.")
-
+    return sendSuccessResponse(
+      res,
+      200,
+      "User's phone number has been updated."
+    );
   } catch (error) {
     const errorMessage = (error as Error).message;
 
-    const status = centralizedErrorHandler(errorMessage)
+    const status = centralizedErrorHandler(errorMessage);
 
-    return sendErrorResponse(res,status, status != 500 ? errorMessage : SERVER_ERR)
+    return sendErrorResponse(
+      res,
+      status,
+      status != 500 ? errorMessage : SERVER_ERR
+    );
   }
 }
 
 async function changeEmail(req: express.Request, res: express.Response) {
   try {
-   const {grantType, oldEmail, newEmail} = req.body
-    validateGrantType(grantType , 'access_token')
+    const { grantType, oldEmail, newEmail } = req.body;
+    validateGrantType(grantType, "access_token");
 
-    const accessToken = extractTokenFromHeader(req) as string
-    const { error, value } = validateChangeEmail({ accessToken, oldEmail, newEmail});
+    const accessToken = extractTokenFromHeader(req) as string;
+    const { error, value } = validateChangeEmail({
+      accessToken,
+      oldEmail,
+      newEmail,
+    });
 
     if (error) {
-      return sendErrorResponse(res,400, error.details[0].message)
-
+      return sendErrorResponse(res, 400, error.details[0].message);
     }
 
     const decode = decodeAccessToken(accessToken);
@@ -473,28 +521,30 @@ async function changeEmail(req: express.Request, res: express.Response) {
 
     await user.save();
 
-    return  sendSuccessResponse(res, 200, "User's email has been updated.")
-
+    return sendSuccessResponse(res, 200, "User's email has been updated.");
   } catch (error) {
     const errorMessage = (error as Error).message;
 
-    const status = centralizedErrorHandler(errorMessage)
+    const status = centralizedErrorHandler(errorMessage);
 
-    return sendErrorResponse(res,status, status != 500 ? errorMessage : SERVER_ERR)
+    return sendErrorResponse(
+      res,
+      status,
+      status != 500 ? errorMessage : SERVER_ERR
+    );
   }
 }
 
 async function removeEmail(req: express.Request, res: express.Response) {
   try {
-    const {grantType} = req.body
-    validateGrantType(grantType , 'access_token')
+    const { grantType } = req.body;
+    validateGrantType(grantType, "access_token");
 
-    const accessToken = extractTokenFromHeader(req) as string
+    const accessToken = extractTokenFromHeader(req) as string;
     const { error, value } = validateToken({ token: accessToken });
 
     if (error) {
-      return sendErrorResponse(res,400, error.details[0].message)
-
+      return sendErrorResponse(res, 400, error.details[0].message);
     }
 
     const decode = decodeAccessToken(value.token);
@@ -508,85 +558,86 @@ async function removeEmail(req: express.Request, res: express.Response) {
       await user.save();
     }
 
-    return  sendSuccessResponse(res, 200, "User's email has been updated.")
-
+    return sendSuccessResponse(res, 200, "User's email has been updated.");
   } catch (error) {
     const errorMessage = (error as Error).message;
 
-    const status = centralizedErrorHandler(errorMessage)
+    const status = centralizedErrorHandler(errorMessage);
 
-    return sendErrorResponse(res,status, status != 500 ? errorMessage : SERVER_ERR)
+    return sendErrorResponse(
+      res,
+      status,
+      status != 500 ? errorMessage : SERVER_ERR
+    );
   }
 }
 
 async function sendOTP(req: express.Request, res: express.Response) {
   try {
-    const {phoneNumber} = req.body
+    const { phoneNumber } = req.body;
     const { error, value } = validatePhoneNumber({ phoneNumber });
 
     if (error) {
-      return sendErrorResponse(res,400, error.details[0].message)
-
+      return sendErrorResponse(res, 400, error.details[0].message);
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     const expiresAt = new Date();
-  expiresAt.setMinutes(expiresAt.getMinutes() + 15); // OTP will expire in 15 minutes
-  await OTPModel.findOneAndRemove({ phoneNumber });
+    expiresAt.setMinutes(expiresAt.getMinutes() + 15); // OTP will expire in 15 minutes
+    await OTPModel.findOneAndRemove({ phoneNumber });
 
-
-  // Create a new OTP document
-  const otpDocument = new OTPModel({
-    phoneNumber,
-    otp,
-    expiresAt,
-  });  
+    // Create a new OTP document
+    const otpDocument = new OTPModel({
+      phoneNumber,
+      otp,
+      expiresAt,
+    });
 
     const sns = new AWS.SNS();
 
-  
     const params = {
-      Message: `Your OTP code is ${otp}`,
+      Message: `Your FlyLeaf OTP code is ${otp}`,
       PhoneNumber: phoneNumber,
     };
 
-
-    sns.publish(params,async (err:any, data:any) => {
+    sns.publish(params, async (err: any, data: any) => {
       if (err) {
-        throw new Error(FAILED_SEND_OTP)
+        throw new Error(FAILED_SEND_OTP);
       }
-      await otpDocument.save()
-      return  sendSuccessResponse(res, 200, 'OTP sent successfully')
-
+      await otpDocument.save();
+      return sendSuccessResponse(res, 200, "OTP sent successfully");
     });
-
   } catch (error) {
     const errorMessage = (error as Error).message;
 
-    const status = centralizedErrorHandler(errorMessage)
+    const status = centralizedErrorHandler(errorMessage);
 
-    return sendErrorResponse(res,status, status != 500 ? errorMessage : SERVER_ERR)
+    return sendErrorResponse(
+      res,
+      status,
+      status != 500 ? errorMessage : SERVER_ERR
+    );
   }
 }
-
 
 async function verifyOTP(req: express.Request, res: express.Response) {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const {phoneNumber, otp} = req.body
+    const { phoneNumber, otp } = req.body;
     const { error, value } = Joi.object({
       phoneNumber: Joi.string().required(),
-      otp: Joi.string().required()
+      otp: Joi.string().required(),
     }).validate({ phoneNumber, otp });
-    
-    if (error) {
-      return sendErrorResponse(res,400, error.details[0].message)
 
+    if (error) {
+      return sendErrorResponse(res, 400, error.details[0].message);
     }
 
-    const otpDocument = await OTPModel.findOne({phoneNumber}).session(session);
+    const otpDocument = await OTPModel.findOne({ phoneNumber }).session(
+      session
+    );
 
     if (!otpDocument) {
       throw new Error(SERVER_ERR);
@@ -598,123 +649,165 @@ async function verifyOTP(req: express.Request, res: express.Response) {
 
     await OTPModel.findByIdAndRemove(otpDocument._id).session(session);
 
-    const userDoc = await UserModel.findOne({phoneNumber}).session(session);
+    const userDoc = await UserModel.findOne({ phoneNumber }).session(session);
 
-      if(userDoc){
-        const accessToken = createAccessToken(userDoc._id) as string
-        const refreshToken = createRefreshToken(userDoc._id) as string
-        await AuthServices.updateUserRefreshTokenInDB(userDoc._id, refreshToken, session)
+    if (userDoc) {
+      const accessToken = createAccessToken(userDoc._id) as string;
+      const refreshToken = createRefreshToken(userDoc._id) as string;
+      await AuthServices.updateUserRefreshTokenInDB(
+        userDoc._id,
+        refreshToken,
+        session
+      );
 
-      
-        await session.commitTransaction();
-        session.endSession();
-        return  sendSuccessResponse(res, 200, 'OTP verified and correct.', {newUser: userDoc, accessToken, refreshToken})
-      }
-
-     
       await session.commitTransaction();
       session.endSession();
-      return sendSuccessResponse(res, 200, 'OTP verified and correct.', {newUser: !userDoc});
-  
-    } catch (error) {
-      await session.abortTransaction();
-      session.endSession();
-      const errorMessage = (error as Error).message;
-      const status = centralizedErrorHandler(errorMessage);
-      return sendErrorResponse(res, status, status !== 500 ? errorMessage : SERVER_ERR);
-    }
-  }
-
-  async function sendLink(req: express.Request, res: express.Response) {
-    try {
-      const {email} = req.body
-      const { error, value } = validateEmail({ email });
-  
-      if (error) {
-        return sendErrorResponse(res,400, error.details[0].message)
-  
-      }
-
-      await UserModel.findOne({email}).then(result => {
-        if(!result) throw new Error(USER_NOT_FOUND_ERR)
-      })
-
-      if (!NODEMAILER_SECRET) {
-        return res.status(500).json({ error: SERVER_ERR });
-      }
-  
-      const token = jwt.sign({ email }, NODEMAILER_SECRET, { expiresIn: '15m' });
-
-      const expiresAt = new Date();
-  expiresAt.setMinutes(expiresAt.getMinutes() + 15); // OTP will expire in 15 minutes
-  
-  await EmailTokenModel.findOneAndRemove({ email });
-
-      const EmailTokenDoc = new EmailTokenModel({
-        token,
-        email,
-        expiresAt
-      })
-
-      await EmailTokenDoc.save()
-  
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: 'flyleaf.dev@gmail.com',
-          pass: 'nzriccfimllfmuhx'
-        },
-        tls: {
-          rejectUnauthorized: false
-        }
+      return sendSuccessResponse(res, 200, "OTP verified and correct.", {
+        newUser: false,
+        accessToken,
+        refreshToken,
       });
-  
-      const info = await transporter.sendMail({
-        from: '"Flyleaf Team" <no-reply@flyleaf.com>',
-        to: email,
-        subject: 'Secure Login Link from Flyleaf',
-        html: `
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+    return sendSuccessResponse(res, 200, "OTP verified and correct.", {
+      newUser: true,
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    const errorMessage = (error as Error).message;
+    const status = centralizedErrorHandler(errorMessage);
+    return sendErrorResponse(
+      res,
+      status,
+      status !== 500 ? errorMessage : SERVER_ERR
+    );
+  }
+}
+
+async function sendLink(req: express.Request, res: express.Response) {
+  try {
+    const { email, grantType } = req.body;
+    const { error, value } = validateEmail({ email });
+
+    if (error) {
+      return sendErrorResponse(res, 400, error.details[0].message);
+    }
+
+    if (!["login", "register"].includes(grantType)) {
+      return sendErrorResponse(
+        res,
+        400,
+        "Grant type can either be login or register."
+      );
+    }
+
+    const userDoc = await UserModel.findOne({ email })
+
+    if (grantType === "login" && !userDoc) {
+      throw new Error(USER_NOT_FOUND_ERR);
+
+    }
+
+    if (grantType === "register" && userDoc) {
+      throw new Error(USER_ALREADY_EXIST);
+
+    }
+
+    if (!NODEMAILER_SECRET) {
+      return res.status(500).json({ error: SERVER_ERR });
+    }
+
+    const token = jwt.sign(
+      { email, purpose: grantType === "login" ? "login" : "register" },
+      NODEMAILER_SECRET,
+      { expiresIn: "15m" }
+    );
+
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 15);
+
+    await EmailTokenModel.findOneAndRemove({ email });
+
+    const EmailTokenDoc = new EmailTokenModel({
+      token,
+      email,
+      expiresAt,
+    });
+
+    await EmailTokenDoc.save();
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "flyleaf.dev@gmail.com",
+        pass: "nzriccfimllfmuhx",
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
+
+    const info = await transporter.sendMail({
+      from: '"Flyleaf Team" <no-reply@flyleaf.com>',
+      to: email,
+      subject: "Secure Login Link from Flyleaf",
+      html: `
   <p>Hello,</p>
   <p>Thank you for choosing Flyleaf! We're excited to help you make meaningful connections.</p>
   <p>For your security, please use the link below to log in to your Flyleaf account:</p>
-  <a href="http://localhost:4000/api/auth/log-in/verify-login-link/${token}">Log in to Flyleaf</a>
+  <a href="http://192.168.4.79:4000/api/auth/log-in/verify-login-link/${token}">Log in to Flyleaf</a>
   <p>This link will expire in 15 minutes. If you did not request this link, you can safely ignore this email.</p>
   <p>Best regards,</p>
   <p>The Flyleaf Team</p>
-`
+`,
+    });
 
-      });
-  
-      return  sendSuccessResponse(res, 200, 'Email link sent successfully.')
+    return sendSuccessResponse(res, 200, "Email link sent successfully.");
+  } catch (error) {
+    const errorMessage = (error as Error).message;
 
-    } catch (error) {
-      const errorMessage = (error as Error).message;
-  
-      const status = centralizedErrorHandler(errorMessage)
-  
-      return sendErrorResponse(res,status, status != 500 ? errorMessage : SERVER_ERR)
-    }
+    const status = centralizedErrorHandler(errorMessage);
+
+    return sendErrorResponse(
+      res,
+      status,
+      status != 500 ? errorMessage : SERVER_ERR
+    );
   }
+}
 
-  async function verifyLink(req: express.Request, res: express.Response) {
-    const session = await mongoose.startSession();
+async function verifyLink(req: express.Request, res: express.Response) {
+  const session = await mongoose.startSession();
   session.startTransaction();
-    try {
-      const {token} = req.params
-      const { error, value } = validateToken({ token });
-  
-      if (error) {
-        return sendErrorResponse(res,400, error.details[0].message)
-  
-      }
+  try {
+    const { token } = req.params;
+    const { error, value } = validateToken({ token });
 
-      if (!NODEMAILER_SECRET) {
-        return res.status(500).json({ error: SERVER_ERR });
-      }
-  
-      let decoded;
+    if (error) {
+      return sendErrorResponse(res, 400, error.details[0].message);
+    }
+
+    if (!NODEMAILER_SECRET) {
+      return res.status(500).json({ error: SERVER_ERR });
+    }
+
+    await EmailTokenModel.findOneAndRemove({ token })
+      .session(session)
+      .then((result) => {
+        if (!result) {
+          throw new Error(INVALID_TOKEN);
+        }
+      });
+
+    let decoded;
     try {
-      decoded = jwt.verify(token, NODEMAILER_SECRET) as { email: string };
+      decoded = jwt.verify(token, NODEMAILER_SECRET) as {
+        email: string;
+        purpose: string;
+      };
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {
         throw new Error(EXPIRED_TOKEN);
@@ -723,173 +816,213 @@ async function verifyOTP(req: express.Request, res: express.Response) {
       }
     }
 
-    await EmailTokenModel.findOneAndRemove({email: decoded.email}).session(session);
+     const userDoc = await UserModel.findOne({ email: decoded.email }).session(
+        session
+      );
 
+    if (decoded.purpose === "login") {
+     
 
-    const userDoc = await UserModel.findOne({email: decoded.email}).session(session);
+      if (userDoc) {
+        const authCode = crypto.randomBytes(16).toString("hex");
 
-      if(userDoc){
-        const authCode = crypto.randomBytes(16).toString('hex');
+        // You can create a new model for storing this one-time use code or use existing models
+        const authCodeDoc = new AuthCodeModel({
+          code: authCode,
+          userId: userDoc._id,
+          expiresAt: new Date(Date.now() + 5 * 60 * 1000), // expires in 5 minutes
+        });
 
-      // You can create a new model for storing this one-time use code or use existing models
-      const authCodeDoc = new AuthCodeModel({
-        code: authCode,
-        userId: userDoc._id,
-        expiresAt: new Date(Date.now() + 5 * 60 * 1000) // expires in 5 minutes
-      });
-
-      await authCodeDoc.save({session})
-      await session.commitTransaction();
-      session.endSession();
-      return res.redirect(`flyleaf://login/verify?authCode=${authCode}`);
-      
+        await authCodeDoc.save({ session });
+        await session.commitTransaction();
+        session.endSession();
+        return res.status(200).redirect(`flyleaf://login/verify?emailVerified=true&authCode=${authCode}`);
       }
 
-
-
-  
-    } catch (error) {
-      const errorMessage = (error as Error).message;
-    
-  
-      const status = centralizedErrorHandler(errorMessage)
-  
-      return sendErrorResponse(res,status, status != 500 ? errorMessage : SERVER_ERR)
-    }
-  }
-
-  async function validateAuthCodeAndFetchTokens(req: express.Request, res: express.Response) {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-  
-    try {
-      const { authCode } = req.query;
-  
-      // Validate that an authCode was actually sent in the request
-      if (!authCode) {
-        return sendErrorResponse(res, 400, "Missing authCode");
+      else{
+        return res.status(200).redirect(`flyleaf://login/verify?emailVerified=false`);
       }
-  
-      // Search for the authCode in the database
-      const authCodeDoc = await AuthCodeModel.findOne({ code: authCode }).session(session);
-  
-      if (!authCodeDoc) {
-        return sendErrorResponse(res, 400, "Invalid or expired authCode");
-      }
-  
-      // If the code is valid, fetch or create the accessToken and refreshToken
-      const userId = authCodeDoc.userId;
-      const accessToken = createAccessToken(userId.toString()) as string;
-      const refreshToken = createRefreshToken(userId.toString()) as string;
-  
-      // Create or update refreshToken in database
-      await AuthServices.updateUserRefreshTokenInDB(userId, refreshToken, session)
-  
-      // Remove the used authCode
-      await AuthCodeModel.findByIdAndRemove(authCodeDoc._id).session(session);
-  
-      await session.commitTransaction();
-      session.endSession();
-  
-      return sendSuccessResponse(res, 200, "Tokens fetched successfully", { accessToken, refreshToken });
-  
-    } catch (error) {
-      const errorMessage = (error as Error).message;
-  
-      const status = centralizedErrorHandler(errorMessage);
-      await session.abortTransaction();
-      session.endSession();
-  
-      return sendErrorResponse(res, status, status !== 500 ? errorMessage : SERVER_ERR);
-    }
-  }
-
-  // Google Sign-In
-  async function googleSignIn(req: express.Request, res: express.Response) {
-
-    try {
-      const { grantType } = req.body;
-      validateGrantType(grantType, 'access_token');
-  
-      const accessToken = extractTokenFromHeader(req) as string;
-      const { error, value } = validateToken({ token: accessToken });
-  
-      if (error) {
-        return sendErrorResponse(res, 400, error.details[0].message);
-      }
-  
-      const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
-  
-      const ticket = await googleClient.verifyIdToken({
-        idToken: accessToken,
-        audience: GOOGLE_CLIENT_ID,
-      });
-  
-      const payload = ticket.getPayload();
-  
-      if (!payload || !payload.email) {
-        return sendErrorResponse(res, 400, 'Invalid token payload');
-      }
-  
-      const { email } = payload;
-  
-      // Find or create a user based on their email
-      const user = await UserModel.findOne({ email })
-    if(user){
-      const accessToken = createAccessToken(user._id.toString()) as string;
-      const refreshToken = createRefreshToken(user._id.toString()) as string;
-  
-      // Create or update refreshToken in database
-      await AuthServices.updateUserRefreshTokenInDB(user._id, refreshToken)
-      return sendSuccessResponse(res, 200, 'Logged in with Google', {user, accessToken, refreshToken} )
-    } else{
-      return sendSuccessResponse(res, 202, 'Logged in with Google', {email} )
-    }
-    } catch (error) {
-      const errorMessage = (error as Error).message;
-  
-      const status = centralizedErrorHandler(errorMessage);
-  
-      return sendErrorResponse(res, status, status !== 500 ? errorMessage : SERVER_ERR);
-    }
-  }
-  
-
-// Facebook Sign-In
-async function facebookSignIn(req: express.Request, res: express.Response)  {
-
-  try {
-    const {grantType} = req.body
-    validateGrantType(grantType , 'access_token')
-
-    const accessToken = extractTokenFromHeader(req) as string
-    const { error, value } = validateToken({ token: accessToken });
-
-    if (error) {
-      return sendErrorResponse(res,400, error.details[0].message)
-
-    }
-    const fbResponse = await axios.get(`https://graph.facebook.com/me?fields=id,email&access_token=${accessToken}`);
-    const { email } = fbResponse.data;
-
-    // Find or create a user based on their email
-    const user = await UserModel.findOne({ email })
-    if(user){
-      const accessToken = createAccessToken(user._id.toString()) as string;
-      const refreshToken = createRefreshToken(user._id.toString()) as string;
-  
-      // Create or update refreshToken in database
-      await AuthServices.updateUserRefreshTokenInDB(user._id, refreshToken)
-      return sendSuccessResponse(res, 200, 'Logged in with Facebook', {user, accessToken, refreshToken} )
-    } else{
-      return sendSuccessResponse(res, 200, 'Logged in with Facebook', {email} )
+    } else if (decoded.purpose === "register") {
+      if(!userDoc) return res.status(200).redirect(`flyleaf://register/verify?emailVerified=true`);
+      else return res.status(200).redirect(`flyleaf://register/verify?emailVerified=false`);
+    } else {
+      throw new Error(INVALID_TOKEN);
     }
   } catch (error) {
     const errorMessage = (error as Error).message;
-  
+
     const status = centralizedErrorHandler(errorMessage);
 
-    return sendErrorResponse(res, status, status !== 500 ? errorMessage : SERVER_ERR);
+    return sendErrorResponse(res, status, errorMessage)
+  }
+}
+
+async function validateAuthCodeAndFetchTokens(
+  req: express.Request,
+  res: express.Response
+) {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const { authCode } = req.body;
+
+    // Validate that an authCode was actually sent in the request
+    if (!authCode) {
+      return sendErrorResponse(res, 400, "Missing authCode");
+    }
+
+    // Search for the authCode in the database
+    const authCodeDoc = await AuthCodeModel.findOne({ code: authCode }).session(
+      session
+    );
+
+    if (!authCodeDoc) {
+      return sendErrorResponse(res, 400, "Invalid or expired authCode");
+    }
+
+    // If the code is valid, fetch or create the accessToken and refreshToken
+    const userId = authCodeDoc.userId;
+    const accessToken = createAccessToken(userId.toString()) as string;
+    const refreshToken = createRefreshToken(userId.toString()) as string;
+
+    // Create or update refreshToken in database
+    await AuthServices.updateUserRefreshTokenInDB(
+      userId,
+      refreshToken,
+      session
+    );
+
+    // Remove the used authCode
+    await AuthCodeModel.findByIdAndRemove(authCodeDoc._id).session(session);
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return sendSuccessResponse(res, 200, "Tokens fetched successfully", {
+      accessToken,
+      refreshToken,
+    });
+  } catch (error) {
+    const errorMessage = (error as Error).message;
+
+    const status = centralizedErrorHandler(errorMessage);
+    await session.abortTransaction();
+    session.endSession();
+
+    return sendErrorResponse(
+      res,
+      status,
+      status !== 500 ? errorMessage : SERVER_ERR
+    );
+  }
+}
+
+// Google Sign-In
+async function googleSignIn(req: express.Request, res: express.Response) {
+  try {
+    const { grantType } = req.body;
+    validateGrantType(grantType, "access_token");
+
+    const accessToken = extractTokenFromHeader(req) as string;
+    const { error, value } = validateToken({ token: accessToken });
+
+    if (error) {
+      return sendErrorResponse(res, 400, error.details[0].message);
+    }
+
+    const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: accessToken,
+      audience: GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+
+    if (!payload || !payload.email) {
+      return sendErrorResponse(res, 400, "Invalid token payload");
+    }
+
+    const { email } = payload;
+
+    // Find or create a user based on their email
+    const user = await UserModel.findOne({ email });
+    if (user) {
+      const accessToken = createAccessToken(user._id.toString()) as string;
+      const refreshToken = createRefreshToken(user._id.toString()) as string;
+
+      // Create or update refreshToken in database
+      await AuthServices.updateUserRefreshTokenInDB(user._id, refreshToken);
+      return sendSuccessResponse(res, 200, "Logged in with Google", {
+        user,
+        accessToken,
+        refreshToken,
+        newUser: false
+      });
+    } else {
+      return sendSuccessResponse(res, 202, "Logged in with Google", { email, newUser: true });
+    }
+  } catch (error) {
+    const errorMessage = (error as Error).message;
+
+    const status = centralizedErrorHandler(errorMessage);
+
+    return sendErrorResponse(
+      res,
+      status,
+      status !== 500 ? errorMessage : SERVER_ERR
+    );
+  }
+}
+
+// Facebook Sign-In
+async function facebookSignIn(req: express.Request, res: express.Response) {
+  try {
+    const { grantType } = req.body;
+    validateGrantType(grantType, "access_token");
+
+    const accessToken = extractTokenFromHeader(req) as string;
+    const { error, value } = validateToken({ token: accessToken });
+
+    if (error) {
+      return sendErrorResponse(res, 400, error.details[0].message);
+    }
+    const fbResponse = await axios.get(
+      `https://graph.facebook.com/me?fields=id,email&access_token=${accessToken}`
+    );
+    const { email } = fbResponse.data;
+
+    // Find or create a user based on their email
+    const user = await UserModel.findOne({ email });
+    if (user) {
+      const accessToken = createAccessToken(user._id.toString()) as string;
+      const refreshToken = createRefreshToken(user._id.toString()) as string;
+
+      // Create or update refreshToken in database
+      await AuthServices.updateUserRefreshTokenInDB(user._id, refreshToken);
+      return sendSuccessResponse(res, 200, "Logged in with Facebook", {
+        user,
+        accessToken,
+        refreshToken,
+        newUser: false
+      });
+    } else {
+      return sendSuccessResponse(res, 200, "Logged in with Facebook", {
+        email,
+        newUser: true
+      });
+    }
+  } catch (error) {
+    const errorMessage = (error as Error).message;
+
+    const status = centralizedErrorHandler(errorMessage);
+
+    return sendErrorResponse(
+      res,
+      status,
+      status !== 500 ? errorMessage : SERVER_ERR
+    );
   }
 }
 
@@ -910,6 +1043,6 @@ const authController = {
   verifyLink,
   validateAuthCodeAndFetchTokens,
   googleSignIn,
-  facebookSignIn
+  facebookSignIn,
 };
 export default authController;

@@ -13,12 +13,12 @@ import {
 } from '../../../components';
 
 import {ROUTES, THEME_COLORS, themeText, TYPES} from '../../../constants';
-import {useFormValidation} from '../../../utils/hooks';
+import {useDispatch, useFormValidation, usePreventBackHandler} from '../../../utils/hooks';
 import {images} from '../../../assets';
 import {NavigationProp} from '@react-navigation/native';
 import {AuthService} from '../../../services';
-import {GoogleSignin} from '@react-native-google-signin/google-signin';
-import {WEB_CLIENT_ID} from '@env';
+import { storeTokensInKeychain } from '../../../utils/keychain';
+import { RegisterActions } from '../../../redux';
 
 const LoginStartScreen = ({
   navigation,
@@ -35,13 +35,47 @@ const LoginStartScreen = ({
   const [phone, setPhone] = useState('');
   const [phoneIsValid, setPhoneIsValid] = useState(false);
   const [showEmail, setShowEmail] = useState(false);
+  const dispatch = useDispatch()
 
-  useEffect(() => {
-    GoogleSignin.configure({
-      webClientId: WEB_CLIENT_ID,
-      scopes: ['email'],
-    });
-  }, []);
+  usePreventBackHandler()
+
+  const onGoogleSignIn = () => {
+    AuthService.onGoogleButtonPress().then(
+      async result => {
+        if(result.newUser){
+          dispatch(RegisterActions.setEmail(email))
+          navigation.navigate(ROUTES.REGISTER_NAVIGATOR, { screens:ROUTES.REGISTER_WELCOME_SCREEN} as any)
+
+        }else{
+          await storeTokensInKeychain(
+            result.accessToken,
+            result.refreshToken,
+          );
+
+          navigation.navigate(ROUTES.BOTTOM_TAB_NAVIGATOR)
+        }
+      }
+    )
+  }
+
+  const onFacebookSignIn = () => {
+    AuthService.onFacebookButtonPress().then(
+      async result => {
+        if(result.newUser){
+          dispatch(RegisterActions.setEmail(email))
+          navigation.navigate(ROUTES.REGISTER_NAVIGATOR, { screens:ROUTES.REGISTER_WELCOME_SCREEN} as any)
+
+        }else{
+          await storeTokensInKeychain(
+            result.accessToken,
+            result.refreshToken,
+          );
+
+          navigation.navigate(ROUTES.BOTTOM_TAB_NAVIGATOR)
+        }
+      }
+    )
+  }
 
   useEffect(() => {
     setEmailIsValid(validateEmail(email));
@@ -159,14 +193,14 @@ const LoginStartScreen = ({
           <View style={styles.socialButtonsContainer}>
             <Button.ButtonImage
               imgUrl={images.googleBar}
-              onPress={AuthService.onGoogleButtonPress} //Need to check if user.uid exist or not, to decide wether to send the user to register or not
+              onPress={onGoogleSignIn} //Need to check if user.uid exist or not, to decide wether to send the user to register or not
               contentContainerStyle={styles.socialButton}
               width={301.54}
               height={51}
             />
             <Button.ButtonImage
               imgUrl={images.facebookBar}
-              onPress={AuthService.onFacebookButtonPress} //Need to check if user.uid exist or not, to decide wether to send the user to register or not
+              onPress={onFacebookSignIn} //Need to check if user.uid exist or not, to decide wether to send the user to register or not
               contentContainerStyle={styles.socialButton}
               width={301.54}
               height={51}

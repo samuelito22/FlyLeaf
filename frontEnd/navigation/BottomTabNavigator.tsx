@@ -48,18 +48,12 @@ const BottomTabNavigator = () => {
       }}
       initialRouteName="Home"
       backBehavior="initialRoute">
-      
       <Tab.Screen
         name="Notification"
         component={NotificationScreen}
         options={{
           tabBarIcon: ({focused}) => (
-            <TabIcon
-              focused={focused}
-              source={
-               icons.notificationBold 
-              }
-            />
+            <TabIcon focused={focused} source={icons.explore} />
           ),
           tabBarButton: props => (
             <View
@@ -76,16 +70,13 @@ const BottomTabNavigator = () => {
           ),
         }}
       />
-      
+
       <Tab.Screen
         name="Home"
         component={HomeScreen}
         options={{
           tabBarIcon: ({focused}) => (
-            <TabIcon
-              focused={focused}
-              source={ images.logo}
-            />
+            <TabIcon focused={focused} source={images.logo} />
           ),
           tabBarButton: props => (
             <View
@@ -102,15 +93,12 @@ const BottomTabNavigator = () => {
           ),
         }}
       />
-     <Tab.Screen
+      <Tab.Screen
         name="Likes"
         component={LikesScreen}
         options={{
           tabBarIcon: ({focused}) => (
-            <TabIcon
-              focused={focused}
-              source={icons.heartBold}
-            />
+            <TabIcon focused={focused} source={icons.heartBold} />
           ),
           tabBarButton: props => (
             <View
@@ -132,10 +120,7 @@ const BottomTabNavigator = () => {
         component={ChatsScreen}
         options={{
           tabBarIcon: ({focused}) => (
-            <TabIcon
-              focused={focused}
-              source={icons.messageBold}
-            />
+            <TabIcon focused={focused} source={icons.messageBold} />
           ),
           tabBarButton: props => (
             <View

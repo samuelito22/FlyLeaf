@@ -1,15 +1,15 @@
 import {Text, View, ScrollView} from 'react-native';
 import React, {useEffect, useState} from 'react';
-import {SafeContainer, Button, LoadingSpinner, questionsList} from '../../../components';
+import {SafeContainer, Button, LoadingSpinner} from '../../../components';
 import {styles} from './styles';
 import {THEME_COLORS, ROUTES, TYPES} from '../../../constants';
-import {
-  RegisterActions
-} from '../../../redux';
+import {RegisterActions} from '../../../redux';
 import {NavigationProp} from '@react-navigation/native';
 import {usePreventBackHandler, useDispatch} from '../../../utils/hooks';
+import {useSelector} from 'react-redux';
+import {ObjectId} from 'mongodb';
 
-const GenderPreferenceScreen = ({
+const SeekingScreen = ({
   navigation,
 }: {
   navigation: NavigationProp<TYPES.RootStackParamList>;
@@ -21,13 +21,13 @@ const GenderPreferenceScreen = ({
 
   const [valid, setValid] = useState(false);
 
-  const [genderPreferencesTemp, setGenderPreferencesTemp] = useState<string[]>(
-    [],
-  );
+  const [seekingTemp, setSeekingTemp] = useState<ObjectId[]>([]);
 
   const dispatch = useDispatch();
 
-  const genderField = questionsList.find(field => field.id === 10) as {question: string, id: number, answers: string[],  icon:string}
+  const {gendersList} = useSelector(
+    (state: TYPES.AppState) => state.usersReducer,
+  );
 
   const handlePress = async () => {
     if (valid) {
@@ -35,7 +35,7 @@ const GenderPreferenceScreen = ({
       try {
         navigation.navigate(ROUTES.REGISTER_RELATIONSHIP_GOAL_SCREEN);
         dispatch(RegisterActions.setProgressBarValue(56));
-        dispatch(RegisterActions.setGenderPreferences(genderPreferencesTemp));
+        dispatch(RegisterActions.setSeeking(seekingTemp));
       } catch (err) {
         console.error(err);
       } finally {
@@ -44,26 +44,24 @@ const GenderPreferenceScreen = ({
     }
   };
 
-  const ClickableIndicatorPrimaryButtonHandlePress = (name: string) => {
-    if (genderPreferencesTemp.includes(name)) {
-      setGenderPreferencesTemp(
-        genderPreferencesTemp.filter((pref: string) => pref !== name),
-      );
+  const ClickableIndicatorPrimaryButtonHandlePress = (_id: ObjectId) => {
+    if (seekingTemp.includes(_id)) {
+      setSeekingTemp(seekingTemp.filter((pref: ObjectId) => pref !== _id));
     } else {
-      setGenderPreferencesTemp([...genderPreferencesTemp, name]);
+      setSeekingTemp([...seekingTemp, _id]);
     }
   };
 
   useEffect(() => {
-    setValid(genderPreferencesTemp.length > 0 ? true : false);
-  }, [genderPreferencesTemp]);
+    setValid(seekingTemp.length > 0 ? true : false);
+  }, [seekingTemp]);
 
   useEffect(
     () =>
       dispatch(
         RegisterActions.setIsRegisterCompleted({
           status: false,
-          currentScreen: ROUTES.REGISTER_GENDER_PREFERENCE_SCREEN,
+          currentScreen: ROUTES.REGISTER_SEEKING_SCREEN,
         }),
       ),
     [],
@@ -74,7 +72,7 @@ const GenderPreferenceScreen = ({
       <View style={styles.container}>
         {isLoading && <LoadingSpinner />}
         <Text style={styles.requirement}>Required</Text>
-        <Text style={styles.title}>{genderField?.question}</Text>
+        <Text style={styles.title}>Which gender are you seeking to meet?</Text>
         <Text style={styles.paragraph}>
           Multiple selections and future changes are allowed
         </Text>
@@ -83,16 +81,14 @@ const GenderPreferenceScreen = ({
           showsVerticalScrollIndicator={false}
           overScrollMode={'never'}
           contentContainerStyle={{flexGrow: 1}}>
-          {genderField?.answers.map((gender, index) => (
-            <View
-              key={index}
-              style={styles.clickableIndicatorPrimaryButton}>
+          {gendersList?.map((gender, index) => (
+            <View key={index} style={styles.clickableIndicatorPrimaryButton}>
               <Button.ClickableIndicatorPrimaryButton
                 onPress={() =>
-                  ClickableIndicatorPrimaryButtonHandlePress(gender)
+                  ClickableIndicatorPrimaryButtonHandlePress(gender._id)
                 }
-                isActive={genderPreferencesTemp.includes(gender)}>
-                {gender}
+                isActive={seekingTemp.includes(gender._id)}>
+                {gender.primary}
               </Button.ClickableIndicatorPrimaryButton>
             </View>
           ))}
@@ -118,4 +114,4 @@ const GenderPreferenceScreen = ({
   );
 };
 
-export default GenderPreferenceScreen;
+export default SeekingScreen;

@@ -14,9 +14,9 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: BORDER_RADIUS.medium,
-    overflow: 'hidden'
+    overflow: 'hidden',
   },
-  customizableButton:{
+  customizableButton: {
     height: 48,
     justifyContent: 'center',
     alignItems: 'center',
@@ -42,7 +42,7 @@ export const styles = StyleSheet.create({
   },
   interestButtonText: {
     ...themeText.bodyRegularSix,
-    alignSelf:'center',
+    alignSelf: 'center',
   },
   clickableButtonContainer: {
     width: '100%',
@@ -52,9 +52,9 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COMPONENT_COLORS.primaryIndicatorBorder,
     overflow: 'hidden',
-    flexDirection:'row',
-    alignItems:'center',
-    justifyContent:'space-between',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     padding: 5,
   },
 
@@ -75,11 +75,11 @@ export const styles = StyleSheet.create({
   textContainer: {
     flex: 1,
     paddingLeft: 30,
-    justifyContent:'center'
+    justifyContent: 'center',
   },
   imageButtonContainer: {
     alignItems: 'center',
-    justifyContent:'center',
+    justifyContent: 'center',
     backgroundColor: 'white',
     overflow: 'hidden',
   },
@@ -109,9 +109,7 @@ export const styles = StyleSheet.create({
     width: 20,
     height: 20,
     resizeMode: 'contain',
-    alignSelf:'center',
-    marginLeft: 6
-
-  }
+    alignSelf: 'center',
+    marginLeft: 6,
+  },
 });
-

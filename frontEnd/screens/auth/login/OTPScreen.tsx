@@ -1,7 +1,5 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useCallback} from 'react';
 import {View, Text} from 'react-native';
-import {FirebaseAuthTypes} from '@react-native-firebase/auth';
-
 import {ROUTES, THEME_COLORS, TYPES} from '../../../constants';
 import {AuthService} from '../../../services';
 import {NavigationProp, RouteProp} from '@react-navigation/native';
@@ -16,10 +14,11 @@ import {
   SafeContainer,
 } from '../../../components';
 
-import { AppStatusActions, RegisterActions} from '../../../redux';
 
 import {styles} from './styles';
 import {useCountdown, useDispatch} from '../../../utils/hooks';
+import {storeTokensInKeychain} from '../../../utils/keychain';
+import { AppStatusActions, RegisterActions } from '../../../redux';
 
 interface LoginOTPScreenProps {
   navigation?: NavigationProp<TYPES.RootStackParamList>;
@@ -35,13 +34,11 @@ const LoginOTPScreen = ({navigation, route}: LoginOTPScreenProps) => {
 
   // states
   const [OTP, setOTP] = useState('');
-  const [confirmation, setConfirmation] =
-    useState<null | FirebaseAuthTypes.ConfirmationResult>(null);
   const [showError, setShowError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [resendButtonActive, setResendButtonActive] = useState(false);
   const [showResendInfo, setShowResendInfo] = useState(false);
-  const dispatch = useDispatch();
+  const dispatch = useDispatch()
 
   // effect - OTP
   useEffect(() => {
@@ -52,94 +49,57 @@ const LoginOTPScreen = ({navigation, route}: LoginOTPScreenProps) => {
     }
   }, [OTP]);
 
-  // effect - on mount
-  useEffect(() => {
-    let isMounted = true;
-
-    const sendOTP = async () => {
-      if (!phoneNumber || !isMounted) return;
-      setIsLoading(true);
-
+  const confirmOTPCode = useCallback(async () => {
+    if (phoneNumber && OTP.length === 6) {
       try {
-        const confirmation = await AuthService.sendVerificationCode(
+        setIsLoading(true);
+
+        const result = await AuthService.confirmVerificationCode(
+          OTP,
           phoneNumber,
         );
-        if (isMounted) {
-          setConfirmation(confirmation);
-          setShowResendInfo(true);
+
+        setIsLoading(false);
+
+        if (result?.type === 'success') {
+          if (result.newUser) {
+            dispatch(RegisterActions.setPhoneNumber(phoneNumber))
+            navigation?.navigate(ROUTES.REGISTER_NAVIGATOR);
+          } else {
+            await storeTokensInKeychain(
+              result.accessToken,
+              result.refreshToken,
+            );
+            navigation?.navigate(ROUTES.BOTTOM_TAB_NAVIGATOR);
+            dispatch(AppStatusActions.setCurrentScreen(ROUTES.BOTTOM_TAB_NAVIGATOR))
+
+          }
+        } else {
+          setShowError(true);
         }
       } catch (error) {
         console.error(error);
-        setShowError(true);
-        setConfirmation(null); // set confirmation to null in case of an error
       }
-
-      setIsLoading(false);
-    };
-
-    sendOTP();
-
-    // Cleanup function:
-    return () => {
-      isMounted = false;
-    };
-  }, [phoneNumber]);
-
-  const confirmOTPCode = async () => {
-    try {
-      setIsLoading(true);
-      const controller = new AbortController(); 
-  
-      if (!confirmation) {
-        setIsLoading(false);
-        return;
-      }
-  
-      const result = await AuthService.confirmVerificationCode(confirmation, OTP);
-  
-      setIsLoading(false);
-  
-      if (result?.success) {
-        if (
-          result.userCredential &&
-          result.userCredential.user.uid &&
-          phoneNumber
-        ) {
-          try {
-            const userUidExistResult = await AuthService.userUidExist(
-              result.userCredential.user.uid,
-              controller.signal
-            );
-            
-            if (userUidExistResult.type === 'success') {
-              dispatch(AppStatusActions.setIsLoggedIn(true));
-              navigation?.navigate(ROUTES.BOTTOM_TAB_NAVIGATOR);
-            } else if (userUidExistResult.type === 'error') {
-              navigation?.navigate(ROUTES.REGISTER_NAVIGATOR);
-              dispatch(RegisterActions.setPhoneNumber(phoneNumber));
-            }
-          } catch (error) {
-            console.error(error);
-            // Handle error here
-          }
-        }
-      } else {
-        setShowError(true);
-      }
-    } catch (error) {
-      console.error(error);
-      // Handle error here
     }
-  };
-  
-  const sendOTP = async () => {
+  }, [phoneNumber, OTP, navigation]);
+
+  const sendOTP = useCallback(async () => {
     if (!phoneNumber) return;
 
-    const confirmation = await AuthService.sendVerificationCode(phoneNumber);
+    setIsLoading(true);
+    try {
+      await AuthService.sendVerificationCode(phoneNumber);
+      setShowResendInfo(true);
+    } catch (error) {
+      console.error(error);
+      setShowError(true);
+    }
+    setIsLoading(false);
+  }, [phoneNumber]);
 
-    setConfirmation(confirmation);
-    setShowResendInfo(true);
-  };
+  const backButtonPress = useCallback(() => {
+    navigation?.navigate(ROUTES.LOGIN_START_SCREEN);
+  }, [navigation]);
 
   const countdown = useCountdown(
     RESEND_COUNTDOWN_START,
@@ -150,14 +110,17 @@ const LoginOTPScreen = ({navigation, route}: LoginOTPScreenProps) => {
     },
   );
 
+  useEffect(() => {
+    sendOTP();
+  }, [phoneNumber, sendOTP]);
+
   // render
   return (
     <KeyboardAvoidingViewWrapper>
       <SafeContainer>
-        {isLoading && <Loading.ActiveIndicator modalBackground={{backgroundColor:"white"}} />}
-        <BackButton
-          onPress={() => navigation?.navigate(ROUTES.LOGIN_START_SCREEN)}
-        />
+        {isLoading && <Loading.ActiveIndicator />}
+        <BackButton onPress={backButtonPress} />
+
         <View style={[styles.container, styles.maxWidth_otp]}>
           <Text style={styles.title}>Verification</Text>
           <Text style={[styles.paragraph, styles.paragraph_marginBottom_otp]}>

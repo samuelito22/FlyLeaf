@@ -16,12 +16,10 @@ import {ROUTES, THEME_COLORS, TYPES} from '../../../constants';
 
 import {styles} from './styles';
 import {usePreventBackHandler, useDispatch} from '../../../utils/hooks';
-import {
-  RegisterActions
-} from '../../../redux';
-import { AuthService } from '../../../services';
-import { AppStatusActions } from '../../../redux';
-import auth from "@react-native-firebase/auth"
+import {RegisterActions} from '../../../redux';
+import {AuthService} from '../../../services';
+import {AppStatusActions} from '../../../redux';
+import auth from '@react-native-firebase/auth';
 
 const DateOfBirthScreen = ({
   navigation,
@@ -87,16 +85,18 @@ const DateOfBirthScreen = ({
     try {
       setAlertVisible(false);
       if (moment().year() - moment(dateOfBirthTemp, 'DDMMYYYY').year() < 18) {
-        
-        const uid = auth().currentUser?.uid
-        if(uid)
-        {
-          dispatch(AppStatusActions.setIsBlocked(true))
+        const uid = auth().currentUser?.uid;
+        if (uid) {
+          dispatch(AppStatusActions.setIsBlocked(true));
         }
-        setIsLoading(false)
-      } 
+        setIsLoading(false);
+      }
       // Dispatch the action to update the birthday in Redux
-      dispatch(RegisterActions.setDateOfBirth(moment(dateOfBirthTemp, 'DD/MM/YYYY').toDate()));
+      dispatch(
+        RegisterActions.setDateOfBirth(
+          moment(dateOfBirthTemp, 'DD/MM/YYYY').toDate(),
+        ),
+      );
       // Navigate to the next screen
       navigation.navigate(ROUTES.REGISTER_GENDER_SELECTION_SCREEN);
 

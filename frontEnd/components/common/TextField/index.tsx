@@ -11,7 +11,8 @@ const TextField: React.FC<TYPES.TextFieldProps> = ({
   autoCapitalize,
   keyboardType,
   secureTextEntry,
-  multiLine
+  multiLine,
+  textAlign,
 }) => {
   return (
     <TextInput
@@ -24,6 +25,7 @@ const TextField: React.FC<TYPES.TextFieldProps> = ({
       keyboardType={keyboardType}
       secureTextEntry={secureTextEntry}
       multiline={multiLine}
+      textAlign={textAlign}
     />
   );
 };

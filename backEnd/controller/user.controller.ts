@@ -26,10 +26,12 @@ import { convertToObjectIdRecursive } from "../utils/converter.utils";
 
 async function getMyProfile(req: express.Request, res: express.Response) {
   try {
+
     const { grantType, coordinates } = req.body;
     validateGrantType(grantType, "access_token");
 
     const accessToken = extractTokenFromHeader(req) as string;
+
     // First validation
     let { error, value } = validateToken({ token: accessToken });
     if (error) {

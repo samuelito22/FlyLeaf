@@ -134,6 +134,8 @@ export const ButtonImage = ({
     borderBottomRightRadius: BORDER_RADIUS.medium,
   };
 
+  
+
   return (
     <View
       style={[
@@ -190,43 +192,48 @@ export const ClickableIndicatorPrimaryButton = ({
   );
 };
 
-export const interestsButton = React.memo(({
-  onPress,
-  style,
-  children,
-  active,
-  icon = null,
-}: TYPES.InterestsButtonProps) => {
-  return (
-    <View
-      style={[
-        styles.interestButton,
-        style,
-        active ? styles.activeInterestButton : styles.inactiveInterestButton,
-      ]}>
-      <TouchableRipple
-        onPress={() => {
-          if (onPress) onPress();
-        }}
-        style={styles.fullCenterContainer}
-        rippleColor={PALETTE.GRAY400}>
-        <></>
-      </TouchableRipple>
-      <View style={{flexDirection: 'row',     paddingHorizontal: 10, paddingVertical: 5
-}}>
-        <Text
-          style={[
-            styles.interestButtonText,
-            active
-              ? styles.activeInterestButtonText
-              : styles.inactiveInterestButtonText,
-          ]}>
-          {children}
-        </Text>
-        {icon && <Image source={{uri: icon}} style={styles.iconStyle} />}
-        {/* Show icon if provided */}
+export const interestsButton = React.memo(
+  ({
+    onPress,
+    style,
+    children,
+    active,
+    icon = null,
+  }: TYPES.InterestsButtonProps) => {
+    return (
+      <View
+        style={[
+          styles.interestButton,
+          style,
+          active ? styles.activeInterestButton : styles.inactiveInterestButton,
+        ]}>
+        <TouchableRipple
+          onPress={() => {
+            if (onPress) onPress();
+          }}
+          style={styles.fullCenterContainer}
+          rippleColor={PALETTE.GRAY400}>
+          <></>
+        </TouchableRipple>
+        <View
+          style={{
+            flexDirection: 'row',
+            paddingHorizontal: 10,
+            paddingVertical: 5,
+          }}>
+          <Text
+            style={[
+              styles.interestButtonText,
+              active
+                ? styles.activeInterestButtonText
+                : styles.inactiveInterestButtonText,
+            ]}>
+            {children}
+          </Text>
+          {icon && <Image source={{uri: icon}} style={styles.iconStyle} />}
+          {/* Show icon if provided */}
+        </View>
       </View>
-    </View>
-  );
-}
-)
+    );
+  },
+);

@@ -1,8 +1,8 @@
 // Define the action types
 export const SET_PHONE_NUMBER = 'SET_PHONE_NUMBER' as const;
 export const SET_DATE_OF_BIRTH = 'SET_DATE_OF_BIRTH' as const;
-export const SET_FIRST_NAME = 'SET_FIRST_NAME' as const;
-export const SET_GENDER_PREFERENCES = 'SET_GENDER_PREFERENCES' as const;
+export const SET_USERNAME = 'SET_USERNAME' as const;
+export const SET_SEEKING = 'SET_SEEKING' as const;
 export const SET_GENDER = 'SET_GENDER' as const;
 export const SET_PICTURES = 'SET_PICTURES' as const;
 export const SET_EMAIL = 'SET_EMAIL' as const;
@@ -12,9 +12,10 @@ export const SET_PROGRESS_BAR_VALUE = 'SET_PROGRESS_BAR_VALUE' as const;
 export const SET_ADDITIONAL_INFORMATION = 'SET_ADDITIONAL_INFORMATION' as const;
 export const SET_INTERESTS = 'SET_INTERESTS' as const;
 export const RESET_REGISTER = 'RESET_REGISTER' as const;
-export const SET_QUESTIONS_LIST = 'SET_QUESTIONS_LIST' as const
-export const SET_INTERESTS_LIST = 'SET_INTERESTS_LIST' as const
+export const SET_QUESTIONS_LIST = 'SET_QUESTIONS_LIST' as const;
+export const SET_INTERESTS_LIST = 'SET_INTERESTS_LIST' as const;
 
+import {ObjectId} from 'mongodb';
 import {TYPES} from '../../constants';
 
 // Register
@@ -34,25 +35,24 @@ export const setDateOfBirth =
     });
   };
 
-export const setFirstName =
-  (firstName: string) => (dispatch: (action: TYPES.AppAction) => void) => {
+export const setUsername =
+  (username: string) => (dispatch: (action: TYPES.AppAction) => void) => {
     dispatch({
-      type: SET_FIRST_NAME,
-      payload: firstName,
+      type: SET_USERNAME,
+      payload: username,
     });
   };
 
-export const setGenderPreferences =
-  (genderPreferences: string[]) =>
-  (dispatch: (action: TYPES.AppAction) => void) => {
+export const setSeeking =
+  (seeking: ObjectId[]) => (dispatch: (action: TYPES.AppAction) => void) => {
     dispatch({
-      type: SET_GENDER_PREFERENCES,
-      payload: genderPreferences,
+      type: SET_SEEKING,
+      payload: seeking,
     });
   };
 
 export const setGender =
-  (gender: { general: string; specific?: string | undefined; }) =>
+  (gender: {primary: ObjectId; secondary?: ObjectId | undefined}) =>
   (dispatch: (action: TYPES.AppAction) => void) => {
     dispatch({
       type: SET_GENDER,
@@ -77,7 +77,7 @@ export const setEmail =
   };
 
 export const setRelationshipGoal =
-  (relationshipGoal: string) =>
+  (relationshipGoal: ObjectId) =>
   (dispatch: (action: TYPES.AppAction) => void) => {
     dispatch({
       type: SET_RELATIONSHIP_GOAL,
@@ -107,7 +107,7 @@ export const setProgressBarValue =
   };
 
 export const setAdditionalInformation =
-  (additionalInformation: {question: string; answer: string, icon: string}[]) =>
+  (additionalInformation: {questionId: ObjectId; answerId: ObjectId}[]) =>
   (dispatch: (action: TYPES.AppAction) => void) => {
     dispatch({
       type: SET_ADDITIONAL_INFORMATION,
@@ -116,7 +116,7 @@ export const setAdditionalInformation =
   };
 
 export const setInterests =
-  (interests: string[]) => (dispatch: (action: TYPES.AppAction) => void) => {
+  (interests: ObjectId[]) => (dispatch: (action: TYPES.AppAction) => void) => {
     dispatch({
       type: SET_INTERESTS,
       payload: interests,
@@ -126,17 +126,3 @@ export const setInterests =
 export const resetRegister = (): TYPES.AppAction => ({
   type: RESET_REGISTER,
 });
-
-export const setQuestionsList = (questionsList: {id: number, question: string, shortForm:string, icon: string, answers: any}[]) => (dispatch: (action: TYPES.AppAction) => void) => {
-  dispatch({
-    type: SET_QUESTIONS_LIST,
-    payload: questionsList
-  })
-}
-
-export const setInterestsList = (interestsList: {question:string, answers:{title:string, interests:{title:string, icon:string}[]}[]}) => (dispatch: (action: TYPES.AppAction) => void) => {
-  dispatch({
-    type: SET_INTERESTS_LIST,
-    payload: interestsList
-  })
-}

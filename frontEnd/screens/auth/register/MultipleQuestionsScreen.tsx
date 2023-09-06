@@ -1,23 +1,14 @@
 import React, {useEffect, useState} from 'react';
 import {Text, View, ScrollView, Image, StyleSheet} from 'react-native';
 import {styles as generalStyles} from './styles';
-import {
-  SafeContainer,
-  Button,
-} from '../../../components';
-import {
-  RegisterActions
-} from '../../../redux';
-import {
-  THEME_COLORS,
-  ROUTES,
-  TYPES,
-
-} from '../../../constants';
+import {SafeContainer, Button} from '../../../components';
+import {RegisterActions} from '../../../redux';
+import {THEME_COLORS, ROUTES, TYPES} from '../../../constants';
 import {NavigationProp} from '@react-navigation/native';
 import {usePreventBackHandler, useDispatch} from '../../../utils/hooks';
 import {useSelector} from 'react-redux';
 import {icons} from '../../../assets';
+import {ObjectId} from 'mongodb';
 
 const BuildYourProfileScreen = ({handlePress}: {handlePress: () => void}) => {
   return (
@@ -25,7 +16,12 @@ const BuildYourProfileScreen = ({handlePress}: {handlePress: () => void}) => {
       <View style={generalStyles.container}>
         <Image
           source={icons.sprout}
-          style={{width: 150, height: 150, marginBottom: 20}}
+          style={{
+            width: 150,
+            height: 150,
+            marginBottom: 20,
+            alignSelf: 'center',
+          }}
           resizeMode="contain"
         />
         <Text style={generalStyles.title}>You thought you were done?</Text>
@@ -55,74 +51,69 @@ const MultipleQuestionsScreen = ({
 }) => {
   usePreventBackHandler();
   const dispatch = useDispatch();
-  const {additionalInformation, questionsList } = useSelector(
+  const {additionalInformation} = useSelector(
     (state: TYPES.AppState) => state.registerReducer,
   );
 
   const [valid, setValid] = useState(false);
-  const [activeId, setActiveId] = useState<number | null>(null);
+  const [activeId, setActiveId] = useState<ObjectId | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState(-1);
-  const [answer, setAnswer] = useState<string>('');
 
-  const questionFieldList = questionsList && questionsList.filter(
-    item => item.id >= 1 && item.id <= 9 || item.id == 15,
-  ) as Array<{question: string; id: number; answers: string[]; icon: string}>;
+  const {questionsList} = useSelector(
+    (state: TYPES.AppState) => state.usersReducer,
+  );
 
+  const questionFieldList = questionsList?.filter(
+    item => item.type === 'Advanced',
+  );
 
-  const handlePress = () => {
-    if (valid && questionFieldList) {
-      if(additionalInformation){
+  const addInformation = (qId: ObjectId, aId: ObjectId) => {
+    const newInfo = {
+      questionId: qId,
+      answerId: aId,
+    };
+
+    if (additionalInformation) {
       dispatch(
         RegisterActions.setAdditionalInformation([
           ...additionalInformation,
-          {
-            question: questionFieldList[currentQuestion].question,
-            answer: answer,
-            icon: questionFieldList[currentQuestion].icon,
-          },
+          newInfo,
         ]),
       );
-      }else{
-        dispatch(
-          RegisterActions.setAdditionalInformation([
-            {
-              question: questionFieldList[currentQuestion].question,
-              answer: answer,
-              icon: questionFieldList[currentQuestion].icon,
-            },
-          ]),
-        );
-      }
+    } else {
+      dispatch(RegisterActions.setAdditionalInformation([newInfo]));
+    }
+  };
 
-      setAnswer('');
+  const handlePress = () => {
+    if (valid && questionFieldList) {
+      addInformation(
+        questionFieldList[currentQuestion]._id,
+        activeId as ObjectId,
+      );
       setActiveId(null);
 
-
-      if (additionalInformation && additionalInformation.length === 9) {
-        navigation.navigate(ROUTES.REGISTER_INTEREST_SCREEN)
-      }else{
-        setCurrentQuestion(prevState => {return prevState + 1})
+      if (currentQuestion < questionFieldList.length - 1) {
+        // Only proceed to the next question if we haven't reached the last one
+        setCurrentQuestion(prevState => (prevState as number) + 1);
+      } else {
+        navigation.navigate(ROUTES.REGISTER_INTEREST_SCREEN);
       }
     }
   };
 
-  const ClickableIndicatorPrimaryButtonHandlePress = (
-    id: number,
-    text: string,
-  ) => {
+  const ClickableIndicatorPrimaryButtonHandlePress = (id: ObjectId) => {
     if (id === activeId) {
       // check if the current id is the activeId
       setActiveId(null);
-      setAnswer('');
     } else {
       setActiveId(id); // set the clicked id as the activeId
-      setAnswer(text);
     }
   };
 
   useEffect(() => {
-    setValid(answer ? true : false);
-  }, [answer]);
+    setValid(activeId !== null ? true : false);
+  }, [activeId]);
 
   useEffect(
     () =>
@@ -140,7 +131,6 @@ const MultipleQuestionsScreen = ({
       setCurrentQuestion(additionalInformation.length);
     }
   }, [additionalInformation]);
-
 
   return (
     <SafeContainer>
@@ -160,20 +150,27 @@ const MultipleQuestionsScreen = ({
             showsVerticalScrollIndicator={false}
             overScrollMode={'never'}
             contentContainerStyle={{flexGrow: 1}}>
-             {questionFieldList && questionFieldList[currentQuestion].answers.map((answer, index) => (
-              <View
-                key={questionFieldList[currentQuestion].question + index}
-                style={generalStyles.clickableIndicatorPrimaryButton}>
-                <Button.ClickableIndicatorPrimaryButton
-                  onPress={() =>
-                    ClickableIndicatorPrimaryButtonHandlePress(index, answer)
-                  }
-                  isActive={index === activeId}>
-                  {answer}
-                </Button.ClickableIndicatorPrimaryButton>
-              </View>
-            ))}
+            {questionFieldList && currentQuestion < questionFieldList.length ? (
+              questionFieldList[currentQuestion].answers.map(
+                (answer, index) => (
+                  <View
+                    key={questionFieldList[currentQuestion].question + index}
+                    style={generalStyles.clickableIndicatorPrimaryButton}>
+                    <Button.ClickableIndicatorPrimaryButton
+                      onPress={() =>
+                        ClickableIndicatorPrimaryButtonHandlePress(answer._id)
+                      }
+                      isActive={answer._id === activeId}>
+                      {answer.text}
+                    </Button.ClickableIndicatorPrimaryButton>
+                  </View>
+                ),
+              )
+            ) : (
+              <Text>No more answers to show.</Text>
+            )}
           </ScrollView>
+
           <View style={generalStyles.alignNextButtonContainer}>
             <Button.PrimaryButton
               onPress={handlePress}

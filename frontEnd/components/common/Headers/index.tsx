@@ -11,27 +11,27 @@ export const HomeHeader = () => {
   const handleProfilePress = async () => {
     navigation.navigate(ROUTES.PROFILE_NAVIGATOR, {
       screen: ROUTES.USER_PROFILE_SCREEN,
-    });
+    } as any);
   };
 
   return (
     <View style={styles.container}>
-        <ButtonImage
-          imgUrl={icons.menu}
-          width={30}
-          height={30}
-          contentContainerStyle={styles.iconContainer}
-          tintColor={THEME_COLORS.dark}
-          onPress={handleProfilePress}
-        />
+      <ButtonImage
+        imgUrl={icons.menu}
+        width={24}
+        height={24}
+        contentContainerStyle={styles.iconContainer}
+        tintColor={THEME_COLORS.dark}
+        onPress={handleProfilePress}
+      />
       <View style={styles.logoContainer}>
         <Image style={styles.logo} source={images.logo} />
       </View>
       <ButtonImage
-      width={30}
-      height={30}
-      contentContainerStyle={styles.iconContainer}
-        imgUrl={icons.nature}
+        width={24}
+        height={24}
+        contentContainerStyle={styles.iconContainer}
+        imgUrl={icons.bell}
         tintColor={THEME_COLORS.dark}
       />
     </View>
@@ -41,22 +41,22 @@ export const HomeHeader = () => {
 export const ProfilePrivateHeader = () => {
   const navigation = useNavigation<NavigationProp<TYPES.RootStackParamList>>();
   const handleBackPress = async () => {
-    navigation.goBack()
+    navigation.goBack();
   };
 
   return (
     <View style={styles.container}>
-        <ButtonImage
-          imgUrl={icons.arrowLeft}
-          width={30}
-          height={30}
-          tintColor={THEME_COLORS.dark}
-          onPress={handleBackPress}
-          contentContainerStyle={styles.iconContainer}
-        />
-    <ButtonImage
-       width={30}
-       height={30}
+      <ButtonImage
+        imgUrl={icons.arrowLeft}
+        width={24}
+        height={24}
+        tintColor={THEME_COLORS.dark}
+        onPress={handleBackPress}
+        contentContainerStyle={styles.iconContainer}
+      />
+      <ButtonImage
+        width={24}
+        height={24}
         imgUrl={icons.settings}
         tintColor={THEME_COLORS.dark}
         contentContainerStyle={styles.iconContainer}
@@ -66,26 +66,33 @@ export const ProfilePrivateHeader = () => {
   );
 };
 
-export const EditProfileHeader = ({ onBackPress, leftIconText } : {onBackPress?: () => void, leftIconText?: string}) => {
+export const EditProfileHeader = ({
+  onBackPress,
+  leftIconText,
+}: {
+  onBackPress?: () => void;
+  leftIconText?: string;
+}) => {
   const navigation = useNavigation<NavigationProp<TYPES.RootStackParamList>>();
   const handleBackPress = async () => {
-    if(onBackPress) onBackPress()
-    navigation.goBack()
+    if (onBackPress) onBackPress();
+    navigation.goBack();
   };
 
   return (
     <View style={styles.container}>
-      <View style={{flexDirection:'row', height:'100%', alignItems:'center'}}>
+      <View
+        style={{flexDirection: 'row', height: '100%', alignItems: 'center'}}>
         <ButtonImage
           imgUrl={icons.arrowLeft}
           tintColor={THEME_COLORS.dark}
           onPress={handleBackPress}
-          width={30}
-          height={30}
+          width={24}
+          height={24}
           contentContainerStyle={styles.iconContainer}
         />
         <Text style={styles.iconText}>{leftIconText}</Text>
-        </View>
+      </View>
     </View>
   );
 };

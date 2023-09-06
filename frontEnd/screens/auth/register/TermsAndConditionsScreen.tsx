@@ -32,7 +32,6 @@ const TermsAndConditionsScreen = ({
     interests,
   } = useSelector((state: TYPES.AppState) => state.registerReducer);
 
-
   usePreventBackHandler();
 
   const onPress = async () => {
@@ -56,18 +55,18 @@ const TermsAndConditionsScreen = ({
           },
           interests: {
             interests,
-            additionalInformation
+            additionalInformation,
           },
-        };       
-  
+        };
+
         if (email) {
           userRegisterParams.contact.email = email;
         }
-  
+
         if (pictures.length > 0) {
           userRegisterParams.profile.pictures = pictures;
         }
-  
+
         try {
           await AuthService.userRegister(userRegisterParams).then(result => {
             if (result.type === 'error') {
@@ -80,11 +79,9 @@ const TermsAndConditionsScreen = ({
         } catch (error) {
           console.error('Error during registration', error);
         }
-  
       }
     }
   };
-  
 
   useEffect(
     () =>

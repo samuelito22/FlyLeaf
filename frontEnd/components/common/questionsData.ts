@@ -1,5 +1,5 @@
-import { icons } from "../../assets";
-import { languagesList } from "./languagesList";
+import {icons} from '../../assets';
+import {languagesList} from './languagesList';
 
 export const questionsList = [
   {
@@ -11,8 +11,8 @@ export const questionsList = [
       'I enjoy a drink now and then',
       'I drink regularly',
     ],
-    icon: icons.drink
-  },  
+    icon: icons.drink,
+  },
   {
     id: 2,
     question: 'Are you more of an early bird or a night owl?',
@@ -22,7 +22,7 @@ export const questionsList = [
       'I can adapt to both',
       'Neither, I love my sleep',
     ],
-    icon: icons.sleep
+    icon: icons.sleep,
   },
   {
     id: 3,
@@ -33,7 +33,7 @@ export const questionsList = [
       'The colors of Fall',
       'The chill of Winter',
     ],
-    icon: icons.season
+    icon: icons.season,
   },
   {
     id: 4,
@@ -44,7 +44,7 @@ export const questionsList = [
       'Sampling all the food',
       'At home, I prefer quiet evenings',
     ],
-    icon: icons.party
+    icon: icons.party,
   },
   {
     id: 5,
@@ -63,7 +63,7 @@ export const questionsList = [
       'Aquarius',
       'Pisces',
     ],
-    icon: icons.zodiac
+    icon: icons.zodiac,
   },
   {
     id: 6,
@@ -75,8 +75,8 @@ export const questionsList = [
       'I am an occasional smoker',
       'I do not smoke',
     ],
-    icon: icons.smoking
-  },  
+    icon: icons.smoking,
+  },
   {
     id: 7,
     question: 'Tell us about your fashion sense',
@@ -86,7 +86,7 @@ export const questionsList = [
       'Classic and elegant',
       'Sporty and functional',
     ],
-    icon: icons.fashion
+    icon: icons.fashion,
   },
   {
     id: 8,
@@ -97,7 +97,7 @@ export const questionsList = [
       'No, but I exercise in other ways',
       'No, I do not exercise',
     ],
-    icon: icons.gym
+    icon: icons.gym,
   },
   {
     id: 9,
@@ -109,13 +109,13 @@ export const questionsList = [
       'PhD',
       'On a graduate programme',
       'Master degree',
-      'Trade school'
+      'Trade school',
     ],
-    icon: icons.education
+    icon: icons.education,
   },
   {
     id: 10,
-    question: "Who are you open to dating?",
+    question: 'Who are you open to dating?',
     answers: ['Male', 'Female', 'Non-Binary'],
   },
   {
@@ -129,7 +129,7 @@ export const questionsList = [
     answers: [
       {
         id: 1,
-        gender: "Male",
+        gender: 'Male',
         extra: [
           'Intersex man',
           'Trans man',
@@ -140,18 +140,18 @@ export const questionsList = [
       },
       {
         id: 2,
-        gender: "Female",
+        gender: 'Female',
         extra: [
           'Intersex woman',
           'Trans woman',
           'Transfeminine',
           'Woman and Nonbinary',
           'Cis woman',
-        ]
+        ],
       },
       {
         id: 3,
-        gender: "Non-Binary",
+        gender: 'Non-Binary',
         extra: [
           'Agender',
           'Bigender',
@@ -168,18 +168,30 @@ export const questionsList = [
           'Polygender',
           'Transgender',
           'Two-spirit',
-        ]
-      }
-    ]
+        ],
+      },
+    ],
   },
   {
     id: 13,
-    question: "What is your sexual orientation?",
-    answers: ['Straight', 'Gay', 'Lesbian', 'Bisexual', 'Asexual', 'Demisexual', 'Pansexual', 'Queer', 'Questioning', 'Aromantic', 'Omnisexual']
+    question: 'What is your sexual orientation?',
+    answers: [
+      'Straight',
+      'Gay',
+      'Lesbian',
+      'Bisexual',
+      'Asexual',
+      'Demisexual',
+      'Pansexual',
+      'Queer',
+      'Questioning',
+      'Aromantic',
+      'Omnisexual',
+    ],
   },
   {
     id: 14,
-    question: "What languages do you speak?",
+    question: 'What languages do you speak?',
     answers: languagesList.map(language => {
       let names = language.name.split(';');
       return {
@@ -195,22 +207,22 @@ export const questionsList = [
       'Yes, definitely',
       'Maybe, I am not sure yet',
       'No, I do not want children',
-      'I already have children'
+      'I already have children',
     ],
-    icon: icons.babies
+    icon: icons.babies,
   },
   {
     id: 16,
-    question: "What is your ethnicity?",
+    question: 'What is your ethnicity?',
     answers: ['Asian', 'Black', 'Mixed', 'White', 'Other'],
-    icon: icons.ethnicity
+    icon: icons.ethnicity,
   },
   {
     id: 17,
-    question: "Have you received the COVID vaccination?",
+    question: 'Have you received the COVID vaccination?',
     answers: ['Fully Vaccinated', 'Partially Vaccinated', 'Not Vaccinated'],
-    icon: icons.vaccine
-    }
+    icon: icons.vaccine,
+  },
 ];
 
 export const interestsList = {

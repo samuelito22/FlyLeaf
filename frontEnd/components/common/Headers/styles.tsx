@@ -10,7 +10,7 @@ import {
 export const styles = StyleSheet.create({
   container: {
     maxHeight: HEIGHT.homeHeader,
-    height: "100%",
+    height: '100%',
     width: '100%',
     borderBottomColor: COMPONENT_COLORS.headerBorder,
     justifyContent: 'space-between',
@@ -18,6 +18,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     position: 'relative',
     backgroundColor: 'white',
+    paddingHorizontal: 10
   },
   logoContainer: {
     position: 'absolute',
@@ -30,21 +31,19 @@ export const styles = StyleSheet.create({
     width: 24,
     height: 24,
     tintColor: THEME_COLORS.primary,
+    resizeMode: 'contain',
   },
   iconContainer: {
-    width:70,
-    height:"100%",
-    alignItems: "center",
-    justifyContent:'center',
-      
+    width: 50,
+    height: 50,
+    borderRadius: 500,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   iconText: {
     color: THEME_COLORS.dark,
     ...themeText.bodyMediumFour,
-    marginLeft:5,
-    transform:[
-      {translateY: 2}
-    ]
-
-  }
+    marginLeft: 5,
+    transform: [{translateY: 2}],
+  },
 });

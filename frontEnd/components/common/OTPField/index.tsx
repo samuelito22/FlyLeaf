@@ -14,7 +14,15 @@ const OTPField: React.FC<TYPES.OTPFieldProps> = ({
 
   const inputs = Array.from({length: OTPLength}, (_, i) => {
     return (
-      <View style={[styles.OTPField__box, {...style, borderColor: OTP[i] ? THEME_COLORS.primary : PALETTE.GHOSTWHITE}]} key={i}>
+      <View
+        style={[
+          styles.OTPField__box,
+          {
+            ...style,
+            borderColor: OTP[i] ? THEME_COLORS.primary : PALETTE.GHOSTWHITE,
+          },
+        ]}
+        key={i}>
         <Text style={styles.OTPField__box__input}>{OTP[i]}</Text>
       </View>
     );

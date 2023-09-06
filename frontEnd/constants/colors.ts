@@ -42,7 +42,7 @@ export const PALETTE = {
 };
 
 export const THEME_COLORS = {
-  primary: "#00755E",
+  primary: '#00755E',
   secondary: PALETTE.LIGHT100,
   tertiary: PALETTE.GRAY300,
   background: PALETTE.WHITE,
@@ -62,7 +62,7 @@ export const COMPONENT_COLORS = {
   primaryIndicatorBackground: PALETTE.GHOSTWHITE2,
   primaryIndicatorBorder: PALETTE.LIGHT100,
   interestCard: PALETTE.INDIGO600,
-  modalBackground: 'rgba(0, 0, 0, 0.1)'
+  modalBackground: 'rgba(0, 0, 0, 0.1)',
 };
 
 /**

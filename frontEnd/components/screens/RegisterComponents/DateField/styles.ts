@@ -16,7 +16,7 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 5,
     height: '100%',
-    width:20
+    width: 20,
   },
   dateField__hiddenInput: {
     width: '800%',

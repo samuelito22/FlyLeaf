@@ -11,21 +11,21 @@ export {default as BirthdayField} from './screens/RegisterComponents/DateField';
 export {default as UploadSelectionAlert} from './screens/RegisterComponents/UploadSelectionAlert';
 
 // Home
-export {default as UserProfileCard} from './screens/HomeComponents/UserProfileCard';
-export * from "./common/Headers"
+export {default as UserProfileCard} from './common/UserProfileCard';
+export * from './common/Headers';
 
 // common
 export * as Button from './common/Button';
-export * as Loading from "./common/Loading"
+export * as Loading from './common/Loading';
 export {default as TextField} from './common/TextField';
 export {default as Dropdown} from './common/Dropdown';
 export {default as OTPField} from './common/OTPField';
 export {default as Alert} from './common/Alert';
 export {default as LoadingSpinner} from './common/LoadingSpinner';
 export {default as BackButton} from './common/BackButton';
-export { default as Ripple } from "./common/Ripple"
-export { default as OAuth2WebView} from "./common/OAuth2WebView"
-export {default as ThreeDotsLoader} from "./common/ThreeDotsLoader"
+export {default as Ripple} from './common/Ripple';
+export {default as OAuth2WebView} from './common/OAuth2WebView';
+export {default as ThreeDotsLoader} from './common/ThreeDotsLoader';
 
 // Data
 export {questionsList, interestsList} from './common/questionsData';
