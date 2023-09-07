@@ -85,7 +85,7 @@ export const styles = StyleSheet.create({
     height: 100,
     tintColor: PALETTE.LIGHT100,
   },
-  imageFullScreen: {
+  imageFull: {
     width: '100%',
     height: '100%',
   },
@@ -134,5 +134,137 @@ export const styles = StyleSheet.create({
     ...themeText.bodyRegularSix,
     color: PALETTE.GRAY500,
   },
+
+
+  // Instagram Card Styles
+  instagramContainer: {
+    backgroundColor: 'white',
+    width: '100%',
+    borderRadius: 15,
+    flexDirection: 'column',
+    padding: 15,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: PALETTE.LIGHT100,
+    marginHorizontal: 10,
+  },
+  instagramHeader: {
+    flexDirection: 'row',
+    maxWidth: 350,
+    width: '100%',
+    alignItems: 'center',
+  },
+  instagramIcon: {
+    height: 30,
+    width: 30,
+    marginRight: 10,
+  },
+  instagramHeaderText: {
+    ...themeText.bodyMediumFive,
+    color: THEME_COLORS.dark,
+  },
+  instagramImageScrollContainer: {
+    marginVertical: 10,
+  },
+  instagramImageContainer: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    width: 60,
+    marginRight: 15,
+    overflow: 'hidden',
+  },
+  instagramImageBackground: {
+    width: 60,
+    height: 60,
+    backgroundColor: 'rgba(1, 1, 1, 0.05)',
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+
+  // Spotify Card Styles
+  spotifyContainer: {
+    backgroundColor: 'black',
+    borderRadius: 15,
+    flex: 1,
+    flexDirection: 'column',
+    padding: 15,
+    overflow: 'hidden',
+    marginHorizontal: 10,
+  },
+  spotifyHeader: {
+    flexDirection: 'row',
+    maxWidth: 250,
+    width: '100%',
+    alignItems: 'center',
+  },
+  spotifyIcon: {
+    height: 30,
+    width: 30,
+    marginRight: 10,
+  },
+  spotifyHeaderText: {
+    ...themeText.bodyMediumFour,
+    color: 'white',
+  },
+  spotifyArtistScrollContainer: {
+    marginVertical: 10,
+  },
+  spotifyArtistContainer: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    width: 60,
+    marginRight: 15,
+    overflow: 'hidden',
+  },
+  spotifyArtistImageBackground: {
+    width: 60,
+    height: 60,
+    backgroundColor: 'rgba(128, 128, 128, 0.5)',
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  artistName: {
+    color: 'white',
+    ...themeText.bodyRegularSeven,
+    textAlign: 'center',
+    marginTop: 5,
+  },
   
+  darkButton: {
+    marginBottom: 10,
+    marginTop: 20,
+    width: '95%',
+    alignSelf: 'center',
+  },
+  lightButton: {
+    marginVertical: 10,
+    width: '95%',
+    alignSelf: 'center',
+  },
+
+  relationshipText: {color: 'black',
+  ...themeText.bodyMediumFive,
+  alignSelf: 'center',
+  marginTop: 10,
+},
+distanceText: { color: 'white',
+...themeText.bodyRegularSix,
+paddingVertical: 5,},
+superlikeImage: { position: 'absolute',
+bottom: 10,
+right: 10,
+width: 50,
+height: 50,
+borderRadius: 100,
+backgroundColor: 'rgba(0,0,0,0.5)',},
+modalContainer:{flex: 1, borderWidth: 1, backgroundColor: 'rgba(0,0,0,0.9)'},
+modalImage: {flex: 1, resizeMode: 'contain'},
+indicatorsContainer: {flexDirection: 'row',
+position: 'absolute',
+top: 10,
+alignSelf: 'center',},
+indicator: {width: '100%',
+marginHorizontal: 2,
+borderRadius: 20,height:5},
+scrollView: {flexGrow: 1, width: '100%'}
 });

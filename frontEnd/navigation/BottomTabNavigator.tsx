@@ -40,6 +40,8 @@ const BottomTabNavigator = () => {
         tabBarShowLabel: false,
         headerShown: false,
         tabBarStyle: {
+          zIndex: 11,
+          position:'absolute',
           height: HEIGHT.bottomTabBar,
           shadowColor: 'transparent',
           elevation: 0,

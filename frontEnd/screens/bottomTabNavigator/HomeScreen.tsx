@@ -1,9 +1,10 @@
 import React from 'react';
 import {View, StyleSheet} from 'react-native';
-import {SafeContainer, UserProfileCard, HomeHeader} from '../../components';
+import {SafeContainer, UserProfileCard, HomeHeader, Loading} from '../../components';
 import {icons, images} from '../../assets';
 import {NavigationProp} from '@react-navigation/native';
 import {TYPES} from '../../constants';
+import { useSelector } from 'react-redux';
 
 type LocationData = {
   latitude: number;
@@ -15,10 +16,18 @@ const HomeScreen = ({
 }: {
   navigation: NavigationProp<TYPES.RootStackParamList>;
 }) => {
+    const currentUserId =
+    useSelector((state: TYPES.AppState) => state.usersReducer.currentUserId) ||
+    null;
+
+
+
   return (
     <SafeContainer>
       <HomeHeader />
+        {!currentUserId ? <Loading.ActiveIndicator modalBackground={{backgroundColor:"transparent"}}/> : 
       <View style={homeScreenStyles.container}>
+      
         <UserProfileCard
         moveable={true}
           userData={{
@@ -870,6 +879,7 @@ const HomeScreen = ({
         }}
         />
       </View>
+      }
     </SafeContainer>
   );
 };

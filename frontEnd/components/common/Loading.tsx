@@ -41,15 +41,15 @@ export const ActiveIndicator = ({
   modalBackground?: ViewStyle;
 }) => {
   return (
-    <Modal transparent={true}>
-      <View style={[styles.modalBackground, modalBackground]}>
+    <View style={{position:'absolute',top:0,bottom:0,left:0,right:0,zIndex:10}}>
+    <View style={[styles.modalBackground, modalBackground]}>
         <ActivityIndicator
           animating={true}
           size={50}
           color={THEME_COLORS.dark}
         />
       </View>
-    </Modal>
+    </View>
   );
 };
 

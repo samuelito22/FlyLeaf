@@ -654,5 +654,5 @@ export interface currentUserProfile {
   instagram: InstagramPost[];
   pictures: UserPicture[];
   additionalInformation: UserAdditionalInformation[];
-  settings: UserSettings[];
+  settings: UserSettings;
 }

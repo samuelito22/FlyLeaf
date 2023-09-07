@@ -9,18 +9,24 @@ import {useDispatch} from './utils/hooks';
 import {useEffect} from 'react';
 import {UserService} from './services';
 import React from 'react';
-import {startContinuouslyCheckingLocation, stopContinuouslyCheckingLocation } from './utils/locationChecker';
-import { removeTokensFromKeychain, retrieveTokensFromKeychain } from './utils/keychain';
-import { getData } from './utils/storage';
-import { NavigationContainerRef } from '@react-navigation/native';
+import {
+  startContinuouslyCheckingLocation,
+  stopContinuouslyCheckingLocation,
+} from './utils/locationChecker';
+import {
+  removeTokensFromKeychain,
+  retrieveTokensFromKeychain,
+} from './utils/keychain';
+import {getData} from './utils/storage';
+import {NavigationContainerRef} from '@react-navigation/native';
 
-export const navigationRef = React.createRef<NavigationContainerRef<TYPES.RootStackParamList>>();
-
+export const navigationRef =
+  React.createRef<NavigationContainerRef<TYPES.RootStackParamList>>();
 
 const MainContent = () => {
   const dispatch = useDispatch();
 
-  const { isBlocked} = useSelector(
+  const {isBlocked} = useSelector(
     (state: TYPES.AppState) => state.appStatusReducer,
   );
 
@@ -29,36 +35,44 @@ const MainContent = () => {
   );
 
   useEffect(() => {
-    let controller = new AbortController;
+    let controller = new AbortController();
     const collectUserProfile = async () => {
       const tokens = await retrieveTokensFromKeychain();
-      const coordinates = await getData("coordinates")
-  
+      const coordinates = await getData('coordinates');
+
       if (tokens && coordinates) {
-          const { accessToken, refreshToken } = tokens;
-          await UserService.getMyProfile(JSON.parse(coordinates) as {longitude: number, latitude: number}, accessToken, refreshToken, controller.signal).then(async result => {
-            if(result.type === "error"){
-              dispatch(AppStatusActions.setCurrentScreen(ROUTES.LOGIN_NAVIGATOR))
+        const {accessToken, refreshToken} = tokens;
+        await UserService.getMyProfile(
+          JSON.parse(coordinates) as {longitude: number; latitude: number},
+          accessToken,
+          refreshToken,
+          controller.signal,
+        )
+          .then(async result => {
+            if (result.type === 'error') {
+              dispatch(
+                AppStatusActions.setCurrentScreen(ROUTES.LOGIN_NAVIGATOR),
+              );
               navigationRef.current?.navigate(ROUTES.LOGIN_NAVIGATOR);
-              await removeTokensFromKeychain()
-
-            }else{
-              dispatch(UserActions.setCurrentUserId(result.user._id))
-              dispatch(UserActions.setUserProfile(result.user._id, result.user))
+              await removeTokensFromKeychain();
+            } else {
+              dispatch(UserActions.setCurrentUserId(result.user._id));
+              dispatch(
+                UserActions.setUserProfile(result.user._id, result.user),
+              );
             }
-          }).catch((e) => {console.log(e)})
+          })
+          .catch(e => {
+            console.log(e);
+          });
 
-          // Use the tokens as needed...
+        // Use the tokens as needed...
       } else {
         navigationRef.current?.navigate(ROUTES.LOGIN_NAVIGATOR);
       }
-  }
+    };
 
-  collectUserProfile()
-  
-
-
-    
+    collectUserProfile();
 
     return () => {
       if (controller) {
@@ -75,11 +89,11 @@ const MainContent = () => {
     return () => {
       stopContinuouslyCheckingLocation();
     };
-  }, []); 
+  }, []);
 
   if (isBlocked) return <BlockedScreen />;
 
-  return <MainNavigator />
+  return <MainNavigator />;
 };
 
 export default function App() {
