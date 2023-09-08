@@ -13,39 +13,10 @@ export const updateUserProfile = (field: string, value: any) => ({
 
 // Thunk action creator for initializing user profile
 export const initUserProfile =
-  (userProfile: TYPES.userProfileDataStructure) =>
+  (userProfile: TYPES.currentUserProfile) =>
   (dispatch: (action: TYPES.AppAction) => void) => {
     dispatch({
       type: INIT_USER_PROFILE,
       payload: userProfile,
-    });
-  };
-
-export const setQuestionsList =
-  (
-    questionsList: {
-      id: number;
-      question: string;
-      shortForm: string;
-      icon: string;
-      answers: any;
-    }[],
-  ) =>
-  (dispatch: (action: TYPES.AppAction) => void) => {
-    dispatch({
-      type: SET_QUESTIONS_LIST,
-      payload: questionsList,
-    });
-  };
-
-export const setInterestsList =
-  (interestsList: {
-    question: string;
-    answers: {title: string; interests: {title: string; icon: string}[]}[];
-  }) =>
-  (dispatch: (action: TYPES.AppAction) => void) => {
-    dispatch({
-      type: SET_INTERESTS_LIST,
-      payload: interestsList,
     });
   };

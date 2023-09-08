@@ -15,6 +15,7 @@ export interface Image {
   
   export interface SpotifyDocument {
     refreshToken?: string;
+    accessToken?: string;
     _id: Schema.Types.ObjectId; 
     artists: Artist[];
   }

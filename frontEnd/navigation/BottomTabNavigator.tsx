@@ -18,18 +18,18 @@ interface TabIconProps {
   source: ImageSourcePropType;
 }
 
-const TabIcon: React.FC<TabIconProps> = ({focused, source}) => {
+const TabIcon = React.memo(({ focused, source }:TabIconProps) => {
   return (
-    <Image
-      source={source}
-      style={{
-        tintColor: focused ? THEME_COLORS.dark : THEME_COLORS.tertiary,
-        width: 24,
-        height: 24,
-      }}
-    />
+     <Image
+        source={source}
+        style={{
+           tintColor: focused ? THEME_COLORS.dark : THEME_COLORS.tertiary,
+           width: 24,
+           height: 24,
+        }}
+     />
   );
-};
+});
 
 const BORDER_RADIUS = 20;
 
@@ -61,6 +61,7 @@ const BottomTabNavigator = () => {
             <View
               style={{
                 flex: 1,
+                height: HEIGHT.bottomTabBar,
                 overflow: 'hidden',
               }}>
               <TouchableRipple
@@ -84,6 +85,7 @@ const BottomTabNavigator = () => {
             <View
               style={{
                 flex: 1,
+                height: HEIGHT.bottomTabBar,
                 overflow: 'hidden',
               }}>
               <TouchableRipple
@@ -106,6 +108,8 @@ const BottomTabNavigator = () => {
             <View
               style={{
                 flex: 1,
+                height: HEIGHT.bottomTabBar,
+
                 overflow: 'hidden',
               }}>
               <TouchableRipple
@@ -128,6 +132,8 @@ const BottomTabNavigator = () => {
             <View
               style={{
                 flex: 1,
+                height: HEIGHT.bottomTabBar,
+
                 overflow: 'hidden',
               }}>
               <TouchableRipple

@@ -34,8 +34,8 @@ export const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   iconContainer: {
-    width: 50,
-    height: 50,
+    width: 55,
+    height: 55,
     borderRadius: 500,
     alignItems: 'center',
     justifyContent: 'center',

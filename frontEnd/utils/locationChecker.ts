@@ -52,8 +52,8 @@ const informiOSUsers = () => {
 
 let locationCheckInterval:any;
 
-export const startContinuouslyCheckingLocation = (interval: number = 5000) => {
-  locationCheckInterval = setInterval(async () => {
+export const startContinuouslyCheckingLocation = (interval: number = 1800000) => {
+  const checkLocation = async () => {
     try {
       const hasLocationAccess = await checkLocationStatus();
       if (!hasLocationAccess) {
@@ -70,7 +70,13 @@ export const startContinuouslyCheckingLocation = (interval: number = 5000) => {
         informiOSUsers();
       }
     }
-  }, interval);
+  }
+
+  // Run the function immediately
+  checkLocation();
+
+  // Set up the interval
+  locationCheckInterval = setInterval(checkLocation, interval);
 };
 
 export const stopContinuouslyCheckingLocation = () => {

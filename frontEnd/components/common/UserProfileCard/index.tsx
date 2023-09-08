@@ -19,6 +19,7 @@ import {
 } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedGestureHandler,
+  useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -46,6 +47,7 @@ const UserProfileCard = ({
   const THRESHOLD_RIGHT = SCREEN_WIDTH * 0.2;
   const [currentPictureIndex, setCurrentPictureIndex] = useState<number>(0);
   const TAP_AREA_WIDTH = SCREEN_WIDTH / 3;
+  const [isVisible, setIsVisible] = useState(true);
   const touchStartTime = useSharedValue(0);
   const touchEndTime = useSharedValue(0);
   const TAP_DURATION_THRESHOLD = 150; // time in milliseconds
@@ -143,16 +145,26 @@ const UserProfileCard = ({
   });
 
   const animatedHeightToZero = useAnimatedStyle(() => {
-    const maxHeight = withTiming(
-      translateX.value === -SCREEN_WIDTH || translateX.value === SCREEN_WIDTH
-        ? 0
-        : cardHeight,
-      {duration: 600},
-    );
     const opacity = isSwipingOut.value ? withTiming(0) : 1;
 
-    return {maxHeight, opacity};
+    return { opacity};
   });
+
+  useAnimatedReaction(
+    () => {
+      return animatedHeightToZero.opacity;  // We want to react to changes in opacity
+    },
+    (result) => {
+      if (result === 0) {
+        // If opacity has reached 0, then set isVisible to false
+        setIsVisible(false);
+      }
+    }
+  );
+
+  if (!isVisible) {
+    return null;  
+}
 
   return (
     <>
@@ -288,7 +300,7 @@ const UserProfileCard = ({
                 )}
                 {userData.bio && (
                   <View style={[styles.informationSection, {width: cardWidth}]}>
-                    <Text style={styles.informationTitle}>About me</Text>
+                    <Text style={styles.informationTitle}>My story</Text>
                     <Text style={styles.bioText}>{userData?.bio}</Text>
                   </View>
                 )}
@@ -298,6 +310,8 @@ const UserProfileCard = ({
                       Basic information
                     </Text>
                     <View style={[styles.buttonsList]}>
+                    {userData.height &&
+
                       <View style={styles.additionalInformationCard}>
                         <Image
                           source={icons.measuringTape}
@@ -309,6 +323,7 @@ const UserProfileCard = ({
                             ` ${userData.height?.inches}`}
                         </Text>
                       </View>
+}
                       <View style={styles.additionalInformationCard}>
                         <Image
                           source={icons.gender}
@@ -320,6 +335,30 @@ const UserProfileCard = ({
                             ` (${userData.gender.secondary})`}
                         </Text>
                       </View>
+                      {userData.profession?.jobTitle &&
+                      <View style={styles.additionalInformationCard}>
+                        <Image
+                          source={{uri: 'https://flyleaf-icons.s3.eu-west-2.amazonaws.com/questions/job.png'}}
+                          style={styles.additionalInformationCard_icon}
+                        />
+                        <Text style={styles.additionalInformationCard_text}>
+                          {userData.profession?.jobTitle}
+                        </Text>
+                      </View>
+}
+{userData.profession?.employer &&
+
+                      <View style={styles.additionalInformationCard}>
+                        <Image
+                          source={{uri: 'https://flyleaf-icons.s3.eu-west-2.amazonaws.com/questions/company.png'}}
+                          style={styles.additionalInformationCard_icon}
+                        />
+                        <Text style={styles.additionalInformationCard_text}>
+                        {userData.profession?.employer}
+
+                        </Text>
+                      </View>
+}
                       {userData.additionalInformation
                         ?.filter(item => item.questionType === 'Basic')
                         .map((field, index) => (
@@ -338,7 +377,7 @@ const UserProfileCard = ({
                     </View>
                   </View>
                 )}
-                {userData.languages && (
+                {userData.languages?.length && (
                   <View style={[styles.informationSection, {width: cardWidth}]}>
                     <Text style={styles.informationTitle}>
                       Languages I know

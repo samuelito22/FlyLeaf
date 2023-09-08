@@ -4,7 +4,7 @@ import {ROUTES, TYPES} from '../constants';
 import LoginNavigator from './auth/Login';
 import RegisterNavigator from './auth/Register';
 import BottomTabNavigator from './BottomTabNavigator';
-import {cardSlideLeftAnimation} from '../utils/navigatorSlideAnimation';
+import {cardSlideDownAnimation, cardSlideLeftAnimation, cardSlideUpAnimation} from '../utils/navigatorSlideAnimation';
 import {useSelector} from 'react-redux';
 import ProfileNavigator from './ProfileNavigator';
 import {retrieveTokensFromKeychain} from '../utils/keychain';
@@ -17,6 +17,8 @@ const MainNavigator = () => {
   const currentScreen = useSelector(
     (state: TYPES.AppState) => state.appStatusReducer.currentScreen,
   );
+
+
 
   
 
@@ -56,12 +58,16 @@ const MainNavigator = () => {
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
+          cardStyleInterpolator: cardSlideLeftAnimation,
         }}
         initialRouteName={currentScreen || ROUTES.LOGIN_NAVIGATOR}>
-        <Stack.Screen
-          name={ROUTES.LOGIN_NAVIGATOR}
-          component={LoginNavigator}
-        />
+      <Stack.Screen
+    name={ROUTES.LOGIN_NAVIGATOR}
+    component={LoginNavigator}
+    options={{
+        cardStyleInterpolator: cardSlideUpAnimation
+    }}
+/>
         <Stack.Screen
           name={ROUTES.REGISTER_NAVIGATOR}
           component={RegisterNavigator}

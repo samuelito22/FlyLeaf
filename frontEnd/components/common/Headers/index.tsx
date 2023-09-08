@@ -54,6 +54,9 @@ export const ProfilePrivateHeader = () => {
         onPress={handleBackPress}
         contentContainerStyle={styles.iconContainer}
       />
+      <View style={styles.logoContainer}>
+        <Image style={styles.logo} source={images.logo} />
+      </View>
       <ButtonImage
         width={24}
         height={24}

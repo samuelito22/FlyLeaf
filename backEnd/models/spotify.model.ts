@@ -15,6 +15,7 @@ const ArtistSchema = new Schema<Artist>({
 
 const SpotifySchema = new Schema<SpotifyDocument>({
     refreshToken: { type: String, required: true },
+    accessToken: { type: String, required: true },
     _id: { type: String, alias: 'spotify_id' },
     artists: [ArtistSchema]
 });

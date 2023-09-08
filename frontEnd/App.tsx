@@ -30,18 +30,17 @@ const MainContent = () => {
     (state: TYPES.AppState) => state.appStatusReducer,
   );
 
-  const {isRegisterCompleted} = useSelector(
-    (state: TYPES.AppState) => state.registerReducer,
-  );
-
   useEffect(() => {
     let controller = new AbortController();
+    let retryCount = 0;
+
     const collectUserProfile = async () => {
       const tokens = await retrieveTokensFromKeychain();
       const coordinates = await getData('coordinates');
 
       if (tokens && coordinates) {
         const {accessToken, refreshToken} = tokens;
+        
         await UserService.getMyProfile(
           JSON.parse(coordinates) as {longitude: number; latitude: number},
           accessToken,
@@ -64,6 +63,10 @@ const MainContent = () => {
           })
           .catch(e => {
             console.log(e);
+            retryCount++;
+            const retryInMilliseconds = Math.pow(2, retryCount) * 1000 + Math.random() * 1000; // Exponential backoff with jitter
+            setTimeout(collectUserProfile, retryInMilliseconds);
+            console.log(`Error occurred. Retrying in ${retryInMilliseconds / 1000} seconds...`);
           });
 
         // Use the tokens as needed...
@@ -79,7 +82,9 @@ const MainContent = () => {
         controller.abort();
       }
     };
-  }, []);
+}, []);
+
+
 
   useEffect(() => {
     // Start checking location when the component is mounted

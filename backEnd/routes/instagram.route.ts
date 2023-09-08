@@ -3,8 +3,7 @@ import instagramController from "../controller/instagram.controller";
 
 const router = express.Router();
 
-router.put("/authenticate-and-fetch", instagramController.authenticateAndFetchInstagram)
-router.delete('/disconnect', instagramController.disconnectFromInstagram)
-router.put('/refresh-token', instagramController.refetchInstagram)
+router.put("/authenticate-and-fetch/:_id", instagramController.authenticateAndFetchInstagram)
+router.delete('/disconnect/:_id', instagramController.disconnectFromInstagram)
 
 export default router;

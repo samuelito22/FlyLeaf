@@ -1,9 +1,8 @@
 import React, {useState, useEffect, useRef} from 'react';
-import {Modal, BackHandler} from 'react-native';
+import {Modal,Image, View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import WebView from 'react-native-webview';
-import {TYPES} from '../../constants';
+import {TYPES, themeText} from '../../constants';
 import ThreeDotsLoader from './ThreeDotsLoader';
-import {ButtonImage} from './Button';
 import {icons} from '../../assets';
 
 function OAuth2WebView({
@@ -15,7 +14,7 @@ function OAuth2WebView({
   const {authorizationEndpoint, clientId, redirectUrl, scopes} = config;
   const [isLoading, setIsLoading] = useState(true);
   const webViewRef = useRef<WebView>(null);
-  const [canGoBack, setCanGoBack] = useState(false);
+  const [currentUrl, setCurrentUrl] = useState('');
 
   const encodedScopes = encodeURIComponent(scopes.join(','));
 
@@ -25,6 +24,14 @@ function OAuth2WebView({
 
   return (
     <Modal visible={isVisible} animationType="slide">
+      <View style={styles.navigationBar}>
+        <TouchableOpacity onPress={onClose}>
+          <Image source={icons.normalCross} style={styles.navBarButton}/>
+        </TouchableOpacity>
+        <Text style={styles.navBarUrl} numberOfLines={1}>
+          {currentUrl}
+        </Text>
+      </View>
       <WebView
         onLoad={() => setIsLoading(true)}
         onLoadEnd={() => setIsLoading(false)}
@@ -32,7 +39,7 @@ function OAuth2WebView({
         source={{uri: authUrl}}
         incognito={true}
         onNavigationStateChange={navState => {
-          setCanGoBack(navState.canGoBack);
+          setCurrentUrl(navState.url);
 
           if (navState.url.startsWith(redirectUrl)) {
             const code = navState.url.match(/code=([\s\S]+?)(&|$)/);
@@ -48,5 +55,27 @@ function OAuth2WebView({
     </Modal>
   );
 }
+
+const styles = StyleSheet.create({
+  navigationBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'black',
+    padding: 20,
+  },
+  navBarButton: {
+    tintColor: 'white',
+    width: 15,
+    height: 15,
+    resizeMode:'contain',
+    marginRight: 20,
+    alignSelf:'center'
+  },
+  navBarUrl: {
+    color: 'white',
+    ...themeText.bodyRegularSix,
+    overflow: 'hidden',
+  },
+});
 
 export default OAuth2WebView;

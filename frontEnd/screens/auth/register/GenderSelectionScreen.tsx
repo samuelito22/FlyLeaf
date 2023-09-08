@@ -4,7 +4,6 @@ import {
   SafeContainer,
   Button,
   LoadingSpinner,
-  questionsList,
 } from '../../../components';
 import {styles} from './styles';
 import {THEME_COLORS, ROUTES, TYPES, PALETTE} from '../../../constants';

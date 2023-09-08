@@ -390,51 +390,11 @@ export interface InitialStateUsersType {
   languagesList: {code: string; name: string}[] | null;
 }
 
+
 export interface InitialStateEditUserType {
-  modalVisible: boolean;
-  bio: string;
-  instagram: {
-    isConnected?: boolean;
-    instagram_id?: string;
-    images: any;
-  } | null;
-  spotify: {
-    isConnected?: boolean;
-    spotify_id?: string;
-    artists: any;
-  } | null;
-  height: {feets: string; inches: string} | undefined;
-  interests: string[];
-  additionalInformation: {
-    question: string;
-    answer: string;
-    icon: string;
-  }[];
-  jobTitle: string | undefined;
-  company: string | undefined;
-  gender: {
-    general: string;
-    specific?: string;
-  } | null;
-  sexualOrientation: string[] | undefined;
-  pictures: string[];
-  languages: string[] | undefined;
-  covidVaccination: string | undefined;
-  ethnicity: string | undefined;
-  questionsList:
-    | {
-        _id: ObjectId;
-        question: string;
-        shortForm: string;
-        icon: string;
-        answers: {_id: ObjectId; text: string}[];
-      }[]
-    | null;
-  interestsList: {
-    question: string;
-    answers: {title: string; interests: {title: string; icon: string}[]}[];
-  } | null;
+  userProfile: EditProfile | null
 }
+
 
 /**
  * Redux stor - App State
@@ -525,32 +485,9 @@ export type oAuth2WebViewType = {
   onClose: () => void;
 };
 
-
-
-export type UserProfile = {
-  _id: string;
-  bio?:string;
-  location: {coordinates: {longitude: number, latitude: number}, city?: string};
-  height?: {feets: string, inches: string}
-  username: string;
-  gender: UserGender;
-  interests: UserInterest[];
-  languages: {_id: string, name: string}[]; // Assuming this should be an array of strings
-  relationshipGoal: string;
-  seeking: string[]; // Assuming this should be an array of strings
-  dateOfBirth: string;
-  verified: boolean;
-  lastActive: string;
-  __v: number;
-  pictures: UserPicture[];
-  additionalInformation: UserAdditionalInformation[];
-  spotify?:any,
-  instagram?: any
-}
-
 type UserGender = {
   primary: string;
-  secondary: string;
+  secondary?: string;
 }
 
 type UserInterest = {
@@ -559,7 +496,7 @@ type UserInterest = {
   icon: string;
 }
 
-type UserPicture = {
+export type UserPicture = {
   _id: string;
   name: string;
   blurLevel: number;
@@ -574,7 +511,7 @@ type UserAdditionalInformation = {
   questionType: 'Advanced' | 'Basic'
 }
 
-interface SpotifyArtist {
+export interface SpotifyArtist {
   id: string;
   name: string;
   type: string;
@@ -586,7 +523,7 @@ interface SpotifyArtist {
   genres: string[];
 }
 
-interface InstagramPost {
+export interface InstagramPost {
   id: string;
   url: string;
 }
@@ -630,29 +567,51 @@ interface UserSettings {
   privacy: PrivacySettings;
   account: AccountSettings;
 }
-
-export interface currentUserProfile {
+export type UserProfile = {
   _id: string;
+  bio?: string;
+  location: {coordinates: {longitude: number, latitude: number}, city?: string};
+  height?: {feets: string, inches: string};
   username: string;
   gender: UserGender;
-  email: string;
   interests: UserInterest[];
-  languages: string[]; // Assuming it's a list of languages e.g. ["English", "Spanish"]
   relationshipGoal: string;
-  seeking: string[];
-  dateOfBirth: Date;
-  connects: number;
-  isPremiumMember: boolean;
+  seeking: string[]; // Array of strings
   verified: boolean;
-  lastActive: Date;
-  createdAt: Date;
-  updatedAt: Date;
-  __v: number;
-  location: {coordinates: {longitude: number, latitude: number}, city?: string};
-
-  spotify: SpotifyArtist[];
-  instagram: InstagramPost[];
   pictures: UserPicture[];
   additionalInformation: UserAdditionalInformation[];
+  spotify?: SpotifyArtist[];
+  instagram?: InstagramPost[];
+  languages?: {_id: string, name: string}[]; // Same structure as in UserProfile
+  dateOfBirth: Date;
+  lastActive: Date;
+  createdAt: Date;
+  profession?: {jobTitle?: string, employer?:string}
+
+}
+
+export interface currentUserProfile extends UserProfile {
+  email?: string;
+  phoneNumber?: string;
+  connects: number;
+  isPremiumMember: boolean;
   settings: UserSettings;
+}
+
+export interface EditProfile {
+  _id: string;
+  bio?: string;
+  location: { city?: string};
+  height?: {feets: string, inches: string};
+  gender: UserGender;
+  interests: UserInterest[];
+  relationshipGoal: string;
+  pictures: UserPicture[];
+  additionalInformation: UserAdditionalInformation[];
+  spotify?: SpotifyArtist[];
+  instagram?: InstagramPost[];
+  languages?: {_id: string, name: string}[]; // Same structure as in UserProfile
+  profession?: {jobTitle?: string, employer?:string}
+  seeking: string[]; // Array of strings
+
 }

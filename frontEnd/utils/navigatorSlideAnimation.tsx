@@ -53,3 +53,33 @@ export const cardSlideUpAnimation = ({
     },
   };
 };
+
+
+
+export const cardSlideDownAnimation = ({
+  current,
+  next,
+  layouts,
+}: StackCardInterpolationProps) => {
+  return {
+    cardStyle: {
+      transform: [
+        {
+          translateY: current.progress.interpolate({
+            inputRange: [0, 1],
+            outputRange: [-layouts.screen.height, 0],
+          }),
+        },
+        {
+          translateY: next
+            ? next.progress.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, layouts.screen.height],
+              })
+            : 0,
+        },
+      ],
+    },
+  };
+};
+

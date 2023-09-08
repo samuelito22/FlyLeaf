@@ -1,40 +1,96 @@
-import {View, ScrollView, Image, Text, StyleSheet} from 'react-native';
-import React, {useMemo} from 'react';
+import {View, ScrollView, Image, Text, StyleSheet, Dimensions} from 'react-native';
+import React, {useMemo, useRef, useState} from 'react';
 import {useNavigation, NavigationProp} from '@react-navigation/native';
 import {PALETTE, ROUTES, THEME_COLORS, TYPES, themeText} from '../../constants';
 import {useSelector} from 'react-redux';
-import {Button, ProfilePrivateHeader, SafeContainer} from '../../components';
+import {Button, Loading, ProfilePrivateHeader, SafeContainer} from '../../components';
 import {icons, images} from '../../assets';
 import {useDispatch} from '../../utils/hooks';
-import {EditProfileActions} from '../../redux';
+import {EditProfileActions, UserActions} from '../../redux';
+import {getAge} from '../../utils/getAge';
+import { UserService } from '../../services';
 
+const featuresList = [
+  {feature: 'Profile Creation', connects: true, premium: true},
+
+  {feature: 'Blurred Image Engagement', connects: true, premium: true},
+
+  {feature: 'Engagement Insights', connects: false, premium: true},
+  {feature: 'Unlimited Chat', connects: true, premium: true},
+  {feature: 'Ad-free Experience', connects: false, premium: true},
+  {feature: 'Notifications', connects: true, premium: true},
+  {feature: 'Unlimited Matches', connects: true, premium: true},
+  {feature: 'Advanced Search', connects: false, premium: true},
+  {
+    feature: 'Icebreakers & Conversation Starters',
+    connects: false,
+    premium: true,
+  },
+  {feature: 'See Who Liked You', connects: false, premium: true},
+  {feature: 'Priority Profile', connects: false, premium: true},
+  {feature: 'Standard Search', connects: true, premium: true},
+
+  {feature: 'Faster Image Reveal', connects: false, premium: true},
+
+  {feature: 'Offline Events or Webinars', connects: false, premium: true},
+];
+
+const FieldOfTable = React.memo(
+  ({
+    feature,
+    connects,
+    premium,
+  }: {
+    feature: string;
+    connects: boolean;
+    premium: boolean;
+  }) => {
+    return (
+      <View style={{flexDirection: 'row', minHeight: 60, alignItems: 'center'}}>
+        <View style={styles.plansContainer_firstColumn}>
+          <Text style={styles.plansContainer_feature}>{feature}</Text>
+        </View>
+        <View style={styles.plansContainer_restOfColumn}>
+          <Image
+            source={connects ? images.successIllustration : icons.dash}
+            resizeMode="contain"
+            style={[
+              !connects && {tintColor: THEME_COLORS.tertiary},
+              {width: 20, height: 20},
+            ]}            
+          />
+        </View>
+        <View style={styles.plansContainer_restOfColumn}>
+          <Image
+            source={premium ? images.successIllustration : icons.dash}
+            resizeMode="contain"
+            style={[
+              !premium && {tintColor: THEME_COLORS.tertiary},
+              {width: 20, height: 20},
+            ]}
+          />
+        </View>
+      </View>
+    );
+  },
+);
 const UserProfileScreen = () => {
   const dispatch = useDispatch();
-
   const currentUserId = useSelector(
     (state: TYPES.AppState) => state.usersReducer.currentUserId,
   );
-  const currentUser = useSelector((state: TYPES.AppState) => 
- state.usersReducer.byId[currentUserId as string] 
-) as TYPES.currentUserProfile
-
-
+  const currentUser = useSelector(
+    (state: TYPES.AppState) => state.usersReducer.byId[currentUserId as string],
+  ) as TYPES.currentUserProfile;
+  const {gendersList, interestsList, questionsList, languagesList} = useSelector(
+    (state: TYPES.AppState) => state.usersReducer,
+  );
   const navigation = useNavigation<NavigationProp<TYPES.RootStackParamList>>();
+  const age = getAge(currentUser?.dateOfBirth);
+  const screenWidth = Dimensions.get('window').width;
+  const cardWidth = (screenWidth-10) * 0.95;
+  const [isLoading, setIsLoading] = useState(false)
 
-  const dateOfBirth = new Date(currentUser?.createdAt);
-
-  const currentDate = new Date();
-
-  let age = currentDate.getFullYear() - dateOfBirth.getFullYear();
-
-  // If the user hasn't had their birthday this year, subtract 1 from the age
-  if (
-    currentDate.getMonth() < dateOfBirth.getMonth() ||
-    (currentDate.getMonth() === dateOfBirth.getMonth() &&
-      currentDate.getDate() < dateOfBirth.getDate())
-  ) {
-    age--;
-  }
   const monthNames = [
     'January',
     'February',
@@ -71,69 +127,49 @@ const UserProfileScreen = () => {
     } ${joinedDateObj.getFullYear()}`;
   }, [currentUser.createdAt]);
 
-  const onEditPress = () => {
-    if (currentUser) {
-      navigation.navigate(ROUTES.EDIT_PROFILE_SCREEN);
-      dispatch(EditProfileActions.initUserProfile(currentUser));
+  const onEditPress = async () => {
+    setIsLoading(true);
+    
+    if (!currentUser) {
+      setIsLoading(false);
+      return;
     }
-  };
-
-  const featuresList = [
-    {feature: 'Profile Creation', free: true, pro: true},
-
-    {feature: 'Blurred Image Engagement', free: true, pro: true},
-
-    {feature: 'Engagement Insights', free: false, pro: true},
-    {feature: 'Unlimited Chat', free: true, pro: true},
-    {feature: 'Ad-Free Experience', free: false, pro: true},
-    {feature: 'Notifications', free: true, pro: true},
-    {feature: 'Unlimited Matches', free: true, pro: true},
-    {feature: 'Advanced Search', free: false, pro: true},
-    {feature: 'Icebreakers & Conversation Starters', free: false, pro: true},
-    {feature: 'See Who Liked You', free: false, pro: true},
-    {feature: 'Priority Profile', free: false, pro: true},
-    {feature: 'Standard Search', free: true, pro: true},
-
-    {feature: 'Faster Image Reveal', free: false, pro: true},
-
-    {feature: 'Offline Events or Webinars', free: false, pro: true},
-  ];
-
-  const FieldOfTable = React.memo(
-    ({feature, free, pro}: {feature: string; free: boolean; pro: boolean}) => {
-      return (
-        <View
-          style={{flexDirection: 'row', minHeight: 60, alignItems: 'center'}}>
-          <View style={styles.plansContainer_firstColumn}>
-            <Text style={styles.plansContainer_feature}>{feature}</Text>
-          </View>
-          <View style={styles.plansContainer_restOfColumn}>
-            <Image
-              source={free ? images.successIllustration : icons.dash}
-              resizeMode="contain"
-              style={[
-                !free && {tintColor: THEME_COLORS.tertiary},
-                {width: 20, height: 20},
-              ]}
-            />
-          </View>
-          <View style={styles.plansContainer_restOfColumn}>
-            <Image
-              source={pro ? images.successIllustration : icons.dash}
-              resizeMode="contain"
-              style={[
-                !pro && {tintColor: THEME_COLORS.tertiary},
-                {width: 20, height: 20},
-              ]}
-            />
-          </View>
-        </View>
-      );
-    },
-  );
+  
+    // If the required data isn't loaded, attempt to load it
+    if (!questionsList && !languagesList && !interestsList && !gendersList) {
+      try {
+        const result = await UserService.getOverviewEn();
+        
+        if (result.type !== 'success') {
+          setIsLoading(false);
+          return;  // Exit if result type is not success
+        }
+  
+        const { questions, interests, languages, genders } = result;
+  
+        dispatch(UserActions.setQuestionsList(questions));
+        dispatch(UserActions.setInterestsList(interests));
+        dispatch(UserActions.setLanguagesList(languages));
+        dispatch(UserActions.setGendersList(genders));
+  
+      } catch (error) {
+        console.error("Failed to get overview data:", error);
+        setIsLoading(false);
+        return;  // Exit on error after logging and setting loading state
+      }
+    }
+  
+    // Continue to edit profile screen
+    navigation.navigate(ROUTES.EDIT_PROFILE_SCREEN);
+    dispatch(EditProfileActions.initUserProfile(currentUser));
+    setIsLoading(false);
+    };
+  
+  
 
   return (
     <SafeContainer>
+      {isLoading && <Loading.ActiveIndicator/>}
       <ProfilePrivateHeader />
       <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollViewContainer}>
@@ -145,7 +181,7 @@ const UserProfileScreen = () => {
             <Text style={[styles.header]}>
               {currentUser.username}, {age}
             </Text>
-            <Text style={styles.profileJoinDate}>{joinedDate}</Text>
+            <Text style={styles.profileJoinDate}>{joinedDate} | {currentUser.connects} Connects</Text>
             <Button.DarkButton
               onPress={onEditPress}
               height={35}
@@ -156,92 +192,67 @@ const UserProfileScreen = () => {
             </Button.DarkButton>
           </View>
 
-          <View style={styles.plansContainer}>
-            <View
-              style={{flexDirection: 'row', justifyContent: 'space-evenly'}}>
+          <View style={styles.plansContainer} >
+            <View style={{borderRadius: 25, overflow: 'hidden', marginVertical: 15}}>
+            <ScrollView
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              style={{flexDirection: 'row'}}>
+                
               <View
                 style={[
                   styles.planCard,
-                  currentUser.connects > 0 && {
-                    borderColor: '#fda831',
-                  },
+                  {width: cardWidth*0.95, backgroundColor: '#50B48A'},
                 ]}>
-                <Image
-                  source={icons.coinsColoured}
-                  style={styles.planCard_icon}
-                  resizeMode="contain"
-                />
-                <View style={styles.planCard_textContainer}>
-                  <Text style={styles.planCard_text}>
-                    <Text
-                      style={{
-                        ...themeText.bodyBoldThree,
-                        color: THEME_COLORS.dark,
-                      }}>
-                      {currentUser?.connects
-                        ? currentUser?.connects
-                        : 0}
-                    </Text>{' '}
-                    Connects
-                  </Text>
-                </View>
-                <Button.ButtonImage
-                  imgUrl={icons.plus}
-                  contentContainerStyle={{
-                    position: 'absolute',
-                    top: -8,
-                    right: -8,
-                    borderWidth: 0.2,
-                    borderRadius: 500,
-                    borderColor: THEME_COLORS.tertiary,
-                  }}
-                  width={30}
-                  height={30}
-                  tintColor={THEME_COLORS.tertiary}
-                />
-              </View>
-              <View
-                style={[
-                  styles.planCard,
-                  currentUser?.isPremiumMember && {
-                    borderColor: 'green',
-                  },
-                ]}>
-                <Image
-                  source={images.logo}
-                  style={styles.planCard_icon}
-                  resizeMode="contain"
-                  tintColor={THEME_COLORS.primary}
-                />
                 <Text
                   style={
                     currentUser?.isPremiumMember
                       ? styles.activeText
                       : styles.inactiveText
                   }>
-                  {currentUser?.isPremiumMember
-                    ? 'Active'
-                    : 'Inactive'}
+                  {currentUser?.isPremiumMember ? 'Active' : 'Inactive'}
                 </Text>
                 <View style={styles.planCard_textContainer}>
-                  <Text style={styles.planCard_text}>Pro membership</Text>
+                  <Text style={styles.planCard_header}>Premium</Text>
+                  <Text style={styles.planCard_paragraph}>
+                    Unlock exclusive features on Flyleaf to deepen connections and explore more matches without limitations.
+                  </Text>
                 </View>
-                <Button.ButtonImage
-                  imgUrl={icons.plus}
-                  contentContainerStyle={{
-                    position: 'absolute',
-                    top: -8,
-                    right: -8,
-                    borderWidth: 0.2,
-                    borderRadius: 500,
-                    borderColor: THEME_COLORS.tertiary,
-                  }}
-                  width={30}
-                  height={30}
-                  tintColor={THEME_COLORS.tertiary}
-                />
+                <Button.DarkButton
+                  style={{marginVertical: 10, height: 40, width: 200}}
+                  textStyle={{...themeText.bodyMediumFive}}>
+                  Starting from £4.99
+                </Button.DarkButton>
               </View>
+              <View
+                style={[
+                  styles.planCard,
+                  {width: cardWidth*0.95, backgroundColor: '#ffca1c'},
+                ]}>
+                <Text
+                  style={
+                    currentUser?.isPremiumMember
+                      ? styles.activeText
+                      : styles.inactiveText
+                  }>
+                  {currentUser?.isPremiumMember ? 'Active' : 'Inactive'}
+                </Text>
+                <View style={styles.planCard_textContainer}>
+                  <Text style={styles.planCard_header}>Connects</Text>
+                  <Text style={styles.planCard_paragraph}>
+                  Buy Flyleaf connects for better visibility, special messages, and premium features.
+</Text>
+                </View>
+                <Button.DarkButton
+                  style={{marginVertical: 10, height: 40, width: 200}}
+                  textStyle={{...themeText.bodyMediumFive}}>
+                  Starting from £0.99
+                </Button.DarkButton>
+              </View>
+            </ScrollView>
             </View>
+
             <View
               style={{
                 flexDirection: 'row',
@@ -254,13 +265,13 @@ const UserProfileScreen = () => {
               <View style={styles.plansContainer_restOfColumn}>
                 <Text
                   style={[styles.plansContainer_title, {textAlign: 'center'}]}>
-                  Free
+                  Connects
                 </Text>
               </View>
               <View style={styles.plansContainer_restOfColumn}>
                 <Text
                   style={[styles.plansContainer_title, {textAlign: 'center'}]}>
-                  Pro
+                  Premium
                 </Text>
               </View>
             </View>
@@ -268,8 +279,8 @@ const UserProfileScreen = () => {
               <FieldOfTable
                 key={index}
                 feature={item.feature}
-                free={item.free}
-                pro={item.pro}
+                connects={item.connects}
+                premium={item.premium}
               />
             ))}
           </View>
@@ -281,7 +292,7 @@ const UserProfileScreen = () => {
 
 export default UserProfileScreen;
 
-export const styles = StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'white',
@@ -303,7 +314,7 @@ export const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 5,
     right: 10,
-    color: THEME_COLORS.tertiary,
+    color: 'white',
     ...themeText.bodyBoldSeven,
   },
 
@@ -336,22 +347,17 @@ export const styles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'space-evenly',
     alignItems: 'center',
-    borderRadius: 15,
-    borderWidth: 2,
-    borderColor: PALETTE.GHOSTWHITE,
     paddingVertical: 25,
     paddingHorizontal: 10,
-    marginVertical: 10,
-    flex: 0.45,
   },
   planCard_icon: {
     width: '100%',
     height: 50,
     margin: 10,
   },
-  planCard_text: {
-    color: THEME_COLORS.dark,
-    ...themeText.bodyMediumFive,
+  planCard_header: {
+    color: 'white',
+    ...themeText.bodyMediumFour,
     textAlign: 'center',
     paddingTop: 2,
   },
@@ -359,8 +365,8 @@ export const styles = StyleSheet.create({
     flex: 1,
   },
   planCard_paragraph: {
-    color: THEME_COLORS.tertiary,
-    ...themeText.bodyRegularSix,
+    color: 'white',
+    ...themeText.bodyRegularFive,
     textAlign: 'center',
   },
   profileJoinDate: {
@@ -376,5 +382,6 @@ export const styles = StyleSheet.create({
     borderRadius: 500,
     marginBottom: 5,
     alignSelf: 'center',
+    backgroundColor:PALETTE.GHOSTWHITE
   },
 });

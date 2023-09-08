@@ -2,13 +2,12 @@ import User from "../models/user.model";
 import axios from "axios";
 import instagramModel from "../models/instagram.model";
 import qs from "qs"
-import { SERVER_ERR, USER_NOT_FOUND_ERR } from "../constants/errors";
+import { SERVER_ERR, UNAUTHORIZED_REQUEST, USER_NOT_FOUND_ERR } from "../constants/errors";
 import mongoose from "mongoose";
 
 const REDIRECT_URI = process.env.INSTAGRAM_REDIRECT_URI;
 const CLIENT_ID = process.env.INSTAGRAM_CLIENT_ID;
 const CLIENT_SECRET = process.env.INSTAGRAM_CLIENT_SECRET;
-
 
 interface InstagramTokens {
   accessToken: string;
@@ -55,25 +54,51 @@ async function obtainInstagramTokens(code: string): Promise<InstagramTokens | nu
   }
 }
 
-async function fetchInstagramImages(accessToken:string, userId:string) {
+async function fetchInstagramImages(accessToken: string, userId: string) {
+  const instagramData = await instagramModel.findById(userId);
+  if (!instagramData) throw new Error(USER_NOT_FOUND_ERR);
+
+  // Check if token expiry is within the next 24 hours
+  if (!instagramData.expiryDate) throw new Error('Missing expiry date.')
+
+  if (new Date(instagramData.expiryDate).getTime() - Date.now() <= 24 * 60 * 60 * 1000) {
+    try {
+      const refreshedTokenData = await refreshInstagramToken(accessToken);
+      // Update the access token and expiry in the database
+      await instagramModel.findOneAndUpdate(
+        { _id: userId },
+        {
+          $set: {
+            accessToken: refreshedTokenData.token,
+            expiryDate: refreshedTokenData.expiryDate
+          }
+        }
+      );
+      accessToken = refreshedTokenData.token;
+    } catch (error) {
+      console.error("Error refreshing Instagram token while fetching images:", error);
+      throw new Error(UNAUTHORIZED_REQUEST)
+    }
+  }
+
   const mediaResponse = await axios.get(
     `https://graph.instagram.com/${userId}/media?fields=id,caption,media_url&access_token=${accessToken}`
   );
 
-  const formattedImages = mediaResponse.data.data.map((images: {id:string, media_url:string}) => ({
-    id: images.id,
-    url: images.media_url
+  const formattedImages = mediaResponse.data.data.map((image: { id: string, media_url: string }) => ({
+    id: image.id,
+    url: image.media_url
   }));
 
   await instagramModel.findOneAndUpdate(
-    {_id: userId},
+    { _id: userId },
     {
-        $set: {
-            "images": formattedImages
-        }
+      $set: {
+        "images": formattedImages
+      }
     }
-  )
-  
+  );
+
   return formattedImages;
 }
 

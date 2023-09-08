@@ -53,6 +53,16 @@ const validateId = (data: {_id:string}) => {
     return schema.validate(data);
 };
 
+const validateIdAndTokens = (data: {_id:string, accessToken: string, refreshToken:string}) => {
+    const schema = Joi.object({
+        _id: Joi.string().required(),
+        accessToken: Joi.string().required(),
+        refreshToken: Joi.string().required()
+
+    });
+    return schema.validate(data);
+};
+
 const validateChangePhoneNumber = (data: { accessToken: string, oldPhoneNumber: string, newPhoneNumber: string }) => {
     const schema = Joi.object({
         accessToken: Joi.string().required(),
@@ -90,5 +100,6 @@ export {
     validateToken,
     validateChangePhoneNumber,
     validateChangeEmail,
-    validateRemoveEmail
+    validateRemoveEmail,
+    validateIdAndTokens
 };
