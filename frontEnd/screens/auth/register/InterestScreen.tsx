@@ -20,21 +20,19 @@ import {usePreventBackHandler, useDispatch} from '../../../utils/hooks';
 import {useSelector} from 'react-redux';
 import {AuthService} from '../../../services';
 import editUserReducer from '../../../redux/reducers/editUserReducer';
-import {ObjectId} from 'mongodb';
 import { storeTokensInKeychain } from '../../../utils/keychain';
 import { getData } from '../../../utils/storage';
+import { checkLocationStatus } from '../../../utils/locationChecker';
 
 const styles = StyleSheet.create({
   interest_title: {
     ...themeText.bodyBoldFour,
     color: THEME_COLORS.dark,
     paddingVertical: 10,
-    textAlign: 'center',
   },
   interest_buttonsContainer: {
     flexWrap: 'wrap',
     flexDirection: 'row',
-    justifyContent: 'center',
   },
   interest_button: {
     marginVertical: 10,
@@ -50,19 +48,20 @@ const styles = StyleSheet.create({
 
 const MAX_INTERESTS = 5;
 
+
+type Props = {
+  navigation: NavigationProp<TYPES.RootStackParamList>;
+};
+
 type Interest = {
-  _id: ObjectId;
-  category: string;
-  icon: string;
-  name: string;
+  id: number;
+  categoryId: number;
+  category: {id: number, text: string};
+  text: string;
 };
 
 type GroupedInterests = {
   [key: string]: Interest[];
-};
-
-type Props = {
-  navigation: NavigationProp<TYPES.RootStackParamList>;
 };
 
 const InterestScreen: React.FC<Props> = ({navigation}) => {
@@ -70,24 +69,28 @@ const InterestScreen: React.FC<Props> = ({navigation}) => {
   const dispatch = useDispatch();
   const {
     email,
-    username,
     dateOfBirth,
-    seeking,
-    gender,
     pictures,
-    relationshipGoal,
     phoneNumber,
-    additionalInformation,
+    firstName,
+    primaryGenderId,
+    secondaryGenderId,
+    longitude,
+    latitude,
+    interestsIds,
+    answers,
+    relationshipGoalId,
+    seekingIds,
   } = useSelector((state: TYPES.AppState) => state.registerReducer);
 
-  const {interestsList} = useSelector(
+  const {interests} = useSelector(
     (state: TYPES.AppState) => state.usersReducer,
   );
 
-  const groupedInterests = interestsList?.reduce<GroupedInterests>(
+  const groupedInterests = interests?.reduce<GroupedInterests>(
     (accumulator, interest) => {
-      accumulator[interest.category] = accumulator[interest.category] || [];
-      accumulator[interest.category].push(interest);
+      accumulator[interest.category.text] = accumulator[interest.category.text] || [];
+      accumulator[interest.category.text].push(interest);
       return accumulator;
     },
     {},
@@ -96,29 +99,31 @@ const InterestScreen: React.FC<Props> = ({navigation}) => {
   // Local states
   const [valid, setValid] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [answer, setAnswer] = useState<Set<ObjectId>>(new Set());
-
+  const [userChoices, setUserChoices] = useState<Set<number>>(new Set());
+  
   // Handlers
-
-  const handleInterestPress = useCallback((interestId: ObjectId) => {
-    setAnswer(prevState => {
-      const newAnswer = new Set(prevState);
-      if (newAnswer.has(interestId)) {
-        newAnswer.delete(interestId);
+  
+  const handleInterestPress = useCallback((interestId: number) => {
+    setUserChoices(prevState => {
+      const newUserChoices = new Set(prevState);
+      if (newUserChoices.has(interestId)) {
+        newUserChoices.delete(interestId);
       } else {
         // If maximum interests haven't been reached, add the new interest.
-        if (newAnswer.size < MAX_INTERESTS) {
-          newAnswer.add(interestId);
+        if (newUserChoices.size < MAX_INTERESTS) {
+          newUserChoices.add(interestId);
         }
       }
-      return newAnswer;
+      return newUserChoices;
     });
   }, []);
 
   const handlePress = () => {
-    if (valid) {
-      //dispatch(RegisterActions.setInterests(Array.from(answer)));
-      registration();
+    if(valid){
+      RegisterActions.setInterestsIds(Array.from(userChoices))
+      await checkLocationStatus().then((position) => {
+        RegisterActions.setLongitude(position.coords)
+      })
     }
   };
 
@@ -189,8 +194,14 @@ const InterestScreen: React.FC<Props> = ({navigation}) => {
 
   // Effects
   useEffect(() => {
-    setValid(answer.size === MAX_INTERESTS);
-  }, [answer]);
+    setValid(userChoices.size === MAX_INTERESTS);
+  }, [userChoices]);
+
+  useEffect(() => {
+    if(phoneNumber && firstName && dateOfBirth && primaryGenderId && secondaryGenderId && longitude && latitude && interestsIds && answers && relationshipGoalId && seekingIds){
+      registration()
+    }
+  },[email, phoneNumber, firstName, dateOfBirth, primaryGenderId, secondaryGenderId, longitude, latitude, interestsIds,answers, relationshipGoalId, seekingIds ])
 
   useEffect(() => {
     dispatch(
@@ -223,15 +234,14 @@ const InterestScreen: React.FC<Props> = ({navigation}) => {
                   style={styles.interest_section}>
                   <Text style={styles.interest_title}>{categoryTitle}</Text>
                   <View style={styles.interest_buttonsContainer}>
-                    {interests.map((interest, idx) => {
+                    {interests.map((interest) => {
                       return (
                         <Button.interestsButton
-                          active={answer.has(interest._id)}
-                          key={interest.name + idx}
+                          active={userChoices.has(interest.id)}
+                          key={interest.id}
                           style={styles.interest_button}
-                          icon={interest.icon}
-                          onPress={() => handleInterestPress(interest._id)}>
-                          {interest.name}
+                          onPress={() => handleInterestPress(interest.id)}>
+                          {interest.text}
                         </Button.interestsButton>
                       );
                     })}
