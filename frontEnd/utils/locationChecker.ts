@@ -1,86 +1,56 @@
 import Geolocation from '@react-native-community/geolocation';
 import { Platform, Alert } from 'react-native';
 import RNAndroidLocationEnabler from 'react-native-android-location-enabler';
-import { storeData } from './storage';
+import { TYPES } from '../constants';
 
-let isAlertBeingShown = false;  // <-- New flag to track alert status
+let isAlertBeingShown = false;
 
-const checkLocationStatus = (): Promise<boolean> => {
-  return new Promise((resolve, reject) => {
-    Geolocation.getCurrentPosition(
-      (position) => {
-        storeData("coordinates", JSON.stringify({longitude: position.coords.longitude, latitude: position.coords.latitude}))
-      },
-      (error) => {
-        switch (error.code) {
-          case 1: // PERMISSION_DENIED
-            resolve(false);
-            break;
-          default:
-            reject(error.message);
-            break;
-        }
-      },
-      { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
-    );
-  });
-};
-
-const requestLocationAndroid = async () => {
-  await RNAndroidLocationEnabler.promptForEnableLocationIfNeeded({
-    interval: 10000,
-    fastInterval: 5000,
-  })
-    .then(data => {})
-    .catch(err => {
-      // The user has not enabled the location services or doesn't want to enable them
+const requestLocationAndroid = async (): Promise<void> => {
+  try {
+    await RNAndroidLocationEnabler.promptForEnableLocationIfNeeded({
+      interval: 10000,
+      fastInterval: 5000,
     });
+  } catch (err) {
+    // Handle the error if needed
+    console.error(err);
+  }
 };
+
 
 const informiOSUsers = () => {
-  if (!isAlertBeingShown) {  // <-- Check the flag before showing alert
+  if (!isAlertBeingShown) {
     isAlertBeingShown = true;
     Alert.alert(
       "Location Permission Required",
       "Please go to Settings and enable location services for this app.",
       [
-        { text: "OK", onPress: () => { isAlertBeingShown = false; } } // <-- Reset the flag on "OK" press
+        { text: "OK", onPress: () => { isAlertBeingShown = false; } }
       ]
     );
   }
 };
 
-let locationCheckInterval:any;
-
-export const startContinuouslyCheckingLocation = (interval: number = 1800000) => {
-  const checkLocation = async () => {
+export const getLocationOnDemand = async (): Promise<TYPES.GeolocationPosition> => {
+  while (true) {
     try {
-      const hasLocationAccess = await checkLocationStatus();
-      if (!hasLocationAccess) {
-        if (Platform.OS === "android") {
-          await requestLocationAndroid();
-        } else if (Platform.OS === "ios") {
-          informiOSUsers();
-        }
-      }
-    } catch (error) {
-      if (Platform.OS === "android") {
+      const position = await new Promise<TYPES.GeolocationPosition>((resolve, reject) => {
+        Geolocation.getCurrentPosition(
+          position => resolve(position),
+          error => reject(error),
+          { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
+        );
+      });
+      
+      return position;  // Return the location if successfully retrieved
+
+    } catch (error:any) {
+      if (Platform.OS === 'android') {
         await requestLocationAndroid();
-      } else if (Platform.OS === "ios") {
+      } else if (Platform.OS === 'ios') {
         informiOSUsers();
       }
+      
     }
-  }
-
-  // Run the function immediately
-  checkLocation();
-
-  // Set up the interval
-  locationCheckInterval = setInterval(checkLocation, interval);
-};
-
-export const stopContinuouslyCheckingLocation = () => {
-  if (locationCheckInterval) {
-    clearInterval(locationCheckInterval);
   }
 };

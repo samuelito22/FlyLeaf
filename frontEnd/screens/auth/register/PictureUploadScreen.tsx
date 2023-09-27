@@ -4,13 +4,11 @@ import {
   Text,
   Image,
   TouchableNativeFeedback,
-  TouchableOpacity,
 } from 'react-native';
 import {
   SafeContainer,
   Button,
   UploadSelectionAlert,
-  LoadingSpinner,
 } from '../../../components';
 import {
   usePreventBackHandler,

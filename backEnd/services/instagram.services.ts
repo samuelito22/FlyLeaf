@@ -1,9 +1,8 @@
-import User from "../models/user.model";
+import Model from "../models";
 import axios from "axios";
-import instagramModel from "../models/instagram.model";
 import qs from "qs"
-import { SERVER_ERR, UNAUTHORIZED_REQUEST, USER_NOT_FOUND_ERR } from "../constants/errors";
-import mongoose from "mongoose";
+import { USER_NOT_FOUND_ERR } from "../constants/errors";
+import { sequelize } from "../config/sequelizeConfig";
 
 const REDIRECT_URI = process.env.INSTAGRAM_REDIRECT_URI;
 const CLIENT_ID = process.env.INSTAGRAM_CLIENT_ID;
@@ -55,51 +54,53 @@ async function obtainInstagramTokens(code: string): Promise<InstagramTokens | nu
 }
 
 async function fetchInstagramImages(accessToken: string, userId: string) {
-  const instagramData = await instagramModel.findById(userId);
-  if (!instagramData) throw new Error(USER_NOT_FOUND_ERR);
+  const transaction = await sequelize.transaction(); // Initialize a Sequelize transaction
+  
+  try {
+    // Fetch the Instagram data from the database
+    const instagramData = await Model.InstagramTokens.findOne({ where: { userId } });
+    if (!instagramData) throw new Error(USER_NOT_FOUND_ERR);
 
-  // Check if token expiry is within the next 24 hours
-  if (!instagramData.expiryDate) throw new Error('Missing expiry date.')
+    // Check if token expiry is within the next 24 hours
+    if (!instagramData.tokenExpiration) throw new Error('Missing expiry date.');
 
-  if (new Date(instagramData.expiryDate).getTime() - Date.now() <= 24 * 60 * 60 * 1000) {
-    try {
-      const refreshedTokenData = await refreshInstagramToken(accessToken);
-      // Update the access token and expiry in the database
-      await instagramModel.findOneAndUpdate(
-        { _id: userId },
-        {
-          $set: {
-            accessToken: refreshedTokenData.token,
-            expiryDate: refreshedTokenData.expiryDate
-          }
-        }
-      );
-      accessToken = refreshedTokenData.token;
-    } catch (error) {
-      console.error("Error refreshing Instagram token while fetching images:", error);
-      throw new Error(UNAUTHORIZED_REQUEST)
+    if (instagramData.tokenExpiration.getTime() - Date.now() <= 24 * 60 * 60 * 1000) {
+      const newTokenData = await refreshInstagramToken(accessToken);
+      accessToken = newTokenData.token;
+
+      // Update the database
+      await instagramData.update({
+        accessToken: newTokenData.token,
+        tokenExpiration:newTokenData.expiryDate
+      }, { transaction });
     }
+
+    // Fetch media from Instagram
+    const mediaResponse = await axios.get(
+      `https://graph.instagram.com/${userId}/media?fields=id,caption,media_url&access_token=${accessToken}`
+    );
+
+    const formattedImages = mediaResponse.data.data.map((image: { id: string, media_url: string }) => ({
+      userId,
+      imageUrl: image.media_url
+    }));
+
+    // Store images in the database
+    await Model.InstagramImages.bulkCreate(formattedImages, { transaction });
+
+    // Commit the transaction
+    await transaction.commit();
+
+    return formattedImages;
+
+  } catch (error) {
+    // If an error occurs, rollback the transaction
+    await transaction.rollback();
+
+    // Log the error and re-throw
+    console.error("Error in fetchInstagramImages:", error);
+    throw error;
   }
-
-  const mediaResponse = await axios.get(
-    `https://graph.instagram.com/${userId}/media?fields=id,caption,media_url&access_token=${accessToken}`
-  );
-
-  const formattedImages = mediaResponse.data.data.map((image: { id: string, media_url: string }) => ({
-    id: image.id,
-    url: image.media_url
-  }));
-
-  await instagramModel.findOneAndUpdate(
-    { _id: userId },
-    {
-      $set: {
-        "images": formattedImages
-      }
-    }
-  );
-
-  return formattedImages;
 }
 
 async function refreshInstagramToken(accessToken:string) {
@@ -123,69 +124,54 @@ async function refreshInstagramToken(accessToken:string) {
   }
 }
 
-async function storeUserInstagramData(_id:string, instagram_id:string, accessToken:string, expiryDate:Date) {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+async function storeUserInstagramData(userId:string, accessToken:string, expiryDate:Date) {
+  const transaction = await sequelize.transaction()
+
   try {
-      const userAlreadyConnectedToInstagramId = await User.findOneAndUpdate(
-          { "instagram": instagram_id, _id: { $ne: _id } },
-          { $unset: { "instagram": 0 } },
-          { new: true, session }
-      );
-
-      await User.findOneAndUpdate(
-          { _id },
-          { $set: { "instagram": instagram_id } },
-          { new: true, session }
-      );
-
-      if (userAlreadyConnectedToInstagramId) {
-          await instagramModel.findOneAndUpdate(
-              { _id: instagram_id },
-              { $set: { accessToken: accessToken, expiryDate: expiryDate } },
-              { new: true, session }
-          );
-      } else {
-          await new instagramModel({
-              accessToken: accessToken,
-              expiryDate: expiryDate,
-              _id: instagram_id
-          }).save({ session });
-      }
-
-      await session.commitTransaction();
-      session.endSession();
-      return userAlreadyConnectedToInstagramId;
+      await Model.InstagramTokens.destroy({where:{userId}, transaction})
+      await Model.InstagramTokens.create({
+        accessToken,
+        tokenExpiration: expiryDate,
+        userId,
+      } as any, {transaction});
+      
+      transaction.commit()
+      return "Successfully stored user's instagram tokens"
+      
   } catch (error) {
-      await session.abortTransaction();
-      session.endSession();
+      await transaction.rollback()
+      console.error("Error storing user's data:", error)
       throw error;
   }
 }
 
-async function disconnectInstagram(_id:string) {
-  const user = await User.findOne({ _id });
-  if (!user) throw new Error(USER_NOT_FOUND_ERR);
+async function disconnectInstagram(id: string) {
+  if (!id) {
+    throw new Error("User ID must not be null or undefined.");
+  }
 
-  const instagram_id = user.instagram;
+  const transaction = await sequelize.transaction();
 
-  if (!instagram_id)
-    throw new Error("User is already disconnected from instagram");
+  try {
+    const instagramDoc = await Model.InstagramTokens.findByPk(id, { transaction });
 
-  await instagramModel.deleteOne({ _id: instagram_id });
+    if (!instagramDoc) {
+      throw new Error(USER_NOT_FOUND_ERR);
+    }
 
-  const updatedUser = await User.findOneAndUpdate(
-    { _id },
-    {
-      $unset: {
-        "instagram": 0
-      },
-    },
-    { new: true }
-  );
-  if (!updatedUser) throw new Error(SERVER_ERR);
-  return updatedUser;
+    await Model.InstagramImages.destroy({ where: { userId: id }, transaction });
+    await Model.InstagramTokens.destroy({ where: { userId: id }, transaction });
+
+    await transaction.commit();
+
+    return "Successfully disconnected user from Instagram.";
+  } catch (error) {
+    await transaction.rollback();
+    console.error("Error disconnecting user from Instagram:", error);
+    throw error;
+  }
 }
+
 
 
 const InstagramServices = {
@@ -196,3 +182,6 @@ const InstagramServices = {
   disconnectInstagram,
 };
 export default InstagramServices;
+
+
+

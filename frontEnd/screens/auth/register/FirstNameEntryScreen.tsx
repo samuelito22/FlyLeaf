@@ -17,7 +17,7 @@ import {ROUTES, THEME_COLORS, TYPES} from '../../../constants';
 import {styles} from './styles';
 import {usePreventBackHandler, useDispatch} from '../../../utils/hooks';
 
-const UserNameEntryScreen = ({
+const FirstNameEntryScreen = ({
   navigation,
 }: {
   navigation: NavigationProp<TYPES.RootStackParamList>;
@@ -26,29 +26,18 @@ const UserNameEntryScreen = ({
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const [text, setText] = useState(''); // For username
+  const [text, setText] = useState(''); // For first name
 
-  const [formattedUsername, setFormattedUsername] = useState(text);
+  const [formattedFirstName, setFormattedFirstName] = useState(text);
   const dispatch = useDispatch();
 
   const [isAlertVisible, setAlertVisible] = useState(false);
   const [valid, setValid] = useState(false);
 
   useEffect(() => {
-    setValid(text.length > 1 && text.length < 11);
-    setFormattedUsername(text);
+    setValid(text.length > 1 && text.length < 21);
+    setFormattedFirstName(text);
   }, [text]);
-
-  useEffect(
-    () =>
-      dispatch(
-        RegisterActions.setIsRegisterCompleted({
-          status: false,
-          currentScreen: ROUTES.REGISTER_USERNAME_SCREEN,
-        }),
-      ),
-    [],
-  );
 
   const handlePress = () => {
     if (valid) {
@@ -59,12 +48,23 @@ const UserNameEntryScreen = ({
   const handleAlertClose = () => {
     setAlertVisible(false);
   };
+  
+  useEffect(
+    () =>
+      dispatch(
+        RegisterActions.setIsRegisterCompleted({
+          status: false,
+          currentScreen: ROUTES.REGISTER_FIRST_NAME_SCREEN,
+        }),
+      ),
+    [],
+  );
 
   const handleAlertConfirm = async () => {
     setIsLoading(true);
     try {
       setAlertVisible(false);
-      dispatch(RegisterActions.setUsername(formattedUsername));
+      dispatch(RegisterActions.setFirstName(formattedFirstName));
       navigation.navigate(ROUTES.REGISTER_DATE_OF_BIRTH_SCREEN);
       dispatch(RegisterActions.setProgressBarValue(14));
     } catch (err) {
@@ -80,12 +80,12 @@ const UserNameEntryScreen = ({
         {isLoading && <LoadingSpinner />}
         <View style={styles.container}>
           <Text style={styles.requirement}>Required</Text>
-          <Text style={styles.title}>What's your username?</Text>
+          <Text style={styles.title}>What's your first name?</Text>
           <Text style={styles.paragraph}>
-            Please enter your username of maximum of 10 characters in the field below.
+            Please enter your first name in the field below.
           </Text>
           <TextField
-            placeholder="Type your username"
+            placeholder="Type your first name"
             text={text}
             setText={text => setText(text)}
             keyboardType="default"
@@ -99,7 +99,6 @@ const UserNameEntryScreen = ({
               width: '100%',
               alignSelf: 'center',
             }}
-            textAlign="center"
           />
           <View style={styles.alignNextButtonContainer}>
             <Button.PrimaryButton
@@ -114,15 +113,15 @@ const UserNameEntryScreen = ({
             </Button.PrimaryButton>
           </View>
           <Text style={styles.extraInformation}>
-            Usernames promote individuality and privacy in the Flyleaf
+            Your first name promotes individuality and privacy in the Flyleaf
             community. It allows members to maintain their privacy while
-            interacting with others. Please note, your username is visible to
+            interacting with others. Please note, your first name is visible to
             others and unchangeable.
           </Text>
 
           <Alert
             title="Confirmation"
-            message={`You've entered your username as ${formattedUsername}. Is that correct?`}
+            message={`You've entered your first name as ${formattedFirstName}. Is that correct?`}
             visible={isAlertVisible}
             onClose={handleAlertClose}
             onConfirm={handleAlertConfirm}
@@ -133,4 +132,4 @@ const UserNameEntryScreen = ({
   );
 };
 
-export default UserNameEntryScreen;
+export default FirstNameEntryScreen;

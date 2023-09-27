@@ -1,5 +1,5 @@
 {
-  "include": ["./**/*.ts", "models/spotify.model.js", "server.mjs", "data/asok.js", "models/questions.model.js"],
+  "include": ["./**/*.ts", "models/spotify.model.js", "server.mjs", "data/asok.js", "models/questions.model.js", "models/loadModel.js", "asok.js"],
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig to read more about this file */
 
@@ -106,6 +106,8 @@
     /* Completeness */
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true   ,                              /* Skip type checking all .d.ts files. */
+    "experimentalDecorators": true, // This is crucial for TypeORM's decorators to work
+    "emitDecoratorMetadata": true   // And this too
 
   },
    "ts-node": {

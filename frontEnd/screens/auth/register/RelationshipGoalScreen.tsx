@@ -4,7 +4,6 @@ import {
   SafeContainer,
   Button,
   LoadingSpinner,
-  questionsList,
 } from '../../../components';
 import {styles} from './styles';
 import {THEME_COLORS, ROUTES, TYPES} from '../../../constants';
@@ -12,7 +11,6 @@ import {RegisterActions} from '../../../redux';
 import {NavigationProp} from '@react-navigation/native';
 import {usePreventBackHandler, useDispatch} from '../../../utils/hooks';
 import {useSelector} from 'react-redux';
-import {ObjectId} from 'mongodb';
 
 const RelationshipGoalsScreen = ({
   navigation,
@@ -23,17 +21,13 @@ const RelationshipGoalsScreen = ({
   usePreventBackHandler();
 
   const [valid, setValid] = useState(false);
-  const [activeId, setActiveId] = useState<null | ObjectId>(null);
+  const [activeId, setActiveId] = useState<null | number>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const dispatch = useDispatch();
 
-  const {questionsList} = useSelector(
+  const {relationshipGoals} = useSelector(
     (state: TYPES.AppState) => state.usersReducer,
-  );
-
-  const relationshipGoalField = questionsList?.find(
-    item => item.shortForm === 'Goal',
   );
 
   const handlePress = () => {
@@ -42,7 +36,7 @@ const RelationshipGoalsScreen = ({
       try {
         navigation.navigate(ROUTES.REGISTER_PICTURE_UPLOAD_SCREEN);
         dispatch(RegisterActions.setProgressBarValue(70));
-        dispatch(RegisterActions.setRelationshipGoal(activeId as ObjectId));
+        dispatch(RegisterActions.setRelationshipGoalId(activeId as number));
       } catch (err) {
         console.error(err);
       } finally {
@@ -51,12 +45,12 @@ const RelationshipGoalsScreen = ({
     }
   };
 
-  const ClickableIndicatorPrimaryButtonHandlePress = (_id: ObjectId) => {
-    if (_id === activeId) {
+  const ClickableIndicatorPrimaryButtonHandlePress = (id: number) => {
+    if (id === activeId) {
       // check if the current id is the activeId
       setActiveId(null);
     } else {
-      setActiveId(_id); // set the clicked id as the activeId
+      setActiveId(id); // set the clicked id as the activeId
     }
   };
 
@@ -87,13 +81,13 @@ const RelationshipGoalsScreen = ({
           showsVerticalScrollIndicator={false}
           overScrollMode={'never'}
           contentContainerStyle={{flexGrow: 1}}>
-          {relationshipGoalField?.answers.map((goal, index) => (
-            <View key={index} style={styles.clickableIndicatorPrimaryButton}>
+          {relationshipGoals?.map((goal) => (
+            <View key={goal.id} style={styles.clickableIndicatorPrimaryButton}>
               <Button.ClickableIndicatorPrimaryButton
                 onPress={() =>
-                  ClickableIndicatorPrimaryButtonHandlePress(goal._id)
+                  ClickableIndicatorPrimaryButtonHandlePress(goal.id)
                 }
-                isActive={goal._id === activeId}>
+                isActive={goal.id === activeId}>
                 {goal.text}
               </Button.ClickableIndicatorPrimaryButton>
             </View>

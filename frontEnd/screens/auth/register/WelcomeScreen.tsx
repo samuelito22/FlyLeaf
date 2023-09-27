@@ -41,12 +41,14 @@ const WelcomeScreen = ({
     try {
       const result = await UserService.getOverviewEn();
       if (result.type === 'success') {
-        dispatch(UserActions.setQuestionsList(result.questions));
-        dispatch(UserActions.setInterestsList(result.interests));
-        dispatch(UserActions.setLanguagesList(result.languages));
-        dispatch(UserActions.setGendersList(result.genders));
+        dispatch(UserActions.setQuestions(result.questions));
+        dispatch(UserActions.setInterests(result.interests));
+        dispatch(UserActions.setLanguages(result.languages));
+        dispatch(UserActions.setGenders(result.genders));
+        dispatch(UserActions.setRelationshipGoals(result.relationshipGoals));
+        dispatch(UserActions.setAnswers(result.answers));
         dispatch(AppStatusActions.setCurrentScreen(ROUTES.REGISTER_NAVIGATOR))
-        navigation.navigate(ROUTES.REGISTER_USERNAME_SCREEN);
+        navigation.navigate(ROUTES.REGISTER_FIRST_NAME_SCREEN);
       }
     } catch (e) {
       console.log(e);

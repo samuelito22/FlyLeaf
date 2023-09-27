@@ -117,7 +117,7 @@ export interface Account {
 }
 
 export interface Settings {
-    _id: Schema.Types.ObjectId;
+    userId: Schema.Types.ObjectId;
     distanceInKm?: boolean;
     notification?: Notification;
     safety?: Safety;
@@ -180,7 +180,7 @@ export interface Gender {
 }
 
 export interface Pictures { 
-    user_id: Schema.Types.ObjectId,
+    userId: Schema.Types.ObjectId,
     name: string,
     blurLevel?: number,
 }
@@ -188,7 +188,7 @@ export interface Pictures {
 
 export interface RefreshToken { 
     token: string,
-    _id:Schema.Types.ObjectId,
+    userId:Schema.Types.ObjectId,
     issuedAt?: Date,
     expiresAt: Date,
     revoked?: Date,

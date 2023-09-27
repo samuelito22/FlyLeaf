@@ -12,6 +12,7 @@ import {useSelector} from 'react-redux';
 import {
   BORDER_RADIUS,
   PALETTE,
+  ROUTES,
   THEME_COLORS,
   TYPES,
   themeText,
@@ -24,6 +25,7 @@ import {TouchableRipple} from 'react-native-paper';
 import { EditProfileActions } from '../../redux';
 import InterestScreen from '../auth/register/InterestScreen';
 import { InstagramService, SpotifyService } from '../../services';
+import { useNavigation, NavigationProp } from "@react-navigation/native"
 
 interface CallToActionProps {
   question: string;
@@ -263,6 +265,7 @@ const EditProfileScreen = () => {
   const { questionsList} =
     useSelector((state: TYPES.AppState) => state.usersReducer);
   const dispatch = useDispatch();
+  const navigation = useNavigation<NavigationProp<TYPES.RootStackParamList>>();
 
   return (
     <KeyboardAvoidingViewWrapper>
@@ -282,11 +285,13 @@ const EditProfileScreen = () => {
           {questionsList
             ?.filter(item => item.type === 'Basic')
             .map((field, index) => {
+              let onPress
+              let answer: string;
+
               if (field.shortForm === 'Orientation') {
                 return null;
               }
 
-              let answer: string;
               if (field.shortForm === 'Goal') {
                 answer = userProfile?.relationshipGoal || 'Add';
               } else {
@@ -296,33 +301,39 @@ const EditProfileScreen = () => {
                   )?.answer || 'Add';
               }
 
+              if(field.shortForm === 'Vaccine'){
+                onPress = () => {navigation.navigate(ROUTES.EDIT_VACCINE_SCREEN)}
+              }else if(field.shortForm === 'Ethnicity'){
+                onPress = () => {navigation.navigate(ROUTES.EDIT_ETHNICITY_SCREEN)}
+              }
+
               return (
                 <CallToAction
                   key={index}
                   question={field.shortForm}
                   answer={answer}
                   icon={field.icon}
-                  onPress={() => {}}
+                  onPress={onPress || (() => {})}
                 />
               );
             })}
           <CallToAction
             question="Gender"
-            answer={`${userProfile?.gender.primary}${userProfile?.gender.secondary && ' ('+userProfile.gender.secondary+')'}`}
+            answer={`${userProfile?.gender.primary}${userProfile?.gender.secondary ? ' (' + userProfile.gender.secondary + ')' : ''}`}
             icon={'https://flyleaf-icons.s3.eu-west-2.amazonaws.com/questions/gender.png'}
-            onPress={() => {}}
+            onPress={() => {navigation.navigate(ROUTES.EDIT_GENDER_SCREEN)}}
           />
           <CallToAction
             question="Job Title"
             answer={userProfile?.profession?.jobTitle || 'Add'}
             icon={'https://flyleaf-icons.s3.eu-west-2.amazonaws.com/questions/job.png'}
-            onPress={() => {}}
+            onPress={() => {navigation.navigate(ROUTES.EDIT_JOB_TITLE_SCREEN)}}
           />
           <CallToAction
             question="Employer"
             answer={userProfile?.profession?.employer || 'Add'}
             icon={'https://flyleaf-icons.s3.eu-west-2.amazonaws.com/questions/company.png'}
-            onPress={() => {}}
+            onPress={() => {navigation.navigate(ROUTES.EDIT_COMPANY_SCREEN)}}
           />
         </View>
 
@@ -338,7 +349,7 @@ const EditProfileScreen = () => {
               <Text style={styles.itemText}>{language.name}</Text>
             </View>
           )) : <Text style={styles.itemAlternativeText}>Press to add languages that you know.</Text>}
-          <TouchableRipple rippleColor={PALETTE.GHOSTWHITE} onPress={() => {}} style={{position:'absolute', top:0,bottom:0, left:0, right:0}}><></></TouchableRipple>
+          <TouchableRipple rippleColor={PALETTE.GHOSTWHITE} onPress={() => {navigation.navigate(ROUTES.EDIT_LANGUAGE_SCREEN)}} style={{position:'absolute', top:0,bottom:0, left:0, right:0}}><></></TouchableRipple>
           </View>
         </View>
 
@@ -792,6 +803,7 @@ const spotifyStyles = StyleSheet.create({
     height: 60,
     backgroundColor: 'rgba(128, 128, 128, 0.5)',
     borderRadius: 10,
+    overflow:'hidden'
   },
   artistImage: {
     width: '100%',

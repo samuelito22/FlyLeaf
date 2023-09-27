@@ -28,7 +28,7 @@ export function createRefreshToken(_id: string) {
 export function decodeAccessToken(access_token: string){
     try{
         const decode = jwt.verify(access_token, ACCESS_SECRET as string) as jwtPayload;
-        return {...decode, sub: new mongoose.Types.ObjectId(decode.sub)}
+        return {...decode, sub: decode.sub}
     }catch{
         throw new Error(EXPIRED_TOKEN)
     }
@@ -37,7 +37,7 @@ export function decodeAccessToken(access_token: string){
 export function decodeRefreshToken(refresh_token: string){
     try{
         const decode = jwt.verify(refresh_token, REFRESH_SECRET as string) as jwtPayload;
-    return {...decode, sub: new mongoose.Types.ObjectId(decode.sub)}
+    return {...decode, sub: decode.sub}
     }
     
     catch{

@@ -5,7 +5,7 @@ import WelcomeScreen from './auth/register/WelcomeScreen';
 
 // Register
 import DateOfBirthScreen from './auth/register/DateOfBirthScreen';
-import UsernameEntryScreen from './auth/register/UsernameEntryScreen';
+import FirstNameEntryScreen from './auth/register/FirstNameEntryScreen';
 import SeekingScreen from './auth/register/SeekingScreen';
 import GenderSelectionScreen from './auth/register/GenderSelectionScreen';
 import PictureUploadScreen from './auth/register/PictureUploadScreen';
@@ -50,7 +50,7 @@ export {
   EditGenderScreen,
   EmailVerificationScreen,
   DateOfBirthScreen,
-  UsernameEntryScreen,
+  FirstNameEntryScreen,
   SeekingScreen,
   GenderSelectionScreen,
   PictureUploadScreen,

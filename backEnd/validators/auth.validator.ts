@@ -1,28 +1,46 @@
 import Joi from 'joi';
 import { objectIdRegex, phoneNumberRegex } from '../constants/regex';
 
-const validateUser = (data:any) => {
-  const schema = Joi.object({
-      username: Joi.string().required(),
-      gender: Joi.object({
-          primary: Joi.string().required().pattern(objectIdRegex),
-          secondary: Joi.string().optional().pattern(objectIdRegex),
-      }).required(),
-      phoneNumber: Joi.string().pattern(new RegExp(phoneNumberRegex)),
-      email: Joi.string().email().optional(),
-      interests: Joi.array().items(Joi.string().pattern(objectIdRegex)).required(),
-      additionalInformation: Joi.array().items(Joi.object({
-          questionId: Joi.string().required().pattern(objectIdRegex),
-          answerId: Joi.string().required().pattern(objectIdRegex),
-      })).required(),
-      relationshipGoal: Joi.string().required().pattern(objectIdRegex),
-      seeking: Joi.array().items(Joi.string().pattern(objectIdRegex)).required(),
-      dateOfBirth: Joi.date().required(),
-      verified: Joi.boolean().default(false),
-      coordinates: Joi.object({longitude: Joi.number().required(), latitude: Joi.number().required()}),
-  });
+interface ValidateUserInterface {
+    firstName: string,
+    dateOfBirth: Date,
+    primaryGenderId: number,
+    secondaryGenderId?: number,
+    email?: string,
+    phoneNumber?: string,
+    longitude: number,
+    latitude: number,
+    interestsIds: number[],
+    answers: {questionId: number, answerId: number}[],
+    relationshipGoalId: number,
+    seekingIds: number[]
 
-  return schema.validate(data)
+}
+
+const validateUser = (data:any) => {
+    const schema = Joi.object({
+        firstName: Joi.string().required(),
+        dateOfBirth: Joi.date().required(),
+        primaryGenderId: Joi.number().required(),
+        secondaryGenderId: Joi.number().optional(),
+        email: Joi.string().email().optional(),
+        phoneNumber: Joi.string().pattern(phoneNumberRegex).required(),
+        longitude: Joi.number().required(),
+        latitude: Joi.number().required(),
+        interestsIds: Joi.array().items(Joi.number()).length(5).required(),
+        answers: Joi.array().items(Joi.object({
+            questionId: Joi.number().required(),
+            answerId: Joi.number().required(),
+        })).required(),
+        relationshipGoalId: Joi.number().required(),
+        seekingIds: Joi.array().items(Joi.number()).required(),
+    });
+    
+    if(schema.validate(data).error){
+        throw new Error(schema.validate(data).error?.message)
+    }
+
+  return schema.validate(data).value as ValidateUserInterface
 };
 
 const validateToken = (data:{token:string}) => {
@@ -46,16 +64,16 @@ const validatePhoneNumber = (data:{phoneNumber:string}) => {
     return schema.validate(data);
 };
 
-const validateId = (data: {_id:string}) => {
+const validateId = (data: {id:string}) => {
     const schema = Joi.object({
-        _id: Joi.string().required(),
+        id: Joi.string().required(),
     });
     return schema.validate(data);
 };
 
-const validateIdAndTokens = (data: {_id:string, accessToken: string, refreshToken:string}) => {
+const validateIdAndTokens = (data: {id:string, accessToken: string, refreshToken:string}) => {
     const schema = Joi.object({
-        _id: Joi.string().required(),
+        id: Joi.string().required(),
         accessToken: Joi.string().required(),
         refreshToken: Joi.string().required()
 

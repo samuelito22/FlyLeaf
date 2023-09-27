@@ -1,9 +1,8 @@
-import {Text, View, ScrollView, StyleSheet, BackHandler} from 'react-native';
+import {Text, View, ScrollView, StyleSheet} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {
   SafeContainer,
   Button,
-  questionsList,
   EditProfileHeader,
 } from '../../components';
 import {
@@ -12,47 +11,63 @@ import {
   COMPONENT_COLORS,
   BORDER_RADIUS,
   themeText,
-  PALETTE,
 } from '../../constants';
 import {EditProfileActions} from '../../redux';
 import {useDispatch} from '../../utils/hooks';
 import {verticalScale} from 'react-native-size-matters';
 import {useSelector} from 'react-redux';
-import {useFocusEffect} from '@react-navigation/native';
 
 const EditVaccineScreen = () => {
-  const state = useSelector((state: TYPES.AppState) => state.editUserReducer);
-
-  const [vaccine, setVaccine] = useState<string>(
-    state.covidVaccination ? state.covidVaccination : '',
-  );
+  const { questionsList} =
+    useSelector((state: TYPES.AppState) => state.usersReducer);
+    const userResponses =
+    useSelector((state: TYPES.AppState) => state.editUserReducer.userResponses);
+  const vaccineField = questionsList?.find(item => item.shortForm === "Vaccine")
+  const additionalInformation = useSelector((state: TYPES.AppState) => state.editUserReducer.userProfile?.additionalInformation)
+  const [vaccine, setVaccine] = useState<undefined | string> (additionalInformation?.find(item => item.questionShortForm === 'Vaccine')?.answer)
 
   const dispatch = useDispatch();
 
-  const vaccineField = questionsList.find(field => field.id === 17) as {
-    question: string;
-    id: number;
-    answers: string[];
-  };
-
   const ClickableIndicatorPrimaryButtonHandlePress = (name: string) => {
     if (vaccine == name) {
-      setVaccine('');
+      setVaccine(undefined);
     } else {
       setVaccine(name);
     }
   };
 
   useEffect(() => {
-    vaccine != ''
-      ? dispatch(
-          EditProfileActions.updateUserProfile('covidVaccination', vaccine),
-        )
-      : dispatch(
-          EditProfileActions.updateUserProfile('covidVaccination', undefined),
-        );
-  }, [vaccine]);
+    const updatedAdditionalInformation = additionalInformation?.map(item => 
+      item.questionShortForm === 'Vaccine'
+        ? { ...item, answer: vaccine }
+        : item
+    ) || [];
+  
+    if (!additionalInformation?.some(item => item.questionShortForm === 'Vaccine') && vaccine) {
+      updatedAdditionalInformation.push({
+        question: vaccineField?.question as string,
+        questionShortForm: 'Vaccine',
+        questionIcon: '',
+        answer: vaccine,
+        questionType: 'Basic' 
+      });
+    }
+  
+    dispatch(EditProfileActions.updateUserProfile('additionalInformation', updatedAdditionalInformation));
+// Refactored code for updating userResponses
+const newResponse = {
+  questionId: vaccineField?._id,
+  answerId: vaccineField?.answers.find(item => item.text === vaccine)?._id
+};
 
+const currentResponses = Array.isArray(userResponses) ? userResponses : [];
+
+const updatedUserResponses = currentResponses.some(response => response.questionId === newResponse.questionId)
+    ? currentResponses.map(response => response.questionId === newResponse.questionId ? newResponse : response)
+    : [...currentResponses, newResponse];
+
+dispatch(EditProfileActions.updateFormat('userResponses', updatedUserResponses));
+  }, [vaccine]);
   return (
     <SafeContainer>
       <EditProfileHeader leftIconText="Save" />
@@ -66,14 +81,14 @@ const EditVaccineScreen = () => {
           contentContainerStyle={{flexGrow: 1}}>
           {vaccineField?.answers.map((answer, index) => (
             <View key={index} style={styles.clickableIndicatorPrimaryButton}>
-              <Button.ClickableIndicatorPrimaryButton
-                onPress={() =>
-                  ClickableIndicatorPrimaryButtonHandlePress(answer)
-                }
-                isActive={vaccine.includes(answer)}>
-                {answer}
-              </Button.ClickableIndicatorPrimaryButton>
-            </View>
+            <Button.ClickableIndicatorPrimaryButton
+              onPress={() =>
+                ClickableIndicatorPrimaryButtonHandlePress(answer.text)
+              }
+              isActive={vaccine === answer.text}>
+              {answer.text}
+            </Button.ClickableIndicatorPrimaryButton>
+          </View>
           ))}
         </ScrollView>
         <Text style={styles.extraInformation}>

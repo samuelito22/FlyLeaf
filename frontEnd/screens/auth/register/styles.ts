@@ -18,7 +18,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'column',
     paddingTop: verticalScale(40),
     maxWidth: 425,
-    paddingHorizontal: 20,
+    paddingHorizontal: 25,
     width: '100%',
   },
   alignNextButtonContainer: {
@@ -85,19 +85,17 @@ export const styles = StyleSheet.create({
   requirement: {
     ...themeText.bodyMediumSix,
     color: PALETTE.GRAY300,
-    textAlign: 'center',
+
   },
   title: {
     ...themeText.headingTwo,
     color: THEME_COLORS.dark,
     marginBottom: verticalScale(12),
-    textAlign: 'center',
   },
   paragraph: {
     ...themeText.bodyRegularFive,
     color: THEME_COLORS.dark,
     marginBottom: verticalScale(17),
-    textAlign: 'center',
   },
   extraInformation: {
     ...themeText.bodyRegularSeven,

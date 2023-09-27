@@ -97,7 +97,6 @@ const RecoveryEmailScreen = ({
               width: '100%',
               alignSelf: 'center',
             }}
-            textAlign="center"
           />
           <View style={styles.alignNextButtonContainer}>
             <Button.PrimaryButton

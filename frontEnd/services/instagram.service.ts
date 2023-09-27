@@ -1,38 +1,13 @@
 import {API_ENDPOINTS} from '../constants';
-import { authorize } from 'react-native-app-auth';
 
-const config = {
-  clientId: '614409710852626',
-  redirectUrl: 'https://91db-90-242-236-229.ngrok-free.app/instagram/oauth/', // This should be set in your Instagram App's settings
-  authorizationEndpoint: 'https://api.instagram.com/oauth/authorize',
-  tokenEndpoint: 'https://api.instagram.com/oauth/access_token',
-  scopes: ['user_profile', 'user_media'], // Permissions for accessing user's media and profile
-  issuer: 'https://api.instagram.com'
-};
-
-type InstagramAuthResult = {
-  accessToken: string;
-} | null;
-
-const instagramAuth = async (): Promise<InstagramAuthResult> => {
-  try {
-    const result = await authorize(config);
-    console.log(result)
-    return {
-      accessToken: result.accessToken,
-    };
-  } catch (error) {
-    console.log('Auth Error', error);
-    return null;
-  }
-};
-
+const MAX_RETRIES = 0
 
 const authenticateAndFetchInstagram = async (
   _id: string,
   code: string,
   signal?: AbortSignal,
-) => {
+  retryCount: number = 0
+): Promise<any> => {
   try {
     const response = await fetch(
       `${API_ENDPOINTS.AUTHENTICATE_AND_FETCH_INSTAGRAM}/${_id}`,
@@ -43,16 +18,38 @@ const authenticateAndFetchInstagram = async (
         },
         signal,
         body: JSON.stringify({code}),
-      },
+      }
     );
+
+    if (response.status >= 500 && retryCount < MAX_RETRIES) {
+      console.log(`Attempt ${retryCount + 1} failed. Retrying...`);
+      const retryInMilliseconds = Math.pow(2, retryCount) * 1000 + Math.random() * 1000;
+      await new Promise(res => setTimeout(res, retryInMilliseconds));
+      return authenticateAndFetchInstagram(_id, code, signal, ++retryCount);
+    }
+
+    if (!response.ok) {
+      throw new Error('Failed to authenticate and fetch Instagram');
+    }
+
     const data = await response.json();
     return data;
   } catch (error: any) {
     console.log('Error message:', error.message);
+    if (error.message === 'Network request failed' && retryCount < MAX_RETRIES) {
+      console.log(`Network error at attempt ${retryCount + 1}. Retrying...`);
+      const retryInMilliseconds = Math.pow(2, retryCount) * 1000 + Math.random() * 1000; 
+      await new Promise(res => setTimeout(res, retryInMilliseconds));
+      return authenticateAndFetchInstagram(_id, code, signal, ++retryCount);
+    }
   }
 };
 
-const disconnectFromInstagram = async (_id: string, signal?: AbortSignal) => {
+const disconnectFromInstagram = async (
+  _id: string,
+  signal?: AbortSignal,
+  retryCount: number = 0
+): Promise<any> => {
   try {
     const response = await fetch(
       `${API_ENDPOINTS.DISCONNECT_FROM_INSTAGRAM}/${_id}`,
@@ -62,12 +59,30 @@ const disconnectFromInstagram = async (_id: string, signal?: AbortSignal) => {
           'Content-Type': 'application/json',
         },
         signal,
-      },
+      }
     );
+
+    if (response.status >= 500 && retryCount < MAX_RETRIES) {
+      console.log(`Attempt ${retryCount + 1} failed. Retrying...`);
+      const retryInMilliseconds = Math.pow(2, retryCount) * 1000 + Math.random() * 1000;
+      await new Promise(res => setTimeout(res, retryInMilliseconds));
+      return disconnectFromInstagram(_id, signal, ++retryCount);
+    }
+
+    if (!response.ok) {
+      throw new Error('Failed to disconnect from Instagram');
+    }
+
     const data = await response.json();
     return data;
   } catch (error: any) {
     console.log('Error message:', error.message);
+    if (error.message === 'Network request failed' && retryCount < MAX_RETRIES) {
+      console.log(`Network error at attempt ${retryCount + 1}. Retrying...`);
+      const retryInMilliseconds = Math.pow(2, retryCount) * 1000 + Math.random() * 1000; 
+      await new Promise(res => setTimeout(res, retryInMilliseconds));
+      return disconnectFromInstagram(_id, signal, ++retryCount);
+    }
   }
 };
 
@@ -75,7 +90,5 @@ export const InstagramService = () => {
   return {
     authenticateAndFetchInstagram,
     disconnectFromInstagram,
-
-    instagramAuth
   };
 };

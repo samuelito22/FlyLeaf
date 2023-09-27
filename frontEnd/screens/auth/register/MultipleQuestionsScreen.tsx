@@ -8,7 +8,6 @@ import {NavigationProp} from '@react-navigation/native';
 import {usePreventBackHandler, useDispatch} from '../../../utils/hooks';
 import {useSelector} from 'react-redux';
 import {icons} from '../../../assets';
-import {ObjectId} from 'mongodb';
 
 const BuildYourProfileScreen = ({handlePress}: {handlePress: () => void}) => {
   return (
@@ -51,58 +50,57 @@ const MultipleQuestionsScreen = ({
 }) => {
   usePreventBackHandler();
   const dispatch = useDispatch();
-  const {additionalInformation} = useSelector(
-    (state: TYPES.AppState) => state.registerReducer,
+  const userAnswers = useSelector(
+    (state: TYPES.AppState) => state.registerReducer.answers,
   );
 
   const [valid, setValid] = useState(false);
-  const [activeId, setActiveId] = useState<ObjectId | null>(null);
+  const [activeId, setActiveId] = useState<number | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState(-1);
 
-  const {questionsList} = useSelector(
+  const {questions, answers} = useSelector(
     (state: TYPES.AppState) => state.usersReducer,
   );
 
-  const questionFieldList = questionsList?.filter(
+  const questionFieldList = questions?.filter(
     item => item.type === 'Advanced',
   );
 
-  const addInformation = (qId: ObjectId, aId: ObjectId) => {
+  const [tempAnswers, setTempAnswers] = useState<{questionId: number, answerId: number}[]>([]);
+
+  const addInformation = (qId: number, aId: number) => {
     const newInfo = {
       questionId: qId,
       answerId: aId,
     };
-
-    if (additionalInformation) {
-      dispatch(
-        RegisterActions.setAdditionalInformation([
-          ...additionalInformation,
-          newInfo,
-        ]),
-      );
-    } else {
-      dispatch(RegisterActions.setAdditionalInformation([newInfo]));
-    }
+    // Change this line to update the tempAnswers state variable
+    setTempAnswers(prevState => [...prevState, newInfo]);
   };
-
+  
   const handlePress = () => {
     if (valid && questionFieldList) {
       addInformation(
-        questionFieldList[currentQuestion]._id,
-        activeId as ObjectId,
+        questionFieldList[currentQuestion].id,
+        activeId as number,
       );
       setActiveId(null);
-
+  
       if (currentQuestion < questionFieldList.length - 1) {
-        // Only proceed to the next question if we haven't reached the last one
         setCurrentQuestion(prevState => (prevState as number) + 1);
       } else {
+        
         navigation.navigate(ROUTES.REGISTER_INTEREST_SCREEN);
       }
     }
   };
 
-  const ClickableIndicatorPrimaryButtonHandlePress = (id: ObjectId) => {
+  useEffect(() => {
+    if (tempAnswers.length === 10) {
+      dispatch(RegisterActions.setAnswers(tempAnswers));
+    }
+  }, [tempAnswers]);
+  
+  const ClickableIndicatorPrimaryButtonHandlePress = (id: number) => {
     if (id === activeId) {
       // check if the current id is the activeId
       setActiveId(null);
@@ -126,12 +124,6 @@ const MultipleQuestionsScreen = ({
     [],
   );
 
-  useEffect(() => {
-    if (additionalInformation && additionalInformation.length < 10) {
-      setCurrentQuestion(additionalInformation.length);
-    }
-  }, [additionalInformation]);
-
   return (
     <SafeContainer>
       {currentQuestion === -1 ? (
@@ -142,7 +134,7 @@ const MultipleQuestionsScreen = ({
             {currentQuestion + 1}/10
           </Text>
           <Text style={generalStyles.title}>
-            {questionFieldList && questionFieldList[currentQuestion].question}
+            {questionFieldList && questionFieldList[currentQuestion].text}
           </Text>
 
           <ScrollView
@@ -151,16 +143,16 @@ const MultipleQuestionsScreen = ({
             overScrollMode={'never'}
             contentContainerStyle={{flexGrow: 1}}>
             {questionFieldList && currentQuestion < questionFieldList.length ? (
-              questionFieldList[currentQuestion].answers.map(
+              answers?.filter(item=> item.questionId === questionFieldList[currentQuestion].id).map(
                 (answer, index) => (
                   <View
-                    key={questionFieldList[currentQuestion].question + index}
+                    key={answer.id}
                     style={generalStyles.clickableIndicatorPrimaryButton}>
                     <Button.ClickableIndicatorPrimaryButton
                       onPress={() =>
-                        ClickableIndicatorPrimaryButtonHandlePress(answer._id)
+                        ClickableIndicatorPrimaryButtonHandlePress(answer.id)
                       }
-                      isActive={answer._id === activeId}>
+                      isActive={answer.id === activeId}>
                       {answer.text}
                     </Button.ClickableIndicatorPrimaryButton>
                   </View>

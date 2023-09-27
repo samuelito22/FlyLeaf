@@ -5,100 +5,104 @@ import {Store, Persistor, UserActions, AppStatusActions} from './redux';
 import {StatusBar} from 'react-native';
 import {ROUTES, TYPES} from './constants';
 import {BlockedScreen} from './screens';
-import {useDispatch} from './utils/hooks';
+import {useDispatch, useInternetConnection} from './utils/hooks';
 import {useEffect} from 'react';
 import {UserService} from './services';
 import React from 'react';
-import {
-  startContinuouslyCheckingLocation,
-  stopContinuouslyCheckingLocation,
-} from './utils/locationChecker';
 import {
   removeTokensFromKeychain,
   retrieveTokensFromKeychain,
 } from './utils/keychain';
 import {getData} from './utils/storage';
 import {NavigationContainerRef} from '@react-navigation/native';
+import { useErrorAlert } from './utils/hooks';
+import { getLocationOnDemand } from './utils/locationChecker';
 
 export const navigationRef =
   React.createRef<NavigationContainerRef<TYPES.RootStackParamList>>();
 
 const MainContent = () => {
-  const dispatch = useDispatch();
+  
 
-  const {isBlocked} = useSelector(
+  const {isBlocked, currentScreen} = useSelector(
     (state: TYPES.AppState) => state.appStatusReducer,
   );
+  const currentUserId = useSelector(
+    (state: TYPES.AppState) => state.usersReducer.currentUserId,
+  );
+  const dispatch = useDispatch();
+
+  const online = useInternetConnection()
+
+  const { notify, ErrorAlert } = useErrorAlert();
+
+  useEffect(() => {
+    dispatch(AppStatusActions.setIsOnline(online))
+    if (!online) {
+      notify('No internet connection. Please connect to the internet.');
+    }
+  },[online])
+
 
   useEffect(() => {
     let controller = new AbortController();
-    let retryCount = 0;
 
     const collectUserProfile = async () => {
-      const tokens = await retrieveTokensFromKeychain();
-      const coordinates = await getData('coordinates');
+        const tokens = await retrieveTokensFromKeychain();
 
-      if (tokens && coordinates) {
-        const {accessToken, refreshToken} = tokens;
-        
-        await UserService.getMyProfile(
-          JSON.parse(coordinates) as {longitude: number; latitude: number},
-          accessToken,
-          refreshToken,
-          controller.signal,
-        )
-          .then(async result => {
-            if (result.type === 'error') {
-              dispatch(
-                AppStatusActions.setCurrentScreen(ROUTES.LOGIN_NAVIGATOR),
-              );
-              navigationRef.current?.navigate(ROUTES.LOGIN_NAVIGATOR);
-              await removeTokensFromKeychain();
-            } else {
-              dispatch(UserActions.setCurrentUserId(result.user._id));
-              dispatch(
-                UserActions.setUserProfile(result.user._id, result.user),
-              );
+        if (tokens) {
+            const {accessToken, refreshToken} = tokens;
+
+            try {
+                const { longitude, latitude} = (await getLocationOnDemand()).coords
+                const result = await UserService.getMyProfile(
+                    accessToken,
+                    refreshToken,
+                    longitude,
+                    latitude,
+                    controller.signal,
+                )
+
+                if (result.type === 'error') {
+                    dispatch(AppStatusActions.setCurrentScreen(ROUTES.LOGIN_NAVIGATOR));
+                    navigationRef.current?.navigate(ROUTES.LOGIN_NAVIGATOR);
+                    await removeTokensFromKeychain();
+                } else {
+                    dispatch(UserActions.setCurrentUserId(result.user._id));
+                    dispatch(UserActions.setUserProfile(result.user._id, result.user));
+                }
+            } catch (e:any) {
+                if (e.name === 'AbortError') {
+                    console.log('AbortError: Fetch request aborted.');
+                } else {
+                    console.log(e);
+                }
             }
-          })
-          .catch(e => {
-            console.log(e);
-            retryCount++;
-            const retryInMilliseconds = Math.pow(2, retryCount) * 1000 + Math.random() * 1000; // Exponential backoff with jitter
-            setTimeout(collectUserProfile, retryInMilliseconds);
-            console.log(`Error occurred. Retrying in ${retryInMilliseconds / 1000} seconds...`);
-          });
-
-        // Use the tokens as needed...
-      } else {
-        navigationRef.current?.navigate(ROUTES.LOGIN_NAVIGATOR);
-      }
+        } else {
+            navigationRef.current?.navigate(ROUTES.LOGIN_NAVIGATOR);
+        }
     };
 
-    collectUserProfile();
+    if (online && !currentUserId && currentScreen == ROUTES.BOTTOM_TAB_NAVIGATOR) {
+        collectUserProfile();
+    }
 
     return () => {
-      if (controller) {
-        controller.abort();
-      }
+        if (controller) {
+            controller.abort();
+        }
     };
-}, []);
+}, [online]);
 
-
-
-  useEffect(() => {
-    // Start checking location when the component is mounted
-    startContinuouslyCheckingLocation();
-
-    // Cleanup function: stops checking location when the component is unmounted
-    return () => {
-      stopContinuouslyCheckingLocation();
-    };
-  }, []);
 
   if (isBlocked) return <BlockedScreen />;
 
-  return <MainNavigator />;
+  return(
+    <>
+        {ErrorAlert}
+  <MainNavigator />
+  </>
+  );
 };
 
 export default function App() {

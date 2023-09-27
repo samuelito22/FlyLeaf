@@ -6,10 +6,7 @@ import {
   TextInputProps,
   StyleProp,
 } from 'react-native';
-import {SpotifyDocument} from '../../SpotifyDocument';
-import {InstagramDocument} from '../../InstagramDocument';
 import {rootReducer} from '../redux/store';
-import {ObjectId} from 'mongodb';
 
 export interface LayoutChangeEvent {
   nativeEvent: {
@@ -168,231 +165,89 @@ export interface ProgressContextType {
  * Redux Actions
  */
 
-interface SetPhoneNumberAction {
-  type: 'SET_PHONE_NUMBER';
-  payload: string;
-}
-
-interface SetDateOfBirthAction {
-  type: 'SET_DATE_OF_BIRTH';
-  payload: Date;
-}
-
-interface SetUsernameAction {
-  type: 'SET_USERNAME';
-  payload: string;
-}
-
-interface SetSeekingAction {
-  type: 'SET_SEEKING';
-  payload: ObjectId[];
-}
-
-interface setAdditionalInformation {
-  type: 'SET_ADDITIONAL_INFORMATION';
-  payload: {questionId: ObjectId; answerId: ObjectId}[] | null;
-}
-
-interface SetGenderAction {
-  type: 'SET_GENDER';
-  payload: {primary: ObjectId; secondary?: ObjectId | undefined};
-}
-
-interface SetPicturesAction {
-  type: 'SET_PICTURES';
-  payload: string[];
-}
-
-interface SetEmailAction {
-  type: 'SET_EMAIL';
-  payload: string;
-}
-
-interface SetRelationshipGoalAction {
-  type: 'SET_RELATIONSHIP_GOAL';
-  payload: ObjectId;
-}
-
-interface SetShowLocationScreenAction {
-  type: 'SET_SHOW_LOCATION_SCREEN';
-  payload: boolean;
-}
-
-interface SetIsRegisterCompletedAction {
-  type: 'SET_IS_REGISTER_COMPLETED';
-  payload: {
-    status: boolean;
-    currentScreen: keyof RootStackParamList | null;
-  };
-}
-
-interface SetProgressBarValueAction {
-  type: 'SET_PROGRESS_BAR_VALUE';
-  payload: number;
-}
-
-interface SetQuestionAndAnswerAction {
-  type: 'SET_QUESTION_AND_ANSWER';
-  payload: {question: string; answer: string}[];
-}
-
-interface SetInterestsAction {
-  type: 'SET_INTERESTS';
-  payload: ObjectId[];
-}
-
-interface resetRegisterAction {
-  type: 'RESET_REGISTER';
-}
-
-interface SetUserProfileAction {
-  type: 'SET_USER_PROFILE';
-  payload: {id: string; data: any};
-}
-
-interface SetCurrentUserIdAction {
-  type: 'SET_CURRENT_USER_ID';
-  payload: string;
-}
-
-interface RemoveUserProfileAction {
-  type: 'REMOVE_USER_PROFILE';
-  payload: string;
-}
-
-interface setIsBlocked {
-  type: 'SET_IS_BLOCKED';
-  payload: boolean;
-}
-
-
-
-interface setCurrentScreen {
-  type: 'SET_CURRENT_SCREEN';
-  payload: keyof RootStackParamList;
-}
-
-interface updateUserProfile {
-  type: 'UPDATE_USER_PROFILE';
-  payload: {field: string; value: any};
-}
-
-interface initUserProfile {
-  type: 'INIT_USER_PROFILE';
-  payload: currentUserProfile;
-}
-
-export interface setQuestionsList {
-  type: 'SET_QUESTIONS_LIST';
-  payload: {
-    _id: ObjectId;
-    question: string;
-    shortForm: string;
-    icon: string;
-    answers: {_id: ObjectId; text: string}[];
-    type: 'Advanced' | 'Basic';
-  }[];
-}
-
-export interface setInterestsList {
-  type: 'SET_INTERESTS_LIST';
-  payload: {_id: ObjectId; category: string; name: string; icon: string}[];
-}
-
-export interface setLanguagesList {
-  type: 'SET_LANGUAGES_LIST';
-  payload: {_id: ObjectId; code: string; name: string}[];
-}
-
-export interface setGendersList {
-  type: 'SET_GENDERS_LIST';
-  payload: {
-    _id: ObjectId;
-    primary: string;
-    secondary: {_id: ObjectId; text: string}[];
-  }[];
-}
-
-export type AppAction =
-  | setInterestsList
-  | setQuestionsList
-  | updateUserProfile
-  | initUserProfile
-  | setAdditionalInformation
-  | SetPhoneNumberAction
-  | SetDateOfBirthAction
-  | SetUsernameAction
-  | SetSeekingAction
-  | SetGenderAction
-  | SetPicturesAction
-  | SetEmailAction
-  | SetRelationshipGoalAction
-  | SetShowLocationScreenAction
-  | SetIsRegisterCompletedAction
-  | SetProgressBarValueAction
-  | SetQuestionAndAnswerAction
-  | SetInterestsAction
-  | resetRegisterAction
-  | SetUserProfileAction
-  | SetCurrentUserIdAction
-  | RemoveUserProfileAction
-  | setIsBlocked
-  | setCurrentScreen
-  | setGendersList
-  | setLanguagesList;
-
-export interface InitialStateRegisterType {
-  dateOfBirth: Date | null;
-  username: string | null;
-  seeking: ObjectId[] | null;
-  gender: {primary: ObjectId; secondary?: ObjectId | undefined} | null;
-  pictures: string[] | null;
-  email: string | null;
-  relationshipGoal: ObjectId | null;
-  phoneNumber: string | null;
-  progressBarValue: number;
-  additionalInformation: {questionId: ObjectId; answerId: ObjectId}[] | null;
-  interests: ObjectId[];
-  isRegisterCompleted: {
-    status: boolean;
-    currentScreen: keyof RootStackParamList | null;
-  };
-}
+  export interface InitialStateRegisterType {
+    firstName: string;
+    dateOfBirth: Date | null;
+    primaryGenderId: number;
+    secondaryGenderId: number | null;
+    email: string;
+    phoneNumber: string;
+    longitude: number;
+    latitude: number;
+    interestsIds: number[];
+    answers: { questionId: number; answerId: number }[];
+    relationshipGoalId: number;
+    seekingIds: number[];
+    isRegisterCompleted: {
+      status: boolean;
+      currentScreen: keyof RootStackParamList | null;
+    };
+    progressBarValue: number;
+    pictures: string[]
+  }
 
 export interface InitialStateAppStatusType {
   isBlocked: boolean;
   currentScreen: keyof RootStackParamList | undefined
+  isOnline: boolean
 }
 
 export interface InitialStateUsersType {
   byId: Record<string, currentUserProfile>;
   currentUserId: string | null;
-  questionsList:
+  questions:
     | {
-        _id: ObjectId;
-        question: string;
+        id: number;
+        text: string;
         shortForm: string;
-        icon: string;
-        answers: {_id: ObjectId; text: string}[];
+        iconPath: string;
         type: 'Advanced' | 'Basic';
       }[]
     | null;
-  interestsList:
-    | {_id: ObjectId; category: string; name: string; icon: string}[]
+  answers: {
+    id: number;
+    text: string;
+    questionId: number
+  }[] | null
+  interests:
+    | {id: number;
+      text: string;
+      categoryId: number;
+      category: {
+        id: number;
+        text: string;
+      };}[]
     | null;
-  gendersList:
+  genders:
     | {
-        _id: ObjectId;
-        primary: string;
-        secondary: {_id: ObjectId; text: string}[];
-      }[]
+        primaryGenders: {
+          id: number;
+          text: string;
+        }[];
+        secondaryGenders: {
+          id: number;
+          text: string;
+          primaryGenderId: number
+        }[];
+      }
     | null;
-  languagesList: {code: string; name: string}[] | null;
+  languages: {
+    id: number;
+    text: string;
+  }[] | null;
+  relationshipGoals: {
+    id: number;
+    text: string;
+  }[] | null
 }
 
 
 export interface InitialStateEditUserType {
   userProfile: EditProfile | null
+  userResponses: {questionId: string, answerId: string}[]
+  newPictures: { [key: string]: any }[];
+  removedPictures: string[];
+  gender?: {primary: string, secondary?: string}
 }
 
 
@@ -409,7 +264,7 @@ export type RootStackParamList = {
   // AUTH
   // Register
   REGISTER_NAVIGATOR: undefined;
-  REGISTER_USERNAME_SCREEN: undefined;
+  REGISTER_FIRST_NAME_SCREEN: undefined;
   REGISTER_DATE_OF_BIRTH_SCREEN: undefined;
   REGISTER_SEEKING_SCREEN: undefined;
   REGISTER_GENDER_SELECTION_SCREEN: undefined;
@@ -456,15 +311,18 @@ export type RootStackParamList = {
  */
 
 export interface UserRegisterParams {
-  username: string;
-  dateOfBirth: Date;
-  gender: {primary: ObjectId; secondary?: ObjectId | undefined};
-  seeking: ObjectId[];
-  relationshipGoal: ObjectId;
-  email?: string;
-  phoneNumber?: string;
-  interests: ObjectId[];
-  additionalInformation: {questionId: ObjectId; answerId: ObjectId}[];
+  firstName: string;
+    dateOfBirth: Date | null;
+    primaryGenderId: number;
+    secondaryGenderId: number | null;
+    email: string;
+    phoneNumber: string;
+    longitude: number;
+    latitude: number;
+    interestsIds: number[];
+    answers: { questionId: number; answerId: number }[];
+    relationshipGoalId: number;
+    seekingIds: number[];
   pictures: string[];
 }
 
@@ -614,4 +472,24 @@ export interface EditProfile {
   profession?: {jobTitle?: string, employer?:string}
   seeking: string[]; // Array of strings
 
+}
+
+
+/**
+ * GeoLocation
+ */
+
+export interface GeolocationCoordinates {
+  latitude: number;
+  longitude: number;
+  altitude: number | null;
+  accuracy: number;
+  altitudeAccuracy: number | null;
+  heading: number | null;
+  speed: number | null;
+}
+
+export interface GeolocationPosition {
+  coords: GeolocationCoordinates;
+  timestamp: number;
 }

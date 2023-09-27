@@ -5,13 +5,15 @@ import * as userAction from '../actions/userActions';
 const initialStateUsers: TYPES.InitialStateUsersType = {
   byId: {},
   currentUserId: null,
-  questionsList: null,
-  interestsList: null,
-  gendersList: null,
-  languagesList: null,
+  questions: null,
+  interests: null,
+  genders: null,
+  languages: null,
+  answers: null,
+  relationshipGoals: null
 };
 
-const usersReducer = (state = initialStateUsers, action: TYPES.AppAction) => {
+const usersReducer = (state = initialStateUsers, action: userAction.UserProfileActionTypes): TYPES.InitialStateUsersType => {
   switch (action.type) {
     case userAction.SET_USER_PROFILE:
       // Action payload should be an object with user id and user data.
@@ -42,32 +44,46 @@ const usersReducer = (state = initialStateUsers, action: TYPES.AppAction) => {
         byId: restOfUsers,
       };
 
-    case userAction.SET_QUESTIONS_LIST:
+    case userAction.SET_QUESTIONS:
       // Action payload should be an array of questions.
       return {
         ...state,
-        questionsList: action.payload,
+        questions: action.payload,
       };
+    
+      case userAction.SET_ANSWERS:
+        // Action payload should be an array of questions.
+        return {
+          ...state,
+          answers: action.payload,
+        };
 
-    case userAction.SET_INTERESTS_LIST:
+    case userAction.SET_INTERESTS:
       // Action payload should be an array of interests.
       return {
         ...state,
-        interestsList: action.payload,
+        interests: action.payload,
       };
 
-    case userAction.SET_GENDERS_LIST:
+    case userAction.SET_GENDERS:
       // Action payload should be an array of genders.
       return {
         ...state,
-        gendersList: action.payload,
+        genders: action.payload,
       };
 
-    case userAction.SET_LANGUAGES_LIST:
+    case userAction.SET_LANGUAGES:
       // Action payload should be an array of languages.
       return {
         ...state,
-        languagesList: action.payload,
+        languages: action.payload,
+      };
+    
+      case userAction.SET_RELATIONSHIP_GOALS:
+      // Action payload should be an array of languages.
+      return {
+        ...state,
+        relationshipGoals: action.payload,
       };
 
     default:

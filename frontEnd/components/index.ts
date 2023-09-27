@@ -26,4 +26,5 @@ export {default as BackButton} from './common/BackButton';
 export {default as Ripple} from './common/Ripple';
 export {default as OAuth2WebView} from './common/OAuth2WebView';
 export {default as ThreeDotsLoader} from './common/ThreeDotsLoader';
+export {default as ErrorAlert} from "./common/ErrorAlert"
 

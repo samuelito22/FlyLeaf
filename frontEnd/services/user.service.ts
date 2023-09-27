@@ -2,10 +2,10 @@ import {API_ENDPOINTS} from '../constants';
 import {TYPES} from '../constants';
 import { storeTokensInKeychain } from '../utils/keychain';
 
-
+const MAX_RETRIES = 3
 
 const profileService = () => {
-  const getNewRefreshAndAccessToken = async (refreshToken: string, signal?: AbortSignal) => {
+  const getNewRefreshAndAccessToken = async (refreshToken: string, signal?: AbortSignal, retryCount: number = 0):Promise<{accessToken:string, refreshToken:string, type:'success' | 'error'}> => {
     try {
         const response = await fetch(`${API_ENDPOINTS.REFRESH_TOKEN}`, {
             method: 'POST',
@@ -16,130 +16,95 @@ const profileService = () => {
             body: JSON.stringify({ grantType: "refresh_token" }),
             signal,
         });
+
+        if (response.status >= 500 && retryCount < MAX_RETRIES) { // Check for server errors and retry count
+            console.log(`Attempt ${retryCount + 1} failed. Retrying...`);
+            const retryInMilliseconds = Math.pow(2, retryCount) * 1000 + Math.random() * 1000; // Exponential backoff with jitter
+            await new Promise(res => setTimeout(res, retryInMilliseconds));
+            return getNewRefreshAndAccessToken(refreshToken, signal, ++retryCount);
+        }
         
         if (!response.ok) {
-            throw new Error('Failed to refresh token');
+          return await response.json();
         }
 
         return await response.json();
     } catch (error: any) {
         console.log('Error message:', error.message);
+        if (error.message === 'Network request failed' && retryCount < MAX_RETRIES) {
+          console.log(`Network error at attempt ${retryCount + 1}. Retrying...`);
+          const retryInMilliseconds = Math.pow(2, retryCount) * 1000 + Math.random() * 1000; 
+          await new Promise(res => setTimeout(res, retryInMilliseconds));
+          return getNewRefreshAndAccessToken(refreshToken, signal, retryCount + 1);
+        }
         throw error; // propagate the error
     }
 };
 
-const getMyProfile = async (coordinates: { longitude: number, latitude: number }, accessToken: string, refreshToken: string, signal?: AbortSignal) => {
+const getMyProfile = async (
+  accessToken: string,
+  refreshToken: string,
+  longitude: number, latitude: number,
+  signal?: AbortSignal,
+  retryCount: number = 0
+): Promise<{ type: 'success' | 'error', user: any }> => {
     try {
-        const fetchProfile = async (token: string) => {
+        const makeProfileRequest = async (token: string) => {
             return await fetch(`${API_ENDPOINTS.GET_MY_PROFILE}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ coordinates, grantType: "access_token" }),
+                body: JSON.stringify({ longitude, latitude, grantType: "access_token" }),
                 signal,
             });
         };
 
-        let response = await fetchProfile(accessToken);
-        const statusCode = response.status;
+        let response = await makeProfileRequest(accessToken);
 
-        if (statusCode === 401) {
+        if (response.status === 401) {
             const tokenResult = await getNewRefreshAndAccessToken(refreshToken);
             if (tokenResult.type === "success") {
                 await storeTokensInKeychain(
                     tokenResult.accessToken,
                     tokenResult.refreshToken,
                 );
-                response = await fetchProfile(tokenResult.accessToken);
+                return getMyProfile( tokenResult.accessToken, tokenResult.refreshToken,longitude, latitude,  signal, ++retryCount);
             }
+        }
+
+        if (response.status >= 500 && retryCount < MAX_RETRIES) {
+          console.log(`Attempt ${retryCount + 1} failed. Retrying...`);
+          const retryInMilliseconds = Math.pow(2, retryCount) * 1000 + Math.random() * 1000; 
+          await new Promise(res => setTimeout(res, retryInMilliseconds));
+          return getMyProfile( accessToken, refreshToken,longitude, latitude, signal, ++retryCount);
+        }
+
+        if (!response.ok) {
+          return await response.json();
         }
 
         return await response.json();
     } catch (error: any) {
-        console.log('Error message:', error.message);
+        //console.log('Error message:', error.message);
+        if (error.message === 'Network request failed' && retryCount < MAX_RETRIES) {
+          console.log(`Network error at attempt ${retryCount + 1}. Retrying...`);
+          const retryInMilliseconds = Math.pow(2, retryCount) * 1000 + Math.random() * 1000; 
+          await new Promise(res => setTimeout(res, retryInMilliseconds));
+          return getMyProfile( accessToken, refreshToken,longitude, latitude, signal, ++retryCount);
+      }
         throw error; // propagate the error
     }
 };
 
 
-  const updateProfile = async (
-    uid: string,
-    data: TYPES.InitialStateEditUserType,
-    signal?: AbortSignal,
-  ) => {
-    const {
-      height,
-      jobTitle,
-      company,
-      bio,
-      sexualOrientation,
-      languages,
-      additionalInformation,
-      covidVaccination,
-      ethnicity,
-      interests,
-      gender,
-      pictures,
-    } = data;
-    try {
-      const response = await fetch(`${API_ENDPOINTS.UPDATE_PROFILE}/${uid}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        signal,
-        body: JSON.stringify({
-          height,
-          jobTitle,
-          company,
-          bio,
-          sexualOrientation,
-          languages,
-          additionalInformation,
-          covidVaccination,
-          ethnicity,
-          interests,
-          gender,
-          pictures,
-        }),
-      });
-      const data = await response.json();
-      return data;
-    } catch (error: any) {
-      console.log('Error message:', error.message);
-    }
-  };
 
-  const initUserProfile = async (
-    uid: string,
-    locationData: TYPES.PositionType,
-    signal?: AbortSignal,
-  ) => {
-    try {
-      const response = await fetch(
-        `${API_ENDPOINTS.INIT_USER_PROFILE}/${uid}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          signal,
-          body: JSON.stringify({locationData: {coordinates: locationData}}),
-        },
-      );
-      const data = await response.json();
-      return data;
-    } catch (error: any) {
-      console.log('Error message:', error.message);
-    }
-  };
 
-  return {getMyProfile, initUserProfile, updateProfile};
+  return {getMyProfile};
 };
 
-const getOverviewEn = async (signal?: AbortSignal) => {
+const getOverviewEn = async (signal?: AbortSignal, retryCount: number = 0): Promise<{questions: any, interests: any, languages: any, genders: any, relationshipGoals: any, answers: any ,type: 'success' | 'error'}> => {
   try {
     const response = await fetch(`${API_ENDPOINTS.GET_OVERVIEW_EN}`, {
       method: 'GET',
@@ -149,11 +114,29 @@ const getOverviewEn = async (signal?: AbortSignal) => {
       signal,
     });
 
-    const data = await response.json();
+    if (response.status >= 500 && retryCount < MAX_RETRIES) {
+      console.log(`Attempt ${retryCount + 1} failed. Retrying...`);
+      const retryInMilliseconds = Math.pow(2, retryCount) * 1000 + Math.random() * 1000; // Exponential backoff with jitter
+      await new Promise(res => setTimeout(res, retryInMilliseconds));
+      return getOverviewEn(signal, ++retryCount);
+    }
 
-    return data;
+    if (!response.ok) {
+      return await response.json();
+    }
+
+    const data = await response.json();
+    return data
+
   } catch (error: any) {
     console.log('Error message:', error.message);
+    if (error.message === 'Network request failed' && retryCount < MAX_RETRIES) {
+      console.log(`Network error at attempt ${retryCount + 1}. Retrying...`);
+      const retryInMilliseconds = Math.pow(2, retryCount) * 1000 + Math.random() * 1000; 
+      await new Promise(res => setTimeout(res, retryInMilliseconds));
+      return getOverviewEn(signal, ++retryCount);
+  }
+    throw error
   }
 };
 

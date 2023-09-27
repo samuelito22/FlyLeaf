@@ -1,5 +1,5 @@
 import {View, ScrollView, Image, Text, StyleSheet, Dimensions} from 'react-native';
-import React, {useMemo, useRef, useState} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {useNavigation, NavigationProp} from '@react-navigation/native';
 import {PALETTE, ROUTES, THEME_COLORS, TYPES, themeText} from '../../constants';
 import {useSelector} from 'react-redux';
@@ -79,12 +79,17 @@ const UserProfileScreen = () => {
   const currentUserId = useSelector(
     (state: TYPES.AppState) => state.usersReducer.currentUserId,
   );
+  const [imageKey, setImageKey] = useState(0);
   const currentUser = useSelector(
     (state: TYPES.AppState) => state.usersReducer.byId[currentUserId as string],
   ) as TYPES.currentUserProfile;
   const {gendersList, interestsList, questionsList, languagesList} = useSelector(
     (state: TYPES.AppState) => state.usersReducer,
   );
+  const isOnline = useSelector(
+    (state: TYPES.AppState) => state.appStatusReducer.isOnline,
+  );
+
   const navigation = useNavigation<NavigationProp<TYPES.RootStackParamList>>();
   const age = getAge(currentUser?.dateOfBirth);
   const screenWidth = Dimensions.get('window').width;
@@ -164,6 +169,13 @@ const UserProfileScreen = () => {
     dispatch(EditProfileActions.initUserProfile(currentUser));
     setIsLoading(false);
     };
+
+    
+useEffect(() => {
+  if (isOnline) {
+      setImageKey(prevKey => prevKey + 1);
+  }
+}, [isOnline]);
   
   
 
@@ -174,6 +186,7 @@ const UserProfileScreen = () => {
       <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollViewContainer}>
           <Image
+          key={imageKey}
             source={{uri: currentUser.pictures[0].url}}
             style={styles.profilePicture}
           />
@@ -230,14 +243,7 @@ const UserProfileScreen = () => {
                   styles.planCard,
                   {width: cardWidth*0.95, backgroundColor: '#ffca1c'},
                 ]}>
-                <Text
-                  style={
-                    currentUser?.isPremiumMember
-                      ? styles.activeText
-                      : styles.inactiveText
-                  }>
-                  {currentUser?.isPremiumMember ? 'Active' : 'Inactive'}
-                </Text>
+      
                 <View style={styles.planCard_textContainer}>
                   <Text style={styles.planCard_header}>Connects</Text>
                   <Text style={styles.planCard_paragraph}>

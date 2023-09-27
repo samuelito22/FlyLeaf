@@ -2,8 +2,6 @@ import { INSTAGRAM_IN_USE, USER_NOT_FOUND_ERR } from "../constants/errors";
 import InstagramServices from "../services/instagram.services";
 import { validateId } from "../validators/auth.validator";
 import { validateIdAndCode } from "../validators/media.validator";
-import User from "../models/user.model";
-import instagramModel from "../models/instagram.model";
 import express from 'express';
 import centralizedErrorHandler from "../utils/centralizedErrorHandler.utils";
 import { sendErrorResponse } from "../utils/response.utils";
@@ -16,18 +14,18 @@ const sendError = (res:express.Response, message:string, status = 500) => {
 // Controller Functions
 
 async function authenticateAndFetchInstagram(req:express.Request, res: express.Response) {
-    const { _id } = req.params;
+    const { id } = req.params;
     try {
       const { code } = req.body;
   
-      const { error } = validateIdAndCode({ _id, code });
+      const { error } = validateIdAndCode({ id, code });
   
       if (error) return sendError(res, error.details[0].message, 400);
   
       const resultToken = await InstagramServices.obtainInstagramTokens(code);
       
       if(resultToken){
-      const userAlreadyConnectedToInstagramId = await InstagramServices.storeUserInstagramData(_id,resultToken.userId,resultToken.accessToken,resultToken.expiryDate)
+      await InstagramServices.storeUserInstagramData(id,resultToken.accessToken,resultToken.expiryDate)
 
       const images = await InstagramServices.fetchInstagramImages(resultToken.accessToken, resultToken.userId)
   
@@ -35,7 +33,6 @@ async function authenticateAndFetchInstagram(req:express.Request, res: express.R
       return res.status(200).json({
         type: "success",
         message: "Authentication and fetch successful",
-        importantMessage: userAlreadyConnectedToInstagramId && INSTAGRAM_IN_USE,
         images: images
       });
     }
@@ -43,7 +40,7 @@ async function authenticateAndFetchInstagram(req:express.Request, res: express.R
       return sendError(res, "Failed to get a refreshToken", 400);
     }
     } catch (error) {
-        await InstagramServices.disconnectInstagram(_id)
+        await InstagramServices.disconnectInstagram(id)
         const errorMessage = (error as Error).message;
         const status = centralizedErrorHandler(errorMessage);
         return sendErrorResponse(res, status, errorMessage);
@@ -52,12 +49,12 @@ async function authenticateAndFetchInstagram(req:express.Request, res: express.R
 
 
 async function disconnectFromInstagram(req:express.Request, res: express.Response) {
-    const { _id } = req.params;
+    const { id } = req.params;
     try {
-        const { error } = validateId({_id});
+        const { error } = validateId({id});
         if (error) return sendError(res, error.details[0].message, 400);
 
-        const result = await InstagramServices.disconnectInstagram(_id)
+        const result = await InstagramServices.disconnectInstagram(id)
         if(!result){
             sendError(res, "Error deleting user's instagram data", 400)
         }

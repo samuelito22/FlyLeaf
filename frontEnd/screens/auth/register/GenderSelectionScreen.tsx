@@ -12,7 +12,6 @@ import {NavigationProp} from '@react-navigation/native';
 import {usePreventBackHandler, useDispatch} from '../../../utils/hooks';
 import {icons} from '../../../assets';
 import {useSelector} from 'react-redux';
-import {ObjectId} from 'mongodb';
 
 const GenderSelectionScreen = ({
   navigation,
@@ -25,21 +24,18 @@ const GenderSelectionScreen = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const [valid, setValid] = useState(false);
-  const [activeId, setActiveId] = useState<ObjectId | null>(null);
+  const [activeId, setActiveId] = useState<number | null>(null);
 
-  const [genderTemp, setGenderTemp] = useState<null | {
-    _id: ObjectId;
-    text: string;
-  }>();
+  const [genderTemp, setGenderTemp] = useState<null | number>(null);
   const [extraGenderTemp, setExtraGenderTemp] = useState<
-    undefined | {_id: ObjectId; text: string}
-  >();
+    null | number
+  >(null);
 
   const [moreSpecificPress, setMoreSpecificPress] = useState(false);
 
   const dispatch = useDispatch();
 
-  const {gendersList} = useSelector(
+  const {genders} = useSelector(
     (state: TYPES.AppState) => state.usersReducer,
   );
 
@@ -48,12 +44,8 @@ const GenderSelectionScreen = ({
       setIsLoading(true);
       try {
         navigation.navigate(ROUTES.REGISTER_SEEKING_SCREEN);
-        dispatch(
-          RegisterActions.setGender({
-            primary: genderTemp?._id as ObjectId,
-            secondary: extraGenderTemp?._id,
-          }),
-        );
+        dispatch(RegisterActions.setPrimaryGenderId(genderTemp as number))
+        extraGenderTemp && dispatch(RegisterActions.setSecondaryGenderId(extraGenderTemp))
         dispatch(RegisterActions.setProgressBarValue(42));
       } catch (error) {
         console.error(error);
@@ -64,18 +56,17 @@ const GenderSelectionScreen = ({
   };
 
   const ClickableIndicatorPrimaryButtonHandlePress = (
-    _id: ObjectId,
-    text: string,
+    id: number,
   ) => {
-    if (_id === activeId) {
+    if (id === activeId) {
       // check if the current id is the activeId
       setActiveId(null);
       setGenderTemp(null);
     } else {
-      setActiveId(_id); // set the clicked id as the activeId
-      setGenderTemp({_id, text});
+      setActiveId(id); // set the clicked id as the activeId
+      setGenderTemp(id);
     }
-    setExtraGenderTemp(undefined);
+    setExtraGenderTemp(null);
   };
 
   useEffect(() => {
@@ -104,19 +95,18 @@ const GenderSelectionScreen = ({
           showsVerticalScrollIndicator={false}
           overScrollMode={'never'}
           contentContainerStyle={{flexGrow: 1}}>
-          {gendersList?.map((genderField, index) => (
-            <View key={index} style={styles.clickableIndicatorPrimaryButton}>
+          {genders?.primaryGenders?.map((gender) => (
+            <View key={gender.id} style={styles.clickableIndicatorPrimaryButton}>
               <Button.ClickableIndicatorPrimaryButton
                 onPress={() =>
                   ClickableIndicatorPrimaryButtonHandlePress(
-                    genderField._id,
-                    genderField.primary,
+                    gender.id,
                   )
                 }
-                isActive={genderField._id === activeId}>
-                {genderField.primary}
+                isActive={gender.id === activeId}>
+                {gender.text}
               </Button.ClickableIndicatorPrimaryButton>
-              {genderField._id === activeId && (
+              {gender.id === activeId && (
                 <Pressable
                   onPress={() => setMoreSpecificPress(true)}
                   style={
@@ -126,7 +116,7 @@ const GenderSelectionScreen = ({
                     style={
                       styles.clickableIndicatorPrimaryButton__extraContainer_text
                     }>
-                    {!extraGenderTemp ? 'More specific?' : extraGenderTemp.text}
+                    {!extraGenderTemp ? 'More specific?' : genders.secondaryGenders.find(item => item.id === extraGenderTemp)?.text}
                   </Text>
                   <Image
                     source={icons.arrowDown}
@@ -178,21 +168,17 @@ const GenderSelectionScreen = ({
               <ScrollView
                 contentContainerStyle={styles.extraScrollViewContainer}>
                 {activeId !== null &&
-                  gendersList &&
-                  gendersList[
-                    gendersList.findIndex(item => item._id === activeId)
-                  ].secondary.map((extraGender, index) => (
+                  genders?.secondaryGenders.filter(item => item.primaryGenderId === genderTemp).map((extraGender)  => (
                     <Pressable
                       style={styles.extraGenderModal_button}
-                      key={index}
+                      key={extraGender.id}
                       onPress={() => {
-                        if (extraGenderTemp?._id === extraGender._id)
-                          setExtraGenderTemp(undefined);
+                        if (extraGenderTemp === extraGender.id)
+                          setExtraGenderTemp(null);
                         else
-                          setExtraGenderTemp({
-                            text: extraGender.text,
-                            _id: extraGender._id,
-                          });
+                          setExtraGenderTemp(
+                            extraGender.id,
+                          );
                         setMoreSpecificPress(false);
                       }}>
                       <View style={styles.extraGenderModal_content}>
@@ -201,7 +187,7 @@ const GenderSelectionScreen = ({
                             styles.extraGenderModal_button__icon,
                             {
                               tintColor:
-                                extraGenderTemp?._id === extraGender._id
+                                extraGenderTemp === extraGender.id
                                   ? THEME_COLORS.primary
                                   : PALETTE.LIGHT400,
                             },

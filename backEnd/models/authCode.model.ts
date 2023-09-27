@@ -1,24 +1,17 @@
-import mongoose from "mongoose";
+import { Model, Column, Table, ForeignKey, DataType,  Index, CreatedAt } from 'sequelize-typescript';
+import { User } from './user'; // Assuming User.ts is in the same directory
 
-const authCodeSchema = new mongoose.Schema({
-  code: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-    expires: 300,  
-  },
-});
+@Table({ tableName: 'AuthCode', updatedAt: false })
+export class AuthCode extends Model<AuthCode> {
 
+  @Index
+  @Column(DataType.STRING)
+  code!: string;
 
-const AuthCodeModel = mongoose.model('AuthCode', authCodeSchema);
+  @ForeignKey(() => User)
+  @Column({type:DataType.UUID, unique: true})
+  userId!: string;
 
-export default AuthCodeModel;
+  @CreatedAt
+  createdAt!: Date;
+}

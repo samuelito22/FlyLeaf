@@ -31,6 +31,6 @@ const styles = StyleSheet.create({
     borderRadius: 120,
     top: 10,
     left: 10,
-    zIndex: 9999,
+    zIndex: 1,
   },
 });

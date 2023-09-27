@@ -1,18 +1,116 @@
 export const SET_USER_PROFILE = 'SET_USER_PROFILE' as const;
 export const SET_CURRENT_USER_ID = 'SET_CURRENT_USER_ID' as const;
 export const REMOVE_USER_PROFILE = 'REMOVE_USER_PROFILE' as const;
-export const SET_QUESTIONS_LIST = 'SET_QUESTIONS_LIST' as const;
-export const SET_INTERESTS_LIST = 'SET_INTERESTS_LIST' as const;
-export const SET_GENDERS_LIST = 'SET_GENDERS_LIST' as const;
-export const SET_LANGUAGES_LIST = 'SET_LANGUAGES_LIST' as const;
+export const SET_QUESTIONS = 'SET_QUESTIONS' as const;
+export const SET_INTERESTS = 'SET_INTERESTS' as const;
+export const SET_GENDERS = 'SET_GENDERS' as const;
+export const SET_LANGUAGES = 'SET_LANGUAGES' as const;
+export const SET_ANSWERS = 'SET_ANSWERS' as const
+export const SET_RELATIONSHIP_GOALS = 'SET_RELATIONSHIP_GOALS' as const
 
 import {TYPES} from '../../constants';
-import {ObjectId} from 'mongodb';
+
+
+interface SetCurrentUserIdAction {
+  type: typeof SET_CURRENT_USER_ID;
+  payload: string;
+}
+
+interface RemoveUserProfileAction {
+  type: typeof REMOVE_USER_PROFILE;
+  payload: string;
+}
+
+
+interface SetUserProfileAction {
+  type: typeof SET_USER_PROFILE;
+  payload: {id: string; data: any};
+}
+
+// Update setQuestionsList interface
+interface SetQuestionsAction {
+  type: typeof SET_QUESTIONS;
+  payload: {
+    id: number;
+    text: string;
+    shortForm: string;
+    iconPath: string;
+    type: 'Advanced' | 'Basic';
+  }[];
+}
+
+// Update setInterestsList interface
+interface SetInterestsAction {
+  type: typeof SET_INTERESTS;
+  payload: {
+    id: number;
+    text: string;
+    categoryId: number;
+    category: {
+      id: number;
+      text: string;
+    };
+  }[];
+}
+
+// Update setLanguagesList interface
+interface SetLanguagesAction {
+  type: typeof SET_LANGUAGES;
+  payload: {
+    id: number;
+    text: string;
+  }[];
+}
+
+interface SetRelationshipGoalsAction {
+  type: typeof SET_RELATIONSHIP_GOALS;
+  payload: {
+    id: number;
+    text: string;
+  }[];
+}
+
+
+// Update setGendersList interface
+interface SetGendersAction {
+  type: typeof SET_GENDERS;
+  payload: {
+    primaryGenders: {
+      id: number;
+      text: string;
+    }[];
+    secondaryGenders: {
+      id: number;
+      text: string;
+      primaryGenderId: number;
+    }[];
+  };
+}
+
+interface SetAnswersAction {
+  type: typeof SET_ANSWERS;
+  payload: {
+    id: number;
+    text: string;
+    questionId: number;
+  }[];
+}
+
+export type UserProfileActionTypes =
+  SetUserProfileAction |
+  SetCurrentUserIdAction |
+  RemoveUserProfileAction |
+  SetQuestionsAction |
+  SetInterestsAction |
+  SetGendersAction |
+  SetLanguagesAction |
+  SetAnswersAction |
+  SetRelationshipGoalsAction;
 
 // Set user profile action
 export const setUserProfile =
   (userId: string, userData: TYPES.currentUserProfile) =>
-  (dispatch: (action: TYPES.AppAction) => void) => {
+  (dispatch: (action: SetUserProfileAction) => void) => {
     dispatch({
       type: SET_USER_PROFILE,
       payload: {id: userId, data: userData},
@@ -21,7 +119,7 @@ export const setUserProfile =
 
 // Set current user ID action
 export const setCurrentUserId =
-  (userId: string) => (dispatch: (action: TYPES.AppAction) => void) => {
+  (userId: string) => (dispatch: (action: SetCurrentUserIdAction) => void) => {
     dispatch({
       type: SET_CURRENT_USER_ID,
       payload: userId,
@@ -30,65 +128,112 @@ export const setCurrentUserId =
 
 // Remove user profile action
 export const removeUserProfile =
-  (userId: string) => (dispatch: (action: TYPES.AppAction) => void) => {
+  (userId: string) => (dispatch: (action: RemoveUserProfileAction) => void) => {
     dispatch({
       type: REMOVE_USER_PROFILE,
       payload: userId,
     });
   };
-
-export const setQuestionsList =
+  export const setQuestions =
   (
     questions: {
-      _id: ObjectId;
-      question: string;
+      id: number;
+      text: string;
       shortForm: string;
-      icon: string;
-      answers: {_id: ObjectId; text: string}[];
+      iconPath: string;
       type: 'Advanced' | 'Basic';
     }[],
   ) =>
-  (dispatch: (action: TYPES.AppAction) => void) => {
+  (dispatch: (action: SetQuestionsAction) => void) => {
     dispatch({
-      type: SET_QUESTIONS_LIST,
+      type: SET_QUESTIONS,
       payload: questions,
     });
   };
 
 // Set interests list action
-export const setInterestsList =
+export const setInterests =
   (
-    interests: {_id: ObjectId; category: string; name: string; icon: string}[],
+    interests: {
+      id: number;
+      text: string;
+      categoryId: number;
+      category: {
+        id: number;
+        text: string;
+      };
+    }[],
   ) =>
-  (dispatch: (action: TYPES.AppAction) => void) => {
+  (dispatch: (action: SetInterestsAction) => void) => {
     dispatch({
-      type: SET_INTERESTS_LIST,
+      type: SET_INTERESTS,
       payload: interests,
     });
   };
 
 // Set genders list action
-export const setGendersList =
+export const setGenders =
   (
     genders: {
-      _id: ObjectId;
-      primary: string;
-      secondary: {_id: ObjectId; text: string}[];
-    }[],
+      primaryGenders: {
+        id: number;
+        text: string;
+      }[];
+      secondaryGenders: {
+        id: number;
+        text: string;
+        primaryGenderId: number;
+      }[];
+    },
   ) =>
-  (dispatch: (action: TYPES.AppAction) => void) => {
+  (dispatch: (action: SetGendersAction) => void) => {
     dispatch({
-      type: SET_GENDERS_LIST,
+      type: SET_GENDERS,
       payload: genders,
     });
   };
 
 // Set languages list action
-export const setLanguagesList =
-  (languages: {_id: ObjectId; code: string; name: string}[]) =>
-  (dispatch: (action: TYPES.AppAction) => void) => {
+export const setLanguages =
+  (
+    languages: {
+      id: number;
+      text: string;
+    }[],
+  ) =>
+  (dispatch: (action: SetLanguagesAction) => void) => {
     dispatch({
-      type: SET_LANGUAGES_LIST,
+      type: SET_LANGUAGES,
       payload: languages,
+    });
+  };
+
+  export const setRelationshipGoals =
+  (
+    relationshipGoals: {
+      id: number;
+      text: string;
+    }[],
+  ) =>
+  (dispatch: (action: SetRelationshipGoalsAction) => void) => {
+    dispatch({
+      type: SET_RELATIONSHIP_GOALS,
+      payload: relationshipGoals,
+    });
+  };
+
+// Set answers list action
+export const setAnswers =
+  (
+    answers: {
+      id: number;
+      text: string;
+      questionId: number;
+    }[],
+  ) =>
+  (dispatch: (action: SetAnswersAction) => void) => {
+    dispatch({
+      type: SET_ANSWERS,
+      payload: answers,
     });
   };

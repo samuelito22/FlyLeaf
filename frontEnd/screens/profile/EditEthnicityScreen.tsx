@@ -1,9 +1,8 @@
-import {Text, View, ScrollView, StyleSheet, BackHandler} from 'react-native';
+import {Text, View, ScrollView, StyleSheet} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {
   SafeContainer,
   Button,
-  questionsList,
   EditProfileHeader,
 } from '../../components';
 import {
@@ -12,7 +11,6 @@ import {
   COMPONENT_COLORS,
   BORDER_RADIUS,
   themeText,
-  PALETTE,
 } from '../../constants';
 import {EditProfileActions} from '../../redux';
 import {useDispatch} from '../../utils/hooks';
@@ -20,32 +18,55 @@ import {verticalScale} from 'react-native-size-matters';
 import {useSelector} from 'react-redux';
 
 const EditEthnicityScreen = () => {
-  const state = useSelector((state: TYPES.AppState) => state.editUserReducer);
-
-  const [ethnicity, setEthnicity] = useState<string>(
-    state.ethnicity ? state.ethnicity : '',
-  );
+  const { questionsList} =
+    useSelector((state: TYPES.AppState) => state.usersReducer);
+    const userResponses =
+    useSelector((state: TYPES.AppState) => state.editUserReducer.userResponses);
+  const ethnicityField = questionsList?.find(item => item.shortForm === "Ethnicity")
+  const additionalInformation = useSelector((state: TYPES.AppState) => state.editUserReducer.userProfile?.additionalInformation)
+  const [ethnicity, setEthnicity] = useState<undefined | string> (additionalInformation?.find(item => item.questionShortForm === 'Ethnicity')?.answer)
 
   const dispatch = useDispatch();
 
-  const ethnicityField = questionsList.find(field => field.id === 16) as {
-    question: string;
-    id: number;
-    answers: string[];
-  };
-
   const ClickableIndicatorPrimaryButtonHandlePress = (name: string) => {
     if (ethnicity == name) {
-      setEthnicity('');
+      setEthnicity(undefined);
     } else {
       setEthnicity(name);
     }
   };
 
   useEffect(() => {
-    ethnicity != ''
-      ? dispatch(EditProfileActions.updateUserProfile('ethnicity', ethnicity))
-      : dispatch(EditProfileActions.updateUserProfile('ethnicity', undefined));
+    const updatedAdditionalInformation = additionalInformation?.map(item => 
+      item.questionShortForm === 'Ethnicity'
+        ? { ...item, answer: ethnicity }
+        : item
+    ) || [];
+  
+    if (!additionalInformation?.some(item => item.questionShortForm === 'Ethnicity') && ethnicity) {
+      updatedAdditionalInformation.push({
+        question: ethnicityField?.question as string,
+        questionShortForm: 'Ethnicity',
+        questionIcon: '',
+        answer: ethnicity,
+        questionType: 'Basic' 
+      });
+    }
+  
+    dispatch(EditProfileActions.updateUserProfile('additionalInformation', updatedAdditionalInformation));
+// Refactored code for updating userResponses
+const newResponse = {
+  questionId: ethnicityField?._id,
+  answerId: ethnicityField?.answers.find(item => item.text === ethnicity)?._id
+};
+
+const currentResponses = Array.isArray(userResponses) ? userResponses : [];
+
+const updatedUserResponses = currentResponses.some(response => response.questionId === newResponse.questionId)
+    ? currentResponses.map(response => response.questionId === newResponse.questionId ? newResponse : response)
+    : [...currentResponses, newResponse];
+
+dispatch(EditProfileActions.updateFormat('userResponses', updatedUserResponses));
   }, [ethnicity]);
 
   return (
@@ -65,10 +86,10 @@ const EditEthnicityScreen = () => {
             <View key={index} style={styles.clickableIndicatorPrimaryButton}>
               <Button.ClickableIndicatorPrimaryButton
                 onPress={() =>
-                  ClickableIndicatorPrimaryButtonHandlePress(answer)
+                  ClickableIndicatorPrimaryButtonHandlePress(answer.text)
                 }
-                isActive={ethnicity.includes(answer)}>
-                {answer}
+                isActive={ethnicity === answer.text}>
+                {answer.text}
               </Button.ClickableIndicatorPrimaryButton>
             </View>
           ))}

@@ -3,10 +3,13 @@ import {API_ENDPOINTS, TYPES} from '../constants';
 import {GoogleSignin} from "../googleConfig"
 
 
+const MAX_RETRIES = 3;
+
 const PhoneAuthService = () => {
   const sendVerificationCode = async (
     phoneNumber: string,
     signal?: AbortSignal,
+    retryCount: number = 0
   ): Promise<any> => {
     try {
       const response = await fetch(`${API_ENDPOINTS.SEND_OTP}`, {
@@ -17,10 +20,30 @@ const PhoneAuthService = () => {
         signal,
         body: JSON.stringify({phoneNumber}),
       });
+
+      if (response.status >= 500 && retryCount < MAX_RETRIES) {
+        console.log(`Attempt ${retryCount + 1} failed. Retrying...`);
+        const retryInMilliseconds = Math.pow(2, retryCount) * 1000 + Math.random() * 1000;
+        await new Promise(res => setTimeout(res, retryInMilliseconds));
+        return sendVerificationCode(phoneNumber, signal, ++retryCount);
+      }
+
+      if (!response.ok) {
+        return await response.json();
+      }
+
       const data = await response.json();
       return data;
     } catch (error: any) {
       console.log('Error message:', error.message);
+      if (error.message === 'Network request failed' && retryCount < MAX_RETRIES) {
+        console.log(`Network error at attempt ${retryCount + 1}. Retrying...`);
+        const retryInMilliseconds = Math.pow(2, retryCount) * 1000 + Math.random() * 1000; 
+        await new Promise(res => setTimeout(res, retryInMilliseconds));
+        return sendVerificationCode(phoneNumber, signal, ++retryCount);
+      }
+
+      throw  error
     }
   };
 
@@ -28,6 +51,7 @@ const PhoneAuthService = () => {
     otp: string,
     phoneNumber: string,
     signal?: AbortSignal,
+    retryCount: number = 0
   ): Promise<any> => {
     try {
       const response = await fetch(`${API_ENDPOINTS.VERIFY_OTP}`, {
@@ -38,10 +62,30 @@ const PhoneAuthService = () => {
         signal,
         body: JSON.stringify({otp, phoneNumber}),
       });
+
+      if (response.status >= 500 && retryCount < MAX_RETRIES) {
+        console.log(`Attempt ${retryCount + 1} failed. Retrying...`);
+        const retryInMilliseconds = Math.pow(2, retryCount) * 1000 + Math.random() * 1000;
+        await new Promise(res => setTimeout(res, retryInMilliseconds));
+        return confirmVerificationCode(otp, phoneNumber, signal, ++retryCount);
+      }
+
+      if (!response.ok) {
+        return await response.json();
+      }
+
       const data = await response.json();
       return data;
     } catch (error: any) {
       console.log('Error message:', error.message);
+      if (error.message === 'Network request failed' && retryCount < MAX_RETRIES) {
+        console.log(`Network error at attempt ${retryCount + 1}. Retrying...`);
+        const retryInMilliseconds = Math.pow(2, retryCount) * 1000 + Math.random() * 1000; 
+        await new Promise(res => setTimeout(res, retryInMilliseconds));
+        return confirmVerificationCode(otp, phoneNumber, signal, ++retryCount);
+      }
+
+      throw error
     }
   };
 
@@ -56,7 +100,8 @@ const EmailLinkAuthService = () => {
     email: string,
     grantType: string,
     signal?: AbortSignal,
-  ) => {
+    retryCount: number = 0
+  ):Promise<any> => {
     try {
       const response = await fetch(`${API_ENDPOINTS.REQUEST_LOGIN_LINK}`, {
         method: 'POST',
@@ -66,14 +111,38 @@ const EmailLinkAuthService = () => {
         signal,
         body: JSON.stringify({email, grantType}),
       });
+
+      if (response.status >= 500 && retryCount < MAX_RETRIES) {
+        console.log(`Attempt ${retryCount + 1} failed. Retrying...`);
+        const retryInMilliseconds = Math.pow(2, retryCount) * 1000 + Math.random() * 1000;
+        await new Promise(res => setTimeout(res, retryInMilliseconds));
+        return sendEmailVerificationLink(email, grantType, signal, ++retryCount);
+      }
+
+      if (!response.ok) {
+        return await response.json();
+      }
+
       const data = await response.json();
       return data;
     } catch (error: any) {
       console.log('Error message:', error.message);
+      if (error.message === 'Network request failed' && retryCount < MAX_RETRIES) {
+        console.log(`Network error at attempt ${retryCount + 1}. Retrying...`);
+        const retryInMilliseconds = Math.pow(2, retryCount) * 1000 + Math.random() * 1000; 
+        await new Promise(res => setTimeout(res, retryInMilliseconds));
+        return sendEmailVerificationLink(email, grantType, signal, ++retryCount);
+      }
+
+      throw error
     }
   };
 
-  const verifyAuthCode = async (authCode: string, signal?: AbortSignal) => {
+  const verifyAuthCode = async (
+    authCode: string,
+    signal?: AbortSignal,
+    retryCount: number = 0
+  ):Promise<any> => {
     try {
       const response = await fetch(`${API_ENDPOINTS.VALIDATE_AUTH_CODE}`, {
         method: 'PUT',
@@ -83,10 +152,29 @@ const EmailLinkAuthService = () => {
         signal,
         body: JSON.stringify({authCode}),
       });
+
+      if (response.status >= 500 && retryCount < MAX_RETRIES) {
+        console.log(`Attempt ${retryCount + 1} failed. Retrying...`);
+        const retryInMilliseconds = Math.pow(2, retryCount) * 1000 + Math.random() * 1000;
+        await new Promise(res => setTimeout(res, retryInMilliseconds));
+        return verifyAuthCode(authCode, signal, ++retryCount);
+      }
+
+      if (!response.ok) {
+        return await response.json();      }
+
       const data = await response.json();
       return data;
     } catch (error: any) {
       console.log('Error message:', error.message);
+      if (error.message === 'Network request failed' && retryCount < MAX_RETRIES) {
+        console.log(`Network error at attempt ${retryCount + 1}. Retrying...`);
+        const retryInMilliseconds = Math.pow(2, retryCount) * 1000 + Math.random() * 1000; 
+        await new Promise(res => setTimeout(res, retryInMilliseconds));
+        return verifyAuthCode(authCode, signal, ++retryCount);
+      }
+
+      throw error
     }
   };
 
@@ -97,6 +185,33 @@ const EmailLinkAuthService = () => {
 };
 
 const OAuthService = () => {
+  const fetchWithRetry = async (endpoint: string, token: string, retryCount: number = 0):Promise<any> => {
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          grantType: "access_token",
+        }),
+      });
+
+      if (response.status >= 500 && retryCount < MAX_RETRIES) {
+        console.log(`Attempt ${retryCount + 1} failed. Retrying...`);
+        const retryInMilliseconds = Math.pow(2, retryCount) * 1000 + Math.random() * 1000;
+        await new Promise(res => setTimeout(res, retryInMilliseconds));
+        return fetchWithRetry(endpoint, token, ++retryCount);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+  };
+
   const onFacebookButtonPress = async () => {
     try {
       const result = await LoginManager.logInWithPermissions(['email']);
@@ -109,20 +224,9 @@ const OAuthService = () => {
       }
 
       // Send token to your backend for validation and user management
-      const response = await fetch(`${API_ENDPOINTS.FACEBOOK_SIGN_IN}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${data.accessToken}`
-        },
-        body: JSON.stringify({
-          grantType: "access_token",
-        }),
-      });
-
-      return await response.json();
-    } catch (error:any) {
-      console.log(error)
+      return await fetchWithRetry(`${API_ENDPOINTS.FACEBOOK_SIGN_IN}`, data.accessToken);
+    } catch (error: any) {
+      console.log(error);
     }
   };
 
@@ -130,21 +234,12 @@ const OAuthService = () => {
     try {
       await GoogleSignin.hasPlayServices({showPlayServicesUpdateDialog: true});
       const {idToken} = await GoogleSignin.signIn();
-      // Send token to your backend for validation and user management
-      const response = await fetch(`${API_ENDPOINTS.GOOGLE_SIGN_IN}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${idToken}`
-        },
-        body: JSON.stringify({
-          grantType: "access_token",
-        }),
-      });
 
-      return await response.json();
-    } catch (error:any) {
-      console.log(error)
+      if(!idToken ) throw new Error('Failed to fetch idToken')
+      // Send token to your backend for validation and user management
+      return await fetchWithRetry(`${API_ENDPOINTS.GOOGLE_SIGN_IN}`, idToken);
+    } catch (error: any) {
+      console.log(error);
     }
   };
 
@@ -155,7 +250,7 @@ const OAuthService = () => {
 };
 
 const UserExistService = () => {
-  const emailExist = async (email: string, signal?: AbortSignal) => {
+  const emailExist = async (email: string, signal?: AbortSignal, retryCount: number = 0):Promise<any> => {
     const formData = new URLSearchParams();
     formData.append('email', email.toLowerCase());
 
@@ -168,18 +263,27 @@ const UserExistService = () => {
         body: formData.toString(),
         signal,
       });
+
+      if (response.status >= 500 && retryCount < MAX_RETRIES) {
+        console.log(`Attempt ${retryCount + 1} failed. Retrying...`);
+        const retryInMilliseconds = Math.pow(2, retryCount) * 1000 + Math.random() * 1000;
+        await new Promise(res => setTimeout(res, retryInMilliseconds));
+        return emailExist(email, signal, ++retryCount);
+      }
+
       const data = await response.json();
       return data;
     } catch (error) {
       console.log(error);
-      return null;
+      throw error
     }
   };
 
   const phoneNumberExist = async (
     phoneNumber: string,
     signal?: AbortSignal,
-  ) => {
+    retryCount: number = 0
+  ):Promise<any> => {
     const formData = new URLSearchParams();
     formData.append('phoneNumber', phoneNumber);
 
@@ -192,47 +296,34 @@ const UserExistService = () => {
         body: formData.toString(),
         signal,
       });
+
+      if (response.status >= 500 && retryCount < MAX_RETRIES) {
+        console.log(`Attempt ${retryCount + 1} failed. Retrying...`);
+        const retryInMilliseconds = Math.pow(2, retryCount) * 1000 + Math.random() * 1000;
+        await new Promise(res => setTimeout(res, retryInMilliseconds));
+        return phoneNumberExist(phoneNumber, signal, ++retryCount);
+      }
+
       const data = await response.json();
       return data;
     } catch (error) {
       console.log(error);
-      return null;
-    }
-  };
-
-  const userUidExist = async (uid: string, signal?: AbortSignal) => {
-    const formData = new URLSearchParams();
-    formData.append('uid', uid);
-
-    try {
-      const response = await fetch(API_ENDPOINTS.ID_EXIST, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: formData.toString(),
-        signal,
-      });
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.log(error);
-      return null;
+      throw error
     }
   };
 
   return {
     emailExist,
     phoneNumberExist,
-    userUidExist,
   };
 };
 
 const userRegister = async (
   userData: TYPES.UserRegisterParams,
-  coordinates: { longitude: number, latitude: number },
   signal?: AbortSignal,
-) => {
+  retryCount: number = 0
+):Promise<any> => {
+
   try {
     // Initialize a new FormData object
     const formData = new FormData();
@@ -249,8 +340,6 @@ const userRegister = async (
         }
       }
     }
-
-    formData.append("coordinates", JSON.stringify(coordinates));
 
     if (userData.pictures) {
       for (const uri of userData.pictures) {
@@ -270,11 +359,25 @@ const userRegister = async (
       signal,
     });
 
+    if (response.status >= 500 && retryCount < MAX_RETRIES) {
+      console.log(`Attempt ${retryCount + 1} failed. Retrying...`);
+      const retryInMilliseconds = Math.pow(2, retryCount) * 1000 + Math.random() * 1000;
+      await new Promise(res => setTimeout(res, retryInMilliseconds));
+      return userRegister(userData, signal, retryCount + 1);
+    }
+
     const data = await response.json();
     return data;
-  } catch (error) {
+  } catch (error:any) {
     console.error(error);
-    return null;
+    if (error.message === 'Network request failed' && retryCount < MAX_RETRIES) {
+      console.log(`Network error at attempt ${retryCount + 1}. Retrying...`);
+      const retryInMilliseconds = Math.pow(2, retryCount) * 1000 + Math.random() * 1000; 
+      await new Promise(res => setTimeout(res, retryInMilliseconds));
+      return userRegister(userData, signal, retryCount + 1);
+    }
+
+    throw error
   }
 };
 

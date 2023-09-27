@@ -1,5 +1,4 @@
 import {
-  BackHandler,
   Image,
   Modal,
   Pressable,
@@ -11,9 +10,7 @@ import React, {useEffect, useState} from 'react';
 import {
   Button,
   EditProfileHeader,
-  LoadingSpinner,
   SafeContainer,
-  questionsList,
 } from '../../components';
 import {ScrollView} from 'react-native-gesture-handler';
 import {icons} from '../../assets';
@@ -21,7 +18,6 @@ import {
   BORDER_RADIUS,
   COMPONENT_COLORS,
   PALETTE,
-  ROUTES,
   THEME_COLORS,
   TYPES,
   themeText,
@@ -31,101 +27,77 @@ import {useSelector} from 'react-redux';
 import {useDispatch} from '../../utils/hooks';
 import {EditProfileActions} from '../../redux';
 
+
 const EditGenderScreen = () => {
-  const dispatch = useDispatch();
-
-  type Answer = {
-    id: number;
-    gender: string;
-    extra: string[];
-  };
-
-  type Field = {
-    id: number;
-    question: string;
-    answers: Answer[];
-  };
-
-  const state = useSelector((state: TYPES.AppState) => state.editUserReducer);
-  const genderInformation = state.gender;
-
-  const foundFieldId = (questionsList as Field[])
-    .find(field => field.id === 12)
-    ?.answers.find(
-      (answer: Answer) => answer.gender === genderInformation?.general,
-    )?.id;
-
-  const [activeId, setActiveId] = useState<number | null>(
-    foundFieldId ? foundFieldId : null,
+  const genderFromRedux = useSelector((state: TYPES.AppState) => state.editUserReducer.userProfile?.gender)
+  const {gendersList} = useSelector(
+    (state: TYPES.AppState) => state.usersReducer,
   );
 
-  const [genderTemp, setGenderTemp] = useState(genderInformation?.general);
-  const [extraGenderTemp, setExtraGenderTemp] = useState<undefined | string>(
-    genderInformation?.specific,
-  );
+  const matchingGender = gendersList?.find(item => item.primary === genderFromRedux?.primary);
+  const [activeId, setActiveId] = useState<string | null>(matchingGender?._id || null);
+
+
+// Now, use the matchingGender to initialize your state.
+const [genderTemp, setGenderTemp] = useState<{ _id: string; text: string; } | undefined>(
+  matchingGender ? { _id: matchingGender._id, text: matchingGender.primary } : undefined
+);
+const [extraGenderTemp, setExtraGenderTemp] = useState<
+    undefined | {_id: string; text: string}
+  >(matchingGender?.secondary.find(item => item.text == genderFromRedux?.secondary));
 
   const [moreSpecificPress, setMoreSpecificPress] = useState(false);
 
-  interface IGender {
-    gender: string;
-    extra: string[];
-    id: number;
-  }
-
-  const genderListField = questionsList.find(
-    question => question.id === 12,
-  ) as {id: number; question: string; answers: IGender[]};
+  const dispatch = useDispatch();
 
   const ClickableIndicatorPrimaryButtonHandlePress = (
-    id: number,
+    _id: string,
     text: string,
   ) => {
-    if (id === activeId) {
+    if (_id === activeId) {
       // check if the current id is the activeId
       setActiveId(null);
-      setGenderTemp('');
+      setGenderTemp(undefined);
     } else {
-      setActiveId(id); // set the clicked id as the activeId
-      setGenderTemp(text);
+      setActiveId(_id); // set the clicked id as the activeId
+      setGenderTemp({_id, text});
     }
     setExtraGenderTemp(undefined);
   };
 
   useEffect(() => {
-    genderTemp &&
-      dispatch(
-        EditProfileActions.updateUserProfile('gender', {
-          general: genderTemp,
-          specific: extraGenderTemp,
-        }),
-      );
-  }, [genderTemp]);
+    if(genderTemp ? true : false){
+      dispatch(EditProfileActions.updateUserProfile('gender', {primary: genderTemp?.text,
+        secondary: extraGenderTemp?.text,}))
+        dispatch(EditProfileActions.updateFormat('gender', {primary: genderTemp?._id,
+          secondary: extraGenderTemp?._id,}))
+    }
+  }, [genderTemp, extraGenderTemp]);
 
   return (
     <SafeContainer>
-      <EditProfileHeader leftIconText="Save" />
+            <EditProfileHeader leftIconText="Save" />
+
       <View style={styles.container}>
-        <Text style={styles.title}>{genderListField?.question}</Text>
+        <Text style={styles.title}>What's your gender identity?</Text>
         <ScrollView
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           overScrollMode={'never'}
           contentContainerStyle={{flexGrow: 1}}>
-          {genderListField?.answers.map(genderField => (
-            <View
-              key={genderField.id}
-              style={styles.clickableIndicatorPrimaryButton}>
+          {gendersList?.map((genderField, index) => (
+            <View key={index} style={styles.clickableIndicatorPrimaryButton}>
               <Button.ClickableIndicatorPrimaryButton
                 onPress={() =>
                   ClickableIndicatorPrimaryButtonHandlePress(
-                    genderField.id,
-                    genderField.gender,
+                    genderField._id,
+                    genderField.primary,
                   )
                 }
-                isActive={genderField.id === activeId}>
-                {genderField.gender}
+                isActive={genderField._id === activeId}>
+                {genderField.primary}
               </Button.ClickableIndicatorPrimaryButton>
-              {genderField.id === activeId && (
+              {genderField._id === activeId && (
                 <Pressable
                   onPress={() => setMoreSpecificPress(true)}
                   style={
@@ -135,7 +107,7 @@ const EditGenderScreen = () => {
                     style={
                       styles.clickableIndicatorPrimaryButton__extraContainer_text
                     }>
-                    {!extraGenderTemp ? 'More specific?' : extraGenderTemp}
+                    {!extraGenderTemp ? 'More specific?' : extraGenderTemp.text}
                   </Text>
                   <Image
                     source={icons.arrowDown}
@@ -148,9 +120,10 @@ const EditGenderScreen = () => {
             </View>
           ))}
         </ScrollView>
+   
         <Text style={styles.extraInformation}>
-          Your preferences are key in shaping your matches, and they are
-          displayed publicly to enhance community interaction
+          Your gender identity will be used to personalize your experience on
+          our platform.
         </Text>
       </View>
       <Modal
@@ -174,39 +147,44 @@ const EditGenderScreen = () => {
               </Text>
               <ScrollView
                 contentContainerStyle={styles.extraScrollViewContainer}>
-                {activeId &&
-                  genderListField.answers
-                    .find(gender => gender.id === activeId)
-                    ?.extra.map((extraGender, index) => (
-                      <Pressable
-                        style={styles.extraGenderModal_button}
-                        key={index}
-                        onPress={() => {
-                          if (extraGenderTemp === extraGender)
-                            setExtraGenderTemp(undefined);
-                          else setExtraGenderTemp(extraGender);
-                          setMoreSpecificPress(false);
-                        }}>
-                        <View style={styles.extraGenderModal_content}>
-                          <Image
-                            style={[
-                              styles.extraGenderModal_button__icon,
-                              {
-                                tintColor:
-                                  extraGenderTemp === extraGender
-                                    ? THEME_COLORS.primary
-                                    : PALETTE.LIGHT400,
-                              },
-                            ]}
-                            source={icons.activeTickSquare}
-                            resizeMode="contain"
-                          />
-                          <Text style={styles.extraGenderModal_button__text}>
-                            {extraGender}
-                          </Text>
-                        </View>
-                      </Pressable>
-                    ))}
+                {activeId !== null &&
+                  gendersList &&
+                  gendersList[
+                    gendersList.findIndex(item => item._id === activeId)
+                  ].secondary.map((extraGender, index) => (
+                    <Pressable
+                      style={styles.extraGenderModal_button}
+                      key={index}
+                      onPress={() => {
+                        if (extraGenderTemp?._id === extraGender._id)
+                          setExtraGenderTemp(undefined);
+                        else
+                          setExtraGenderTemp({
+                            text: extraGender.text,
+                            _id: extraGender._id,
+                          });
+                        setMoreSpecificPress(false);
+                      }}>
+                      <View style={styles.extraGenderModal_content}>
+                        <Image
+                          style={[
+                            styles.extraGenderModal_button__icon,
+                            {
+                              tintColor:
+                                extraGenderTemp?._id === extraGender._id
+                                  ? THEME_COLORS.primary
+                                  : PALETTE.LIGHT400,
+                            },
+                          ]}
+                          source={icons.activeTickSquare}
+                          resizeMode="contain"
+                        />
+                        <Text style={styles.extraGenderModal_button__text}>
+                          {extraGender.text}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  ))}
               </ScrollView>
             </Pressable>
           </View>

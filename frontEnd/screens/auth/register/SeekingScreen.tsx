@@ -7,7 +7,6 @@ import {RegisterActions} from '../../../redux';
 import {NavigationProp} from '@react-navigation/native';
 import {usePreventBackHandler, useDispatch} from '../../../utils/hooks';
 import {useSelector} from 'react-redux';
-import {ObjectId} from 'mongodb';
 
 const SeekingScreen = ({
   navigation,
@@ -21,11 +20,11 @@ const SeekingScreen = ({
 
   const [valid, setValid] = useState(false);
 
-  const [seekingTemp, setSeekingTemp] = useState<ObjectId[]>([]);
+  const [seekingTemp, setSeekingTemp] = useState<number[]>([]);
 
   const dispatch = useDispatch();
 
-  const {gendersList} = useSelector(
+  const {genders} = useSelector(
     (state: TYPES.AppState) => state.usersReducer,
   );
 
@@ -35,7 +34,7 @@ const SeekingScreen = ({
       try {
         navigation.navigate(ROUTES.REGISTER_RELATIONSHIP_GOAL_SCREEN);
         dispatch(RegisterActions.setProgressBarValue(56));
-        dispatch(RegisterActions.setSeeking(seekingTemp));
+        dispatch(RegisterActions.setSeekingIds(seekingTemp));
       } catch (err) {
         console.error(err);
       } finally {
@@ -44,11 +43,11 @@ const SeekingScreen = ({
     }
   };
 
-  const ClickableIndicatorPrimaryButtonHandlePress = (_id: ObjectId) => {
-    if (seekingTemp.includes(_id)) {
-      setSeekingTemp(seekingTemp.filter((pref: ObjectId) => pref !== _id));
+  const ClickableIndicatorPrimaryButtonHandlePress = (id: number) => {
+    if (seekingTemp.includes(id)) {
+      setSeekingTemp(seekingTemp.filter((pref: number) => pref !== id));
     } else {
-      setSeekingTemp([...seekingTemp, _id]);
+      setSeekingTemp([...seekingTemp, id]);
     }
   };
 
@@ -81,14 +80,14 @@ const SeekingScreen = ({
           showsVerticalScrollIndicator={false}
           overScrollMode={'never'}
           contentContainerStyle={{flexGrow: 1}}>
-          {gendersList?.map((gender, index) => (
+          {genders?.primaryGenders?.map((gender, index) => (
             <View key={index} style={styles.clickableIndicatorPrimaryButton}>
               <Button.ClickableIndicatorPrimaryButton
                 onPress={() =>
-                  ClickableIndicatorPrimaryButtonHandlePress(gender._id)
+                  ClickableIndicatorPrimaryButtonHandlePress(gender.id)
                 }
-                isActive={seekingTemp.includes(gender._id)}>
-                {gender.primary}
+                isActive={seekingTemp.includes(gender.id)}>
+                {gender.text}
               </Button.ClickableIndicatorPrimaryButton>
             </View>
           ))}

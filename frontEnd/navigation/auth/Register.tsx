@@ -3,6 +3,7 @@ import React from 'react';
 import {
   DateOfBirthScreen,
   EmailVerificationScreen,
+  FirstNameEntryScreen,
   GenderSelectionScreen,
   InterestScreen,
   MultipleQuestionsScreen,
@@ -13,11 +14,10 @@ import {
   TermsAndConditionsScreen,
   WelcomeScreen,
 } from '../../screens';
-import {ProgressBar} from '../../components';
+import {Loading, ProgressBar} from '../../components';
 import {THEME_COLORS, ROUTES, TYPES} from '../../constants';
 import {cardSlideLeftAnimation} from '../../utils/navigatorSlideAnimation';
 import { useSelector} from 'react-redux';
-import UserNameEntryScreen from '../../screens/auth/register/UsernameEntryScreen';
 import { UserActions } from '../../redux';
 import { UserService } from '../../services';
 import { useDispatch } from '../../utils/hooks';
@@ -29,30 +29,56 @@ const RegisterNavigator = () => {
     (state: TYPES.AppState) => state.registerReducer,
   );
   const dispatch = useDispatch()
+  const [isLoading, setIsLoading] = React.useState(true)
+  const [isOverviewFetched, setIsOverviewFetched] = React.useState(false)
 
-  const [initialRouteName, setInitialRouteName] = React.useState<string>(
-    ROUTES.REGISTER_WELCOME_SCREEN
+  const isOnline = useSelector(
+    (state: TYPES.AppState) => state.appStatusReducer.isOnline,
+  );
+
+  const {questions, languages, interests, relationshipGoals, answers, genders} = useSelector(
+    (state: TYPES.AppState) => state.usersReducer,
   );
 
   React.useEffect(() => {
     const fetchInitialRouteName = async () => {
       if (isRegisterCompleted.currentScreen) {
+        try{
         const result = await UserService.getOverviewEn();
         if (result.type === 'success') {
-          dispatch(UserActions.setQuestionsList(result.questions));
-          dispatch(UserActions.setInterestsList(result.interests));
-          dispatch(UserActions.setLanguagesList(result.languages));
-          dispatch(UserActions.setGendersList(result.genders));
+          dispatch(UserActions.setQuestions(result.questions));
+          dispatch(UserActions.setInterests(result.interests));
+          dispatch(UserActions.setLanguages(result.languages));
+          dispatch(UserActions.setGenders(result.genders));
+          dispatch(UserActions.setRelationshipGoals(result.relationshipGoals));
+        dispatch(UserActions.setAnswers(result.answers));
+        setIsOverviewFetched(true)
         }
-        setInitialRouteName(isRegisterCompleted.currentScreen);
+      }
+      catch(error){
+        console.log("Error in getting FlyLeaf's overview.")
+      }
       }
     };
 
-    fetchInitialRouteName();
-  }, [isRegisterCompleted.currentScreen, dispatch]);
+    if(isOnline && !questions && !languages && !interests && !genders && !relationshipGoals && !answers ) fetchInitialRouteName();
+  }, [isOnline]);
+
+  React.useEffect(() => {
+    if (isLoading) {
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 1000); 
+  
+      return () => clearTimeout(timer); 
+    }
+  }, [isLoading]);
+
+  
 
   return (
     <>
+    {(!isRegisterCompleted.status && (isLoading || !(isRegisterCompleted.currentScreen && isOverviewFetched))) && <Loading.ThreeDotsLoader modalBackground={{backgroundColor:"white"}}/>}
       {progressBarValue !== 100 && isRegisterCompleted.currentScreen ? (
         <ProgressBar
           color={THEME_COLORS.primary}
@@ -62,15 +88,15 @@ const RegisterNavigator = () => {
         />
       ) : null}
       <Stack.Navigator
-        initialRouteName={initialRouteName}
+        initialRouteName={isRegisterCompleted.currentScreen || ROUTES.REGISTER_WELCOME_SCREEN}
         screenOptions={{
           headerShown: false,
 
           cardStyleInterpolator: cardSlideLeftAnimation,
         }}>
         <Stack.Screen
-          name={ROUTES.REGISTER_USERNAME_SCREEN}
-          component={UserNameEntryScreen}
+          name={ROUTES.REGISTER_FIRST_NAME_SCREEN}
+          component={FirstNameEntryScreen}
         />
         <Stack.Screen
           name={ROUTES.REGISTER_DATE_OF_BIRTH_SCREEN}

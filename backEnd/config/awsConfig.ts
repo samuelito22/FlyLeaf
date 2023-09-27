@@ -1,4 +1,4 @@
-import AWS from "aws-sdk"
+var AWS = require('aws-sdk');
 import { AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY } from "../config/config";
 
 export const s3 = new AWS.S3({

@@ -16,8 +16,8 @@ const EditJobTitleScreen = () => {
   // Dispatch function from Redux to update the firstName value
   const dispatch = useDispatch();
   const jobTitle = useSelector(
-    (state: TYPES.AppState) => state.editUserReducer.jobTitle,
-  );
+    (state: TYPES.AppState) => state.editUserReducer.userProfile?.profession?.jobTitle,
+  )
 
   return (
     <KeyboardAvoidingViewWrapper>
@@ -46,10 +46,10 @@ const EditJobTitleScreen = () => {
             onChangeText={text =>
               text != ''
                 ? dispatch(
-                    EditProfileActions.updateUserProfile('jobTitle', text),
+                    EditProfileActions.updateUserProfile('profession.jobTitle', text),
                   )
                 : dispatch(
-                    EditProfileActions.updateUserProfile('jobTitle', undefined),
+                    EditProfileActions.updateUserProfile('profession.jobTitle', undefined),
                   )
             }
             numberOfLines={1}

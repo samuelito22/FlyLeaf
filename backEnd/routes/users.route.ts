@@ -13,8 +13,8 @@ router.put("/me/update-profile",upload.fields([
     { name: 'picture-4', maxCount: 1 }, 
     { name: 'picture-5', maxCount: 1 }, 
     { name: 'picture-0', maxCount: 1 },  ]), userController.updateUserProfile)
-router.put("/me/update-settings", userController.updateSettingsAndPremium)
-router.get("/:_id", userController.getUserProfile)
+//router.put("/me/update-settings", userController.updateSettingsAndPremium)
+router.get("/:id", userController.getUserProfile)
 
 
 export default router;

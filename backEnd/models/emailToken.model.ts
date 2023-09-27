@@ -1,23 +1,15 @@
-import mongoose from "mongoose";
-import { EmailTokenSchema } from "../../types";  // Define your own EmailTokenSchema interface
+import { Model, Column, Table, Index, CreatedAt, DataType } from 'sequelize-typescript';
 
-const emailTokenSchema = new mongoose.Schema<EmailTokenSchema>({
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  token: {
-    type: String,
-    required: true,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-    expires: 900,  // this is the TTL (Time To Live) in seconds, 15 minutes
-  },
-});
+@Table({ tableName: 'EmailToken', updatedAt: false })
+export class EmailToken extends Model<EmailToken> {
 
-const EmailTokenModel = mongoose.model('EmailToken', emailTokenSchema);
+  @Index
+  @Column({type:DataType.STRING, unique:true})
+  email!: string;
 
-export default EmailTokenModel;
+  @Column(DataType.STRING)
+  token!: string;
+
+  @CreatedAt
+  createdAt!: Date;
+}

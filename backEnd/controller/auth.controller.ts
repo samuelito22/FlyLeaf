@@ -5,6 +5,7 @@ import {
   EXPIRED_TOKEN,
   FAILED_CREATION_ACCESS_AND_REFRESH_TOKEN,
   FAILED_SEND_OTP,
+  INVALID_DATA,
   INVALID_TOKEN,
   OTP_ALREADY_USED,
   PHONE_NUMBER_NOT_EXIST,
@@ -26,14 +27,6 @@ import {
   validatePhoneNumber,
   validateEmail,
 } from "../validators/auth.validator";
-import UserModel from "../models/user.model";
-import mongoose from "mongoose";
-import PicturesModel from "../models/pictures.model";
-import SettingsModel from "../models/settings.model";
-import RefreshTokenModel from "../models/refreshToken.model";
-import PremiumModel from "../models/premium.model";
-import InstagramModel from "../models/instagram.model";
-import SpotifyModel from "../models/spotify.model";
 import {
   createAccessToken,
   createRefreshToken,
@@ -47,30 +40,24 @@ import {
   sendErrorResponse,
   sendSuccessResponse,
 } from "../utils/response.utils";
-import { convertToObjectIdRecursive } from "../utils/converter.utils";
-import UserResponse from "../models/response.model";
 import AWS from "aws-sdk";
-import OTPModel from "../models/otp.model";
 import Joi from "joi";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import { GOOGLE_CLIENT_ID, NODEMAILER_SECRET } from "../config/config";
-import EmailTokenModel from "../models/emailToken.model";
-import AuthCodeModel from "../models/authCode.model";
 import crypto from "crypto";
 import axios from "axios";
 import { OAuth2Client } from "google-auth-library";
 import awsServices from "../services/aws.services";
+import { sequelize } from "../config/sequelizeConfig";
+import Model from "../models";
+import { RefreshTokens } from "../models/refreshTokens";
+import { Op } from "sequelize";
 
-// @route POST auth/users/register
-// @desc Register user
-// @access Public
 async function registerUser(req: express.Request, res: express.Response) {
-  const session = await mongoose.startSession();
-  const newUserId = new mongoose.Types.ObjectId();
-  try {
-    session.startTransaction();
+  const t = await sequelize.transaction(); // Start a new transaction
 
+  try {
     const files = req.files;
 
     if (!files || !Array.isArray(files) || files.length < 2) {
@@ -80,107 +67,96 @@ async function registerUser(req: express.Request, res: express.Response) {
         "None or less than two pictures have been uploaded."
       );
     }
+
     let parsedBody = req.body;
+    parsedBody.seekingIds = JSON.parse(parsedBody.seekingIds);
+parsedBody.interestsIds = JSON.parse(parsedBody.interestsIds);
+parsedBody.answers = JSON.parse(parsedBody.answers);
+parsedBody.primaryGenderId = Number(parsedBody.primaryGenderId); 
+parsedBody.secondaryGenderId =  parsedBody.secondaryGenderId && Number(parsedBody.secondaryGenderId); 
+parsedBody.longitude = parseFloat(parsedBody.longitude);  
+parsedBody.latitude = parseFloat(parsedBody.latitude);  
+parsedBody.relationshipGoalId = Number(parsedBody.relationshipGoalId);
 
-    // Parse specific serialized fields back to objects or arrays
-    parsedBody.gender = JSON.parse(parsedBody.gender);
-    parsedBody.dateOfBirth = JSON.parse(parsedBody.dateOfBirth);
-    parsedBody.seeking = JSON.parse(parsedBody.seeking);
-    parsedBody.interests = JSON.parse(parsedBody.interests);
-    parsedBody.additionalInformation = JSON.parse(parsedBody.additionalInformation);
-    parsedBody.coordinates = JSON.parse(parsedBody.coordinates)
+console.log(parsedBody)
 
-    // Check if the parsedBody is valid
-    let { error, value } = validateUser(parsedBody);
-    if (error) {
-      return sendErrorResponse(res, 400, error.details[0].message);
+
+    const value = validateUser(parsedBody);
+
+    const newUser = await Model.User.create({
+      firstName: value.firstName,
+      email: value.email,
+      phoneNumber: value.phoneNumber,
+      primaryGenderId: value.primaryGenderId,
+      secondaryGenderId: value.secondaryGenderId,
+      dateOfBirth: value.dateOfBirth,
+      longitude: value.longitude,
+      latitude: value.latitude,
+      verified: value.email && value.phoneNumber ? true : false
+
+    } as any, {transaction: t})
+
+    // Creating inital tables related to the user
+    await Model.AccountSettings.create({userId: newUser.id} as any, {transaction: t})
+    await Model.FilterSettings.create({userId: newUser.id, relationshipGoalId: value.relationshipGoalId} as any, {transaction: t})
+    await Model.NotificationSettings.create({userId: newUser.id } as any, {transaction: t})
+    await Model.PrivacySettings.create({userId: newUser.id} as any, {transaction: t})
+    for (let interestId of value.interestsIds) {
+      await Model.UserInterests.create({
+          userId: newUser.id,
+          interestId: interestId
+      } as any, {transaction: t});
+  }
+  for (let answer of value.answers) {
+    const answerDoc = await Model.Answers.findByPk(answer.answerId);
+    if (!answerDoc || answerDoc.questionId !== answer.questionId) {
+      throw new Error(INVALID_DATA)
     }
+      await Model.UserAnswers.create({
+          userId: newUser.id,
+          answerId: answer.answerId
+      } as any, {transaction: t});
+  }
 
-    if(value.email && value.phoneNumber){
-      value.verified = true
-    }
+   // Create jwt tokens
+   const accessToken = createAccessToken(newUser.id);
+   const refreshToken = createRefreshToken(newUser.id);
 
+   if (!refreshToken || !accessToken)
+     throw new Error(FAILED_CREATION_ACCESS_AND_REFRESH_TOKEN);
 
-    value = await convertToObjectIdRecursive(value);
-    value._id = newUserId;
-    value.location = { coordinates: value.coordinates };
-    delete value.coordinates;
+   const currentDate = new Date();
+   const expiresAt = new Date(currentDate);
+   expiresAt.setDate(currentDate.getDate() + 30);
 
+   await RefreshTokens.create({userId: newUser.id, token: refreshToken, expiresAt} as any, {transaction: t})
 
-    // Check if user already exists
-    const userExist = await UserModel.findOne({ _id: value._id }, null, {
-      session,
-    });
-    if (userExist) {
-      throw new Error(USER_ALREADY_EXIST);
-    }
+   await awsServices.addUserPicturesToS3(files, newUser.id.toString())
+   .then(async (result) => {
+     const picturePromises = result.map(async (picName: string, index: number) => {
+       return Model.UserPictures.create(
+         { userId: newUser.id, name: picName, orderIndex: index, isProfilePicture: index === 0 ? true : false } as any,
+         { transaction: t }
+       );
+     });
+     await Promise.all(picturePromises);
+   });
+ 
+    
+    await t.commit();
 
-    // Create the user's response model
-    await AuthServices.addUserResponsesToDB(
-      { _id: value._id, responses: value.additionalInformation },
-      session
-    );
-
-    // Create the user's settings model
-    await AuthServices.addUserSettingsToDB({ _id: value._id }, session);
-
-    // Create the user's user model
-    await AuthServices.addUserToDB(value, session);
-
-    // Create jwt tokens
-    const accessToken = createAccessToken(value._id);
-    const refreshToken = createRefreshToken(value._id);
-
-    if (!refreshToken || !accessToken)
-      throw new Error(FAILED_CREATION_ACCESS_AND_REFRESH_TOKEN);
-
-    const currentDate = new Date();
-    const expiresAt = new Date(currentDate);
-    expiresAt.setDate(currentDate.getDate() + 30);
-
-    await AuthServices.addUserRefreshTokenToDB(
-      { _id: value._id, token: refreshToken, expiresAt },
-      session
-    );
-
-    value.pictures = await awsServices.addUserPicturesToS3(
-      files,
-      newUserId.toString()
-    );
-    // Create the user's photo model
-    const picturePromises = value.pictures.map((pic: any) => {
-      return AuthServices.addUserPicturesToDB(
-        { user_id: value._id, name: pic },
-        session
-      );
-    });
-
-    await Promise.all(picturePromises);
-    await session.commitTransaction();
-    session.endSession();
-
-    return res.status(202).json({
-      type: "success",
-      message: USER_CREATED,
+    return sendSuccessResponse(res, 202, USER_CREATED, {
       accessToken,
       refreshToken,
     });
+
   } catch (error) {
-    if (session.inTransaction()) {
-      await session.abortTransaction();
-    }
+    await t.rollback(); // If there's an error, rollback all database operations
 
     const errorMessage = (error as Error).message;
-
     const status = centralizedErrorHandler(errorMessage);
-
-    return sendErrorResponse(
-      res,
-      status,
-      status != 500 ? errorMessage : SERVER_ERR
-    );
-  } finally {
-    session.endSession();
+    console.log(errorMessage)
+    return sendErrorResponse(res, status, status != 500 ? errorMessage : SERVER_ERR);
   }
 }
 
@@ -213,8 +189,7 @@ async function logOutUser(req: express.Request, res: express.Response) {
 }
 
 async function deleteUser(req: express.Request, res: express.Response) {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  const t = await sequelize.transaction();
 
   try {
     const { grantType } = req.body;
@@ -230,40 +205,44 @@ async function deleteUser(req: express.Request, res: express.Response) {
     const decode = decodeAccessToken(value.token);
     if (!decode) throw new Error(EXPIRED_TOKEN);
 
-    const user = await UserModel.findById(decode.sub).session(session);
-    if (!user) {
-      throw new Error(USER_NOT_FOUND_ERR);
-    }
+    const userId = decode.sub
 
-    // delete user's repsonses
-    await UserResponse.deleteOne({ _id: decode.sub }).session(session);
+    // Delete associated records for the User
+  await Model.AccountSettings.destroy({ where: { userId }, transaction: t });
+  await Model.PrivacySettings.destroy({ where: { userId }, transaction: t });
+  await Model.FilterSettings.destroy({ where: { userId }, transaction: t });
+  await Model.UserInterests.destroy({ where: { userId }, transaction: t });
+  await Model.NotificationSettings.destroy({ where: { userId }, transaction: t });
+  await Model.UserAnswers.destroy({ where: { userId }, transaction: t });
+  await Model.UserLanguages.destroy({ where: { userId }, transaction: t });
+  await Model.RefreshTokens.destroy({ where: { userId }, transaction: t });
+  await Model.UserPictures.destroy({ where: { userId }, transaction: t });
+  await Model.Conversations.destroy({
+    where: {
+      [Op.or]: [
+        { user1Id: userId },
+        { user2Id: userId }
+      ]
+    },
+    transaction: t
+  });
+    await Model.DeviceInfo.destroy({ where: { userId }, transaction: t });
+  await Model.InstagramImages.destroy({ where: { userId }, transaction: t });
+  await Model.InstagramTokens.destroy({ where: { userId }, transaction: t });
+  await Model.Messages.destroy({ where: { userId }, transaction: t });
+  await Model.NotificationsHistory.destroy({ where: { userId }, transaction: t });
+  await Model.Payments.destroy({ where: { userId }, transaction: t });
+  await Model.SpotifyTokens.destroy({ where: { userId }, transaction: t });
+  await Model.UserTopArtists.destroy({ where: { userId }, transaction: t });
+  await Model.UserSubscriptions.destroy({ where: { userId }, transaction: t });
+  await Model.UserBlocked.destroy({ where: { userId }, transaction: t });
+  await Model.UserMatches.destroy({ where: { userId }, transaction: t });
+  await Model.UserSeekingGender.destroy({ where: { userId }, transaction: t });
 
-    // delete user's pictures
-    await PicturesModel.deleteMany({ user_id: decode.sub }).session(session);
+  // Finally, delete the user
+  await Model.User.destroy({ where: { id: userId }, transaction: t });
 
-    // delete user's instagram
-    if (user?.instagram) {
-      await InstagramModel.deleteOne({ _id: user.instagram }).session(session);
-    }
-
-    // delete user's spotify (fix the model name here)
-    if (user?.spotify) {
-      await SpotifyModel.deleteOne({ _id: user.spotify }).session(session);
-    }
-
-    // delete user's settings
-    await SettingsModel.deleteOne({ _id: decode.sub }).session(session);
-
-    // delete user's refresh token
-    await RefreshTokenModel.deleteMany({ _id: decode.sub }).session(session);
-
-    // delete user's premium
-    await PremiumModel.deleteOne({ _id: decode.sub }).session(session);
-
-    // delete user
-    await UserModel.deleteOne({ _id: decode.sub }).session(session);
-
-    await session.commitTransaction();
+    await t.commit();
 
     await awsServices.deleteUserFolderFromS3(decode.sub.toString());
 
@@ -273,26 +252,18 @@ async function deleteUser(req: express.Request, res: express.Response) {
       "User's account successfully deleted."
     );
   } catch (error) {
-    await session.abortTransaction();
+    await t.rollback(); // If there's an error, rollback all database operations
 
     const errorMessage = (error as Error).message;
-
     const status = centralizedErrorHandler(errorMessage);
-
-    return sendErrorResponse(
-      res,
-      status,
-      status != 500 ? errorMessage : SERVER_ERR
-    );
-  } finally {
-    session.endSession();
+    return sendErrorResponse(res, status, status != 500 ? errorMessage : SERVER_ERR);
   }
 }
 
 async function refreshToken(req: express.Request, res: express.Response) {
   try {
     const { grantType } = req.body;
-    validateGrantType(grantType, "refresh_token");
+    validateGrantType(grantType, 'refresh_token');
 
     const refreshToken = extractTokenFromHeader(req) as string;
 
@@ -301,15 +272,13 @@ async function refreshToken(req: express.Request, res: express.Response) {
       return sendErrorResponse(res, 400, error.details[0].message);
     }
 
-    const tokenDoc = await RefreshTokenModel.findOne({
-      token: value.token,
-    });
+    const tokenDoc = await Model.RefreshTokens.findOne({ where: { token: value.token } });
     if (!tokenDoc) throw new Error(TOKEN_NOT_FOUND);
 
     if (tokenDoc.revoked) throw new Error(REVOKED_TOKEN);
 
     const currentDate = new Date();
-    if (tokenDoc.expiresAt <= currentDate) {
+    if (new Date(tokenDoc.expiresAt) <= currentDate) {
       throw new Error(EXPIRED_TOKEN);
     }
 
@@ -323,8 +292,7 @@ async function refreshToken(req: express.Request, res: express.Response) {
         throw new Error(FAILED_CREATION_ACCESS_AND_REFRESH_TOKEN);
       }
 
-      const currentDate = new Date();
-      const expiresAt = new Date(currentDate);
+      const expiresAt = new Date();
       expiresAt.setDate(currentDate.getDate() + 30);
 
       tokenDoc.replacedByToken = tokenDoc.token;
@@ -335,31 +303,20 @@ async function refreshToken(req: express.Request, res: express.Response) {
         throw new Error(e.message);
       });
 
-      return sendSuccessResponse(
-        res,
-        200,
-        "Tokens were refreshed successfully.",
-        { refreshToken, accessToken }
-      );
+      return sendSuccessResponse(res, 200, 'Tokens were refreshed successfully.', { refreshToken, accessToken });
     } else {
       throw new Error(INVALID_TOKEN);
     }
   } catch (error) {
+    console.error("Error while refreshing token:", error)
     const errorMessage = (error as Error).message;
 
-    const status = centralizedErrorHandler(errorMessage);
+    const status = centralizedErrorHandler(errorMessage); // Assume you have this function
 
-    return sendErrorResponse(
-      res,
-      status,
-      status != 500 ? errorMessage : SERVER_ERR
-    );
+    return sendErrorResponse(res, status, status != 500 ? errorMessage : SERVER_ERR);
   }
 }
 
-// @route GET auth/users/emailExist
-// @desc Get if the email exists
-// @access Public
 async function emailExist(req: express.Request, res: express.Response) {
   try {
     const { error, value } = validateEmail(req.body);
@@ -385,9 +342,6 @@ async function emailExist(req: express.Request, res: express.Response) {
   }
 }
 
-// @route GET auth/users/phoneExist
-// @desc Get if the phone exists
-// @access Public
 async function phoneNumberExist(req: express.Request, res: express.Response) {
   try {
     const { error, value } = validatePhoneNumber(req.body);
@@ -413,9 +367,6 @@ async function phoneNumberExist(req: express.Request, res: express.Response) {
   }
 }
 
-// @route GET auth/users/uidExist
-// @desc Get if the user uid exists
-// @access Public
 async function idExist(req: express.Request, res: express.Response) {
   try {
     const { error, value } = validateId(req.body);
@@ -444,10 +395,10 @@ async function idExist(req: express.Request, res: express.Response) {
 async function changePhoneNumber(req: express.Request, res: express.Response) {
   try {
     const { grantType, oldPhoneNumber, newPhoneNumber } = req.body;
-    validateGrantType(grantType, "access_token");
+    validateGrantType(grantType, 'access_token');
 
     const accessToken = extractTokenFromHeader(req) as string;
-    const { error, value } = validateChangePhoneNumber({
+    const { error } = validateChangePhoneNumber({
       accessToken,
       oldPhoneNumber,
       newPhoneNumber,
@@ -457,37 +408,24 @@ async function changePhoneNumber(req: express.Request, res: express.Response) {
       return sendErrorResponse(res, 400, error.details[0].message);
     }
 
-    const decode = decodeAccessToken(value.accessToken);
+    const decode = decodeAccessToken(accessToken);
     if (!decode) throw new Error(EXPIRED_TOKEN);
 
-    const user = await UserModel.findById(decode.sub);
-    if (!user) throw new Error(USER_NOT_FOUND_ERR);
+    const userWithPhoneNumber = await Model.User.findOne({ where: { phoneNumber: newPhoneNumber } });
+    if (userWithPhoneNumber) throw new Error(USER_ALREADY_EXIST);
 
-    if (user.phoneNumber != value.oldPhoneNumber) throw new Error(BAD_REQUEST);
-    user.phoneNumber = value.newPhoneNumber;
+    const user = await Model.User.findByPk(decode.sub);
+    if (!user || user.phoneNumber !== oldPhoneNumber) {
+      throw new Error(user ? BAD_REQUEST : USER_NOT_FOUND_ERR);
+    }
 
-    const UserWithPhoneNumber = await UserModel.findOne({
-      phoneNumber: newPhoneNumber,
-    });
-    if (UserWithPhoneNumber) throw new Error(USER_ALREADY_EXIST);
+    await user.update({ phoneNumber: newPhoneNumber });
 
-    await user.save();
-
-    return sendSuccessResponse(
-      res,
-      200,
-      "User's phone number has been updated."
-    );
+    return sendSuccessResponse(res, 200, "User's phone number has been updated.");
   } catch (error) {
     const errorMessage = (error as Error).message;
-
     const status = centralizedErrorHandler(errorMessage);
-
-    return sendErrorResponse(
-      res,
-      status,
-      status != 500 ? errorMessage : SERVER_ERR
-    );
+    return sendErrorResponse(res, status, status !== 500 ? errorMessage : SERVER_ERR);
   }
 }
 
@@ -510,23 +448,20 @@ async function changeEmail(req: express.Request, res: express.Response) {
     const decode = decodeAccessToken(accessToken);
     if (!decode) throw new Error(EXPIRED_TOKEN);
 
-    const user = await UserModel.findById(decode.sub);
+    // Check for user and email validity together
+    const user = await Model.User.findOne({ where: { id: decode.sub, email: value.oldEmail } });
     if (!user) throw new Error(USER_NOT_FOUND_ERR);
 
-    if (user.email && user.email != value.oldEmail)
-      throw new Error(BAD_REQUEST);
-    if (value.newEmail == value.oldEmail) throw new Error(BAD_REQUEST);
+    // Check if new email is the same as old email
+    if (value.newEmail === value.oldEmail) throw new Error(BAD_REQUEST);
 
-    user.email = value.newEmail;
-
-    await user.save();
+    // Update the email directly
+    await user.update({ email: value.newEmail });
 
     return sendSuccessResponse(res, 200, "User's email has been updated.");
   } catch (error) {
     const errorMessage = (error as Error).message;
-
     const status = centralizedErrorHandler(errorMessage);
-
     return sendErrorResponse(
       res,
       status,
@@ -534,6 +469,7 @@ async function changeEmail(req: express.Request, res: express.Response) {
     );
   }
 }
+
 
 async function removeEmail(req: express.Request, res: express.Response) {
   try {
@@ -550,20 +486,19 @@ async function removeEmail(req: express.Request, res: express.Response) {
     const decode = decodeAccessToken(value.token);
     if (!decode) throw new Error(EXPIRED_TOKEN);
 
-    const user = await UserModel.findById(decode.sub);
+    // Find the user by ID
+    const user = await Model.User.findByPk(decode.sub);
     if (!user) throw new Error(USER_NOT_FOUND_ERR);
 
+    // Remove the email directly if it exists
     if (user.email) {
-      user.email = undefined;
-      await user.save();
+      await user.update({ email: undefined });
     }
 
-    return sendSuccessResponse(res, 200, "User's email has been updated.");
+    return sendSuccessResponse(res, 200, "User's email has been removed.");
   } catch (error) {
     const errorMessage = (error as Error).message;
-
     const status = centralizedErrorHandler(errorMessage);
-
     return sendErrorResponse(
       res,
       status,
@@ -585,14 +520,13 @@ async function sendOTP(req: express.Request, res: express.Response) {
 
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + 15); // OTP will expire in 15 minutes
-    await OTPModel.findOneAndRemove({ phoneNumber });
+    await Model.PhoneNumberOTP.destroy({where: {phoneNumber}})
 
     // Create a new OTP document
-    const otpDocument = new OTPModel({
+    const otpDocument = new Model.PhoneNumberOTP({
       phoneNumber,
       otp,
-      expiresAt,
-    });
+     } as any);
 
     const sns = new AWS.SNS();
 
@@ -622,8 +556,7 @@ async function sendOTP(req: express.Request, res: express.Response) {
 }
 
 async function verifyOTP(req: express.Request, res: express.Response) {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  const t = await sequelize.transaction(); // Start Sequelize transaction
   try {
     const { phoneNumber, otp } = req.body;
     const { error, value } = Joi.object({
@@ -635,9 +568,10 @@ async function verifyOTP(req: express.Request, res: express.Response) {
       return sendErrorResponse(res, 400, error.details[0].message);
     }
 
-    const otpDocument = await OTPModel.findOne({ phoneNumber }).session(
-      session
-    );
+    const otpDocument = await Model.PhoneNumberOTP.findOne({
+      where: { phoneNumber },
+      transaction: t,
+    });
 
     if (!otpDocument) {
       throw new Error(SERVER_ERR);
@@ -647,21 +581,16 @@ async function verifyOTP(req: express.Request, res: express.Response) {
       throw new Error(EXPIRED_OR_INCORRECT_OTP);
     }
 
-    await OTPModel.findByIdAndRemove(otpDocument._id).session(session);
+    await Model.PhoneNumberOTP.destroy({ where: { id: otpDocument.id }, transaction: t });
 
-    const userDoc = await UserModel.findOne({ phoneNumber }).session(session);
+    const userDoc = await Model.User.findOne({ where: { phoneNumber }, transaction: t });
 
     if (userDoc) {
-      const accessToken = createAccessToken(userDoc._id) as string;
-      const refreshToken = createRefreshToken(userDoc._id) as string;
-      await AuthServices.updateUserRefreshTokenInDB(
-        userDoc._id,
-        refreshToken,
-        session
-      );
+      const accessToken = createAccessToken(userDoc.id) as string
+      const refreshToken = createRefreshToken(userDoc.id) as string
+      await AuthServices.updateUserRefreshTokenInDB(userDoc.id, refreshToken, t);
 
-      await session.commitTransaction();
-      session.endSession();
+      await t.commit();
       return sendSuccessResponse(res, 200, "OTP verified and correct.", {
         newUser: false,
         accessToken,
@@ -669,21 +598,13 @@ async function verifyOTP(req: express.Request, res: express.Response) {
       });
     }
 
-    await session.commitTransaction();
-    session.endSession();
-    return sendSuccessResponse(res, 200, "OTP verified and correct.", {
-      newUser: true,
-    });
+    await t.commit();
+    return sendSuccessResponse(res, 200, "OTP verified and correct.", { newUser: true });
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
+    await t.rollback();
     const errorMessage = (error as Error).message;
     const status = centralizedErrorHandler(errorMessage);
-    return sendErrorResponse(
-      res,
-      status,
-      status !== 500 ? errorMessage : SERVER_ERR
-    );
+    return sendErrorResponse(res, status, status !== 500 ? errorMessage : SERVER_ERR);
   }
 }
 
@@ -704,7 +625,7 @@ async function sendLink(req: express.Request, res: express.Response) {
       );
     }
 
-    const userDoc = await UserModel.findOne({ email })
+    const userDoc = await Model.User.findOne({ where:{email} })
 
     if (grantType === "login" && !userDoc) {
       throw new Error(USER_NOT_FOUND_ERR);
@@ -729,13 +650,12 @@ async function sendLink(req: express.Request, res: express.Response) {
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + 15);
 
-    await EmailTokenModel.findOneAndRemove({ email });
+    await Model.EmailToken.destroy({ where:{email} })
 
-    const EmailTokenDoc = new EmailTokenModel({
+    const EmailTokenDoc = new Model.EmailToken({
       token,
       email,
-      expiresAt,
-    });
+    } as any);
 
     await EmailTokenDoc.save();
 
@@ -780,8 +700,7 @@ async function sendLink(req: express.Request, res: express.Response) {
 }
 
 async function verifyLink(req: express.Request, res: express.Response) {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  const t = await sequelize.transaction(); // Start Sequelize transaction
   try {
     const { token } = req.params;
     const { error, value } = validateToken({ token });
@@ -794,13 +713,14 @@ async function verifyLink(req: express.Request, res: express.Response) {
       return res.status(500).json({ error: SERVER_ERR });
     }
 
-    await EmailTokenModel.findOneAndRemove({ token })
-      .session(session)
-      .then((result) => {
-        if (!result) {
-          throw new Error(INVALID_TOKEN);
-        }
-      });
+    const result = await Model.EmailToken.destroy({
+      where: { token },
+      transaction: t
+    });
+
+    if (!result) {
+      throw new Error(INVALID_TOKEN);
+    }
 
     let decoded;
     try {
@@ -816,9 +736,7 @@ async function verifyLink(req: express.Request, res: express.Response) {
       }
     }
 
-     const userDoc = await UserModel.findOne({ email: decoded.email }).session(
-        session
-      );
+     const userDoc = await Model.User.findOne({ where:{email: decoded.email}, transaction:t })
 
     if (decoded.purpose === "login") {
      
@@ -827,28 +745,27 @@ async function verifyLink(req: express.Request, res: express.Response) {
         const authCode = crypto.randomBytes(16).toString("hex");
 
         // You can create a new model for storing this one-time use code or use existing models
-        const authCodeDoc = new AuthCodeModel({
+        const authCodeDoc = new Model.AuthCode({
           code: authCode,
-          userId: userDoc._id,
-          expiresAt: new Date(Date.now() + 5 * 60 * 1000), // expires in 5 minutes
-        });
+          userId: userDoc.id,
+        } as any);
 
-        await authCodeDoc.save({ session });
-        await session.commitTransaction();
-        session.endSession();
+        await authCodeDoc.save({transaction: t});
+        await t.commit()
         return res.status(200).redirect(`flyleaf://login/verify?emailVerified=true&authCode=${authCode}`);
       }
 
       else{
-        return res.status(200).redirect(`flyleaf://login/verify?emailVerified=false`);
+        return res.status(200).redirect(`flyleaf://`);
       }
     } else if (decoded.purpose === "register") {
       if(!userDoc) return res.status(200).redirect(`flyleaf://register/verify?emailVerified=true`);
-      else return res.status(200).redirect(`flyleaf://register/verify?emailVerified=false`);
+      else return res.status(200).redirect(`flyleaf://`);
     } else {
       throw new Error(INVALID_TOKEN);
     }
   } catch (error) {
+    await t.rollback()
     const errorMessage = (error as Error).message;
 
     const status = centralizedErrorHandler(errorMessage);
@@ -861,8 +778,7 @@ async function validateAuthCodeAndFetchTokens(
   req: express.Request,
   res: express.Response
 ) {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  const t = await sequelize.transaction(); // Start Sequelize transaction
 
   try {
     const { authCode } = req.body;
@@ -873,9 +789,7 @@ async function validateAuthCodeAndFetchTokens(
     }
 
     // Search for the authCode in the database
-    const authCodeDoc = await AuthCodeModel.findOne({ code: authCode }).session(
-      session
-    );
+    const authCodeDoc = await Model.AuthCode.findOne({ where:{code: authCode}, transaction:t })
 
     if (!authCodeDoc) {
       return sendErrorResponse(res, 400, "Invalid or expired authCode");
@@ -890,25 +804,26 @@ async function validateAuthCodeAndFetchTokens(
     await AuthServices.updateUserRefreshTokenInDB(
       userId,
       refreshToken,
-      session
+      t
     );
 
     // Remove the used authCode
-    await AuthCodeModel.findByIdAndRemove(authCodeDoc._id).session(session);
+    await Model.AuthCode.destroy({
+      where: { id: authCodeDoc.id },
+      transaction:t
+    });
 
-    await session.commitTransaction();
-    session.endSession();
+    await t.commit()
 
     return sendSuccessResponse(res, 200, "Tokens fetched successfully", {
       accessToken,
       refreshToken,
     });
   } catch (error) {
+    await t.rollback()
     const errorMessage = (error as Error).message;
 
     const status = centralizedErrorHandler(errorMessage);
-    await session.abortTransaction();
-    session.endSession();
 
     return sendErrorResponse(
       res,
@@ -947,13 +862,13 @@ async function googleSignIn(req: express.Request, res: express.Response) {
     const { email } = payload;
 
     // Find or create a user based on their email
-    const user = await UserModel.findOne({ email });
+    const user = await Model.User.findOne({ where: {email} });
     if (user) {
-      const accessToken = createAccessToken(user._id.toString()) as string;
-      const refreshToken = createRefreshToken(user._id.toString()) as string;
+      const accessToken = createAccessToken(user.id.toString()) as string;
+      const refreshToken = createRefreshToken(user.id.toString()) as string;
 
       // Create or update refreshToken in database
-      await AuthServices.updateUserRefreshTokenInDB(user._id, refreshToken);
+      await AuthServices.updateUserRefreshTokenInDB(user.id, refreshToken);
       return sendSuccessResponse(res, 200, "Logged in with Google", {
         user,
         accessToken,
@@ -994,13 +909,13 @@ async function facebookSignIn(req: express.Request, res: express.Response) {
     const { email } = fbResponse.data;
 
     // Find or create a user based on their email
-    const user = await UserModel.findOne({ email });
+    const user = await Model.User.findOne({ where:{email} });
     if (user) {
-      const accessToken = createAccessToken(user._id.toString()) as string;
-      const refreshToken = createRefreshToken(user._id.toString()) as string;
+      const accessToken = createAccessToken(user.id.toString()) as string;
+      const refreshToken = createRefreshToken(user.id.toString()) as string;
 
       // Create or update refreshToken in database
-      await AuthServices.updateUserRefreshTokenInDB(user._id, refreshToken);
+      await AuthServices.updateUserRefreshTokenInDB(user.id, refreshToken);
       return sendSuccessResponse(res, 200, "Logged in with Facebook", {
         user,
         accessToken,
