@@ -1,23 +1,23 @@
 import Geolocation from '@react-native-community/geolocation';
 import { Platform, Alert } from 'react-native';
 import RNAndroidLocationEnabler from 'react-native-android-location-enabler';
-import { TYPES } from '../constants';
+import { storeData } from './storage';
 
 let isAlertBeingShown = false;  // <-- New flag to track alert status
 
-export const checkLocationStatus = async (): Promise<{ success: boolean, position?: TYPES.GeolocationPosition, error?: string }> => {
-  return new Promise((resolve) => {
+const checkLocationStatus = (): Promise<boolean> => {
+  return new Promise((resolve, reject) => {
     Geolocation.getCurrentPosition(
       (position) => {
-        resolve({ success: true, position });
+        storeData("coordinates", JSON.stringify({longitude: position.coords.longitude, latitude: position.coords.latitude}))
       },
       (error) => {
         switch (error.code) {
           case 1: // PERMISSION_DENIED
-            resolve({ success: false, error: 'Permission Denied' });
+            resolve(false);
             break;
           default:
-            resolve({ success: false, error: error.message });
+            reject(error.message);
             break;
         }
       },
@@ -56,7 +56,7 @@ export const startContinuouslyCheckingLocation = (interval: number = 1800000) =>
   const checkLocation = async () => {
     try {
       const hasLocationAccess = await checkLocationStatus();
-      if (!hasLocationAccess.success) {
+      if (!hasLocationAccess) {
         if (Platform.OS === "android") {
           await requestLocationAndroid();
         } else if (Platform.OS === "ios") {
