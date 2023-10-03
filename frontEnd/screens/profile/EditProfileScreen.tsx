@@ -1,12 +1,12 @@
-import {View, Text, Image, StyleSheet, TextInput, ViewStyle, ScrollView} from 'react-native';
+import {View, Text, Image, StyleSheet, TextInput, ViewStyle, ScrollView, Modal, Pressable} from 'react-native';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
   Button,
   EditProfileHeader,
   KeyboardAvoidingViewWrapper,
+  Loading,
   OAuth2WebView,
   SafeContainer,
-  UploadSelectionAlert,
 } from '../../components';
 import {useSelector} from 'react-redux';
 import {
@@ -22,10 +22,10 @@ import Animated from 'react-native-reanimated';
 import {icons} from '../../assets';
 import {useDispatch, useImagePicker} from '../../utils/hooks';
 import {TouchableRipple} from 'react-native-paper';
-import { EditProfileActions } from '../../redux';
-import InterestScreen from '../auth/register/InterestScreen';
+import {  EditProfileActions } from '../../redux';
 import { InstagramService, SpotifyService } from '../../services';
 import { useNavigation, NavigationProp } from "@react-navigation/native"
+import { cmToFeetInches, feetInchesToCm } from '../../utils/convertToFeetAndInches';
 
 interface CallToActionProps {
   question: string;
@@ -35,9 +35,9 @@ interface CallToActionProps {
 }
 
 
-const HeightSection = React.memo(({ height, dispatch }: { height: { feets: string, inches: string } | undefined, dispatch: React.Dispatch<TYPES.AppAction> }) => {
+const HeightSection = React.memo(({ height, dispatch }: { height: { feet: string, inches: string } | undefined, dispatch: any }) => {
   const initialState = {
-    feets: height?.feets || '',
+    feet: height?.feet || '',
     inches: height?.inches || '',
     active: { feet: 0, inches: 0 },
     showFeetError: false,
@@ -47,11 +47,11 @@ const HeightSection = React.memo(({ height, dispatch }: { height: { feets: strin
   const [heightState, setHeightState] = useState(initialState);
 
   const validateValue = (value: string, min: number, max: number) => {
-    const intVal = parseInt(value);
+    const intVal = Number(value);
     return !isNaN(intVal) && intVal >= min && intVal <= max;
   };
 
-  const onBlurHandler = (type: 'feets' | 'inches', min: number, max: number) => {
+  const onBlurHandler = (type: 'feet' | 'inches', min: number, max: number) => {
     setHeightState(prevState => {
       // Check if the prevState[type] is empty, if so, avoid the error
       if (prevState[type] === "") {
@@ -73,38 +73,39 @@ const HeightSection = React.memo(({ height, dispatch }: { height: { feets: strin
 
 
   useEffect(() => {
-    if (validateValue(heightState.feets, 3, 7) && validateValue(heightState.inches, 0, 11)) {
-      dispatch(EditProfileActions.updateUserProfile('height', heightState));
+    if (validateValue(heightState.feet, 3, 7) && validateValue(heightState.inches, 0, 11)) {
+      const result = feetInchesToCm(Number(heightState.feet), Number(heightState.inches))
+      dispatch(EditProfileActions.setHeight(result));
     } else {
-      dispatch(EditProfileActions.updateUserProfile('height', undefined));
+      dispatch(EditProfileActions.setHeight(undefined));
     }
-  }, [heightState.feets, heightState.inches, dispatch]);
+  }, [heightState.feet, heightState.inches, dispatch]);
 
   return (
     <View style={styles.section}>
       <Text style={styles.section_header}>Height</Text>
       <View style={{flexDirection:'row'}}>
-      {(['feets', 'inches'] as Array<'feets' | 'inches'>).map((type, index) => (
+      {(['feet', 'inches'] as Array<'feet' | 'inches'>).map((type, index) => (
     <View key={index} style={styles.section_height}>
         <Text style={styles.section_height_header}>{type.charAt(0).toUpperCase() + type.slice(1)}</Text>
         <TextInput
-            onFocus={() => setHeightState(prevState => ({ ...prevState, active: { ...prevState.active, [type === 'feets' ? 'feet' : 'inches']: 1 } }))}
-            onBlur={() => onBlurHandler(type, type === 'feets' ? 3 : 0, type === 'feets' ? 7 : 11)}
+            onFocus={() => setHeightState(prevState => ({ ...prevState, active: { ...prevState.active, [type === 'feet' ? 'feet' : 'inches']: 1 } }))}
+            onBlur={() => onBlurHandler(type, type === 'feet' ? 3 : 0, type === 'feet' ? 7 : 11)}
             style={[
                 styles.section_height_boxInput,
                 {
                     borderColor: heightState.active[type as 'feet' | 'inches'] ? THEME_COLORS.primary : THEME_COLORS.tertiary,
                 },
             ]}
-            value={heightState[type as 'feets' | 'inches']}
+            value={heightState[type as 'feet' | 'inches']}
             onChangeText={text => setHeightState(prevState => ({ ...prevState, [type]: text }))}
-            placeholder={type === 'feets' ? 'ft' : 'in'}
+            placeholder={type === 'feet' ? 'ft' : 'in'}
             placeholderTextColor={THEME_COLORS.tertiary}
             keyboardType="number-pad"
         />
         {heightState[`show${type.charAt(0).toUpperCase() + type.slice(1)}Error` as 'showFeetError' | 'showInchesError'] && (
             <Text style={styles.section_height_error}>
-                {`Please enter a number between ${type === 'feets' ? 3 : 0} and ${type === 'feets' ? 7 : 11}`}
+                {`Please enter a number between ${type === 'feet' ? 3 : 0} and ${type === 'feet' ? 7 : 11}`}
             </Text>
         )}
     </View>
@@ -114,22 +115,22 @@ const HeightSection = React.memo(({ height, dispatch }: { height: { feets: strin
   );
 });
 
-const BiographySection = React.memo(({bio, dispatch}: { bio: string | undefined, dispatch: React.Dispatch<TYPES.AppAction> }) => {
+const BiographySection = React.memo(({ bio, dispatch }: { bio: string | undefined, dispatch: any }) => {
   const [active, setActive] = useState(0);
 
   return (
     <View style={styles.section}>
       <Text style={styles.section_header}>About</Text>
       <Text style={styles.section_subHeader}>
-        Write a coincised and interesting biography to impress your viewers
+        Write a concise and interesting biography to impress your viewers
       </Text>
       <TextInput
         style={[
           styles.section_textInput,
-          {borderColor: active ? THEME_COLORS.primary : THEME_COLORS.tertiary},
+          { borderColor: active ? THEME_COLORS.primary : THEME_COLORS.tertiary },
         ]}
         onChangeText={text =>
-          dispatch(EditProfileActions.updateUserProfile('bio', text))
+          dispatch(EditProfileActions.setBio(text))
         }
         value={bio || ''}
         placeholder="About me"
@@ -142,23 +143,66 @@ const BiographySection = React.memo(({bio, dispatch}: { bio: string | undefined,
   );
 });
 
-const PicturesSection = React.memo(({ pictures, dispatch }: { pictures: TYPES.UserPicture[] | undefined; dispatch: React.Dispatch<TYPES.AppAction> }) => {
+
+const PicturesSection = React.memo(({ pictures, dispatch }: { pictures: TYPES.Picture[] | undefined; dispatch: any }) => {
   // Your component logic here
+  const [modalVisible, setModalVisible] = useState(false)
+  const [pictureToBeViewed, setPictureToBeViewed] = useState<null | string>(null)
+
+  const onDefinedFieldPress = (pictureUrl: string) => {
+    setModalVisible(true)
+    setPictureToBeViewed(pictureUrl)
+  } 
+
+  const onUndefinedFieldPress = () => {
+
+  } 
+
   return (
     <View style={styles.section}>
+      {pictureToBeViewed &&
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(!modalVisible);
+        }}>
+        <View
+          style={styles.modalContainer}>
+            <View style={{justifyContent:'space-between', flexDirection:'row', marginTop: 25, marginHorizontal: 20}}>
+              <Pressable style={{flexDirection:'row'}}>
+                <Image source={icons.exchange} style={{width: 20, height: 20, resizeMode: 'contain',marginRight:20, tintColor: 'white'}}/>
+                <Text style={{...themeText.bodyRegularFive, color:'white'}}>Replace</Text>
+              </Pressable>
+              <Pressable>
+              <Image source={icons.bin} style={{width: 20, height: 20, resizeMode: 'contain', tintColor: 'white'}}/>
+              </Pressable>
+            </View>
+          <Image
+            style={styles.modalImage}
+            source={{uri: pictureToBeViewed}}
+          />
+        </View>
+      </Modal>
+}
           <Text style={styles.section_header}>My pictures</Text>
           <Text style={styles.section_subHeader}>Add clear pictures of yourself. Note they will be blurred publicly.</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 20, paddingTop: 10, overflow: 'hidden' }}>
-    <PictureField style={{ flex: 2 }} picture={pictures ? pictures[0] : undefined} idx={0} />
+    <PictureField onDefinedFieldPress={onDefinedFieldPress}
+        onUndefinedFieldPress={onUndefinedFieldPress} style={{ flex: 2 }} picture={pictures ? pictures[0] : undefined} idx={0} />
 
     <View style={{ flexDirection: 'column', flex: 1 }}>
-        <PictureField style={{ flex: 1 }} picture={pictures ? pictures[1] : undefined} idx={1} />
-        <PictureField style={{ flex: 1 }} picture={pictures ? pictures[2] : undefined} idx={2} />
+        <PictureField onDefinedFieldPress={onDefinedFieldPress}
+        onUndefinedFieldPress={onUndefinedFieldPress} style={{ flex: 1 }} picture={pictures ? pictures[1] : undefined} idx={1}  />
+        <PictureField onDefinedFieldPress={onDefinedFieldPress}
+        onUndefinedFieldPress={onUndefinedFieldPress} style={{ flex: 1 }} picture={pictures ? pictures[2] : undefined} idx={2} />
     </View>
 </View>
 <View style={{ flexDirection: 'row', flex: 1, paddingHorizontal: 20, paddingTop: 5 }}>
     {[...Array(3)].map((_, index) => (
-        <PictureField key={index + 3} style={{ flex: 1 }} picture={pictures ? pictures[index + 3] : undefined} idx={index + 3} />
+        <PictureField onDefinedFieldPress={onDefinedFieldPress}
+        onUndefinedFieldPress={onUndefinedFieldPress} key={index + 3} style={{ flex: 1 }} picture={pictures ? pictures[index + 3] : undefined} idx={index + 3} />
     ))}
 </View>
 
@@ -167,10 +211,19 @@ const PicturesSection = React.memo(({ pictures, dispatch }: { pictures: TYPES.Us
 });
 
 const PictureField = React.memo(
-  ({picture, idx, style}: {picture?: TYPES.UserPicture | undefined; idx: number; style: ViewStyle}) => {
+  ({picture, idx, style, onDefinedFieldPress, onUndefinedFieldPress}: {picture?: TYPES.Picture | undefined; idx: number; style: ViewStyle; onDefinedFieldPress: (pictureUrl:string) => void; onUndefinedFieldPress: () => void}) => {
+
+    const handlePress = () => {
+      if (picture) {
+        onDefinedFieldPress(picture.url);
+      } else {
+        onUndefinedFieldPress();
+      }
+    };
+
     return (
 
-        <View
+        <Pressable
           style={{
             justifyContent: 'center',
             alignItems: 'center',
@@ -180,7 +233,7 @@ const PictureField = React.memo(
             aspectRatio: 1,
             marginBottom: 5,
             marginRight: idx === 3 || idx === 4 ? 5 : idx === 0 ? 10 : 0,
-          }}>
+          }} onPress={handlePress}>
           {picture ? (
             <React.Fragment>
               <Animated.Image
@@ -226,7 +279,7 @@ const PictureField = React.memo(
               resizeMode="cover"
             />
           )}
-        </View>
+        </Pressable>
     );
   },
 );
@@ -259,30 +312,32 @@ const CallToAction: React.FC<CallToActionProps> = React.memo(
   },
 );
 const EditProfileScreen = () => {
-  const {userProfile} = useSelector(
+  const userProfile = useSelector(
     (state: TYPES.AppState) => state.editUserReducer,
   );
-  const { questionsList} =
+  const { questions, answers, genders, languages, interests } =
     useSelector((state: TYPES.AppState) => state.usersReducer);
   const dispatch = useDispatch();
   const navigation = useNavigation<NavigationProp<TYPES.RootStackParamList>>();
+  const [isLoading, setIsLoading] = useState(false)
 
   return (
     <KeyboardAvoidingViewWrapper>
       <SafeContainer>
+        {isLoading && <Loading.ThreeDotsLoader modalBackground={{backgroundColor:'white'}}/>}
         <EditProfileHeader onBackPress={() => {}} leftIconText="Edit" />
 
         {/**Pictures */}
         <PicturesSection pictures={userProfile?.pictures} dispatch={dispatch}/>
 
         {/**Biography */}
-        <BiographySection bio={userProfile?.bio} dispatch={dispatch}/>
+        <BiographySection bio={userProfile?.bio ?? undefined} dispatch={dispatch}/>
         
 
         {/** Basic */}
         <View style={styles.section}>
           <Text style={styles.section_header}>Basic information</Text>
-          {questionsList
+          {questions
             ?.filter(item => item.type === 'Basic')
             .map((field, index) => {
               let onPress
@@ -292,14 +347,11 @@ const EditProfileScreen = () => {
                 return null;
               }
 
-              if (field.shortForm === 'Goal') {
-                answer = userProfile?.relationshipGoal || 'Add';
-              } else {
-                answer =
-                  userProfile?.additionalInformation.find(
-                    item => item.questionShortForm === field.shortForm,
-                  )?.answer || 'Add';
-              }
+              const answerId = userProfile?.answers.find(
+                    item => item.questionId === field.id,
+                  )?.answerId
+
+              answer = answers?.find(item => item.id === answerId)?.text || 'Add';
 
               if(field.shortForm === 'Vaccine'){
                 onPress = () => {navigation.navigate(ROUTES.EDIT_VACCINE_SCREEN)}
@@ -312,44 +364,51 @@ const EditProfileScreen = () => {
                   key={index}
                   question={field.shortForm}
                   answer={answer}
-                  icon={field.icon}
+                  icon={field.iconPath}
                   onPress={onPress || (() => {})}
                 />
               );
             })}
           <CallToAction
             question="Gender"
-            answer={`${userProfile?.gender.primary}${userProfile?.gender.secondary ? ' (' + userProfile.gender.secondary + ')' : ''}`}
+            answer={`${ genders?.primaryGenders.find(item => item.id === userProfile.primaryGenderId)?.text}${(userProfile?.secondaryGenderId != undefined) ? ' (' + genders?.secondaryGenders.find(item => item.id === userProfile.secondaryGenderId)?.text + ')' : ''}`}
             icon={'https://flyleaf-icons.s3.eu-west-2.amazonaws.com/questions/gender.png'}
             onPress={() => {navigation.navigate(ROUTES.EDIT_GENDER_SCREEN)}}
           />
           <CallToAction
             question="Job Title"
-            answer={userProfile?.profession?.jobTitle || 'Add'}
+            answer={userProfile?.jobTitle || 'Add'}
             icon={'https://flyleaf-icons.s3.eu-west-2.amazonaws.com/questions/job.png'}
             onPress={() => {navigation.navigate(ROUTES.EDIT_JOB_TITLE_SCREEN)}}
           />
           <CallToAction
             question="Employer"
-            answer={userProfile?.profession?.employer || 'Add'}
+            answer={userProfile?.employer || 'Add'}
             icon={'https://flyleaf-icons.s3.eu-west-2.amazonaws.com/questions/company.png'}
             onPress={() => {navigation.navigate(ROUTES.EDIT_COMPANY_SCREEN)}}
           />
         </View>
 
-        <HeightSection height={userProfile?.height} dispatch={dispatch}/>
+        {(() => {
+  if (userProfile?.height) {
+    const { feet, inches } = cmToFeetInches(userProfile.height);
+    return <HeightSection height={{ feet: feet.toString(), inches: inches.toString() }} dispatch={dispatch} />;
+  } else {
+    return <HeightSection height={undefined} dispatch={dispatch} />;
+  }
+})()}
 
         {/**Languages */}
         <View style={styles.section}>
           <Text style={styles.section_header}>Languages I know</Text>
           <View style={styles.itemListContainer}>
-          {userProfile?.languages?.length != 0 ? userProfile?.languages?.map((language, index) => (
+          {userProfile?.languagesIds?.length != 0 ? userProfile?.languagesIds?.map((langId, index) => (
             <View key={index} style={styles.itemContainer}>
             <Image source={{uri: "https://flyleaf-icons.s3.eu-west-2.amazonaws.com/questions/language.png"}} style={styles.itemIcon}/>
-              <Text style={styles.itemText}>{language.name}</Text>
+              <Text style={styles.itemText}>{languages?.find(item => item.id === langId)?.text}</Text>
             </View>
           )) : <Text style={styles.itemAlternativeText}>Press to add languages that you know.</Text>}
-          <TouchableRipple rippleColor={PALETTE.GHOSTWHITE} onPress={() => {navigation.navigate(ROUTES.EDIT_LANGUAGE_SCREEN)}} style={{position:'absolute', top:0,bottom:0, left:0, right:0}}><></></TouchableRipple>
+          <TouchableRipple rippleColor={PALETTE.GHOSTWHITE} onPress={() => { navigation.navigate(ROUTES.EDIT_LANGUAGE_SCREEN)}} style={{position:'absolute', top:0,bottom:0, left:0, right:0}}><></></TouchableRipple>
           </View>
         </View>
 
@@ -357,13 +416,12 @@ const EditProfileScreen = () => {
         <View style={styles.section}>
           <Text style={styles.section_header}>My interests</Text>
           <View style={styles.itemListContainer} >
-          {userProfile?.interests?.length != 0 ? userProfile?.interests?.map((interest, index) => (
+          {userProfile?.interestsIds?.length != 0 ? userProfile?.interestsIds?.map((intId, index) => (
             <View key={index} style={styles.itemContainer}>
-            <Image source={{uri: interest.icon}} style={styles.itemIcon}/>
-              <Text style={styles.itemText}>{interest.name}</Text>
+              <Text style={styles.itemText}>{interests?.find(item => item.id === intId)?.text}</Text>
             </View>
           ))  : <Text style={styles.itemAlternativeText}>Press to add your interests.</Text>}
-          <TouchableRipple rippleColor={PALETTE.GHOSTWHITE} onPress={() => {}} style={{position:'absolute', top:0,bottom:0, left:0, right:0}}><></></TouchableRipple>
+          <TouchableRipple rippleColor={PALETTE.GHOSTWHITE} onPress={() => {navigation.navigate(ROUTES.EDIT_INTERESTS_SCREEN)}} style={{position:'absolute', top:0,bottom:0, left:0, right:0}}><></></TouchableRipple>
           </View>
         </View>
 
@@ -371,33 +429,34 @@ const EditProfileScreen = () => {
          <View style={styles.section}>
           <Text style={styles.section_header}>My gender preferences</Text>
           <View style={styles.itemListContainer} >
-          {userProfile?.seeking?.length != 0 ? userProfile?.seeking?.map((gender, index) => (
+          {userProfile?.seekingIds?.length != 0 ? userProfile?.seekingIds?.map((genderId, index) => (
             <View key={index} style={styles.itemContainer}>
-              <Text style={styles.itemText}>{gender}</Text>
+              <Text style={styles.itemText}>{genders?.primaryGenders?.find(item => item.id === genderId)?.text}</Text>
             </View>
           ))  : <Text style={styles.itemAlternativeText}>Press to add your gender preferences.</Text>}
-          <TouchableRipple rippleColor={PALETTE.GHOSTWHITE} onPress={() => {}} style={{position:'absolute', top:0,bottom:0, left:0, right:0}}><></></TouchableRipple>
+          <TouchableRipple rippleColor={PALETTE.GHOSTWHITE} onPress={() => {navigation.navigate(ROUTES.EDIT_SEEKING_SCREEN)}} style={{position:'absolute', top:0,bottom:0, left:0, right:0}}><></></TouchableRipple>
           </View>
         </View>
 
         {/** Advanced */}
         <View style={styles.section}>
           <Text style={styles.section_header}>Advanced information</Text>
-          {questionsList
+          {questions
             ?.filter(item => item.type === 'Advanced')
             .map((field, index) => {
-              const answer =
-                userProfile?.additionalInformation.find(
-                  item => item.questionShortForm === field.shortForm,
-                )?.answer || 'Add';
+              const answerId = userProfile?.answers.find(
+                item => item.questionId === field.id,
+              )?.answerId
+
+          const answer = answers?.find(item => item.id === answerId)?.text || 'Add';
 
               return (
                 <CallToAction
                   key={index}
                   question={field.shortForm}
                   answer={answer}
-                  icon={field.icon}
-                  onPress={() => {}}
+                  icon={field.iconPath}
+                  onPress={() => {navigation.navigate(ROUTES.EDIT_ADVANCED_SCREEN, {questionId: field.id})}}
                 />
               );
             })}
@@ -407,18 +466,18 @@ const EditProfileScreen = () => {
           <Text style={[styles.section_subHeader, {marginBottom: 15}]}>
             Showcase your instagram pictures and artists you enjoy listening to.
           </Text>
-          <SpotifySection state={{artists: userProfile?.spotify, _id: userProfile?._id}} dispatch={dispatch} />
-          <InstagramSection state={{posts: userProfile?.instagram, _id: userProfile?._id}} dispatch={dispatch} />
+          <SpotifySection state={{artists: userProfile?.topArtists, id: userProfile?.id}} dispatch={dispatch} />
+          <InstagramSection state={{posts: userProfile?.instagramImages, id: userProfile?.id}} dispatch={dispatch} />
         </View>
       </SafeContainer>
     </KeyboardAvoidingViewWrapper>
   );
 };
 
-const SpotifySection = ({state, dispatch}:{state:{artists: TYPES.SpotifyArtist[]| undefined, _id:string | undefined}, dispatch: React.Dispatch<TYPES.AppAction>}) => {
+const SpotifySection = ({state, dispatch}:{state:{artists: any[]| undefined, id:string | undefined}, dispatch: any}) => {
   const [artists, setArtists] = useState<any>(Array(10).fill(null))
   useEffect(() => {
-    if(state.artists){
+    if(state?.artists && state.artists.length > 0){
     setArtists(state.artists)
     setIsConnected(true)
     }
@@ -427,15 +486,15 @@ const SpotifySection = ({state, dispatch}:{state:{artists: TYPES.SpotifyArtist[]
 
   const [loading, setLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(
-    state?.artists ? true : false,
+    (state?.artists && state.artists.length > 0) ? true : false,
   );
 
   const handleFetchArtists = async () => {
     setLoading(true);
 
-    if(state._id){
+    if(state.id){
     if (isConnected) {
-      await SpotifyService().disconnectFromSpotify(state._id).then(result => {
+      await SpotifyService().disconnectFromSpotify(state.id).then(result => {
         if(result?.type === "success"){
           setArtists(Array(10).fill(null));
           setIsConnected(false)
@@ -445,12 +504,12 @@ const SpotifySection = ({state, dispatch}:{state:{artists: TYPES.SpotifyArtist[]
     } else {
       const authResult = await SpotifyService().spotifyAuth();
       if (authResult) {
-        await SpotifyService().authenticateAndFetchSpotify(state._id, authResult.accessToken, authResult.refreshToken).then(result => {
+        await SpotifyService().authenticateAndFetchSpotify(state.id, authResult.accessToken, authResult.refreshToken).then(result => {
           if(result.type === "success"){
             setArtists(result.artists)
             setIsConnected(true)
           }
-        })
+        }).catch(e => console.log(e))
       }
     }
   }
@@ -500,11 +559,11 @@ const SpotifySection = ({state, dispatch}:{state:{artists: TYPES.SpotifyArtist[]
   )
 };
 
-const InstagramSection = ({state, dispatch}:{state:{posts: TYPES.InstagramPost[]| undefined, _id:string | undefined}, dispatch: React.Dispatch<TYPES.AppAction>}) => {
+const InstagramSection = ({state, dispatch}:{state:{posts: any| undefined, id:string | undefined}, dispatch: any}) => {
   const [posts, setPosts] = useState<any>(Array(10).fill(null))
   const authCodeRef = useRef<string | null>(null);
   useEffect(() => {
-    if(state.posts){
+    if(state?.posts && state.posts.length > 0){
       setPosts(state.posts)
       setIsConnected(true)
     }
@@ -512,7 +571,7 @@ const InstagramSection = ({state, dispatch}:{state:{posts: TYPES.InstagramPost[]
 
   const [loading, setLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(
-    state?.posts ? true : false,
+    (state?.posts && state.posts.length > 0) ? true : false,
   );
   const [showWebView, setShowWebView] = useState(false);
 
@@ -520,9 +579,9 @@ const InstagramSection = ({state, dispatch}:{state:{posts: TYPES.InstagramPost[]
   const handleFetchImages = async () => {
     setLoading(true);
 
-    if(state._id){
+    if(state.id){
     if (isConnected) {
-      await InstagramService().disconnectFromInstagram(state._id).then(result => {
+      await InstagramService().disconnectFromInstagram(state.id).then(result => {
         if(result?.type === "success"){
           setPosts(Array(10).fill(null));
           setIsConnected(false)
@@ -533,7 +592,7 @@ const InstagramSection = ({state, dispatch}:{state:{posts: TYPES.InstagramPost[]
       setShowWebView(true);
       await waitForAuthCode();
       if (authCodeRef.current) {
-        await InstagramService().authenticateAndFetchInstagram(state._id, authCodeRef.current).then(result => {
+        await InstagramService().authenticateAndFetchInstagram(state.id, authCodeRef.current).then(result => {
           if(result.type === "success"){
             setPosts(result.images)
             setIsConnected(true)
@@ -627,6 +686,7 @@ const InstagramSection = ({state, dispatch}:{state:{posts: TYPES.InstagramPost[]
 };
 
 
+
 export default EditProfileScreen;
 
 const styles = StyleSheet.create({
@@ -637,6 +697,8 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingVertical: 20,
   },
+  modalContainer:{flex: 1, borderWidth: 1, backgroundColor: 'rgba(0,0,0,1)'},
+modalImage: {flex: 1, resizeMode: 'contain'},
   section_header: {
     ...themeText.bodyBoldThree,
     color: THEME_COLORS.dark,
