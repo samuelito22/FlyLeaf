@@ -36,8 +36,14 @@ import successIllustration from './images/successillustration.png';
 import gender from './icons/gender.png';
 import swap from "./images/swap.png"
 import profile from "./icons/profile.png"
+import coins from "./icons/coins.png"
+import premiumBadge from "./icons/premium-badge.png"
+import bin from "./icons/bin.png"
+import exchange from "./icons/exchange.png"
 
 export const icons = {
+  bin, exchange,
+  premiumBadge,
   profile,
     gender,
   measuringTape,
@@ -49,7 +55,7 @@ export const icons = {
   bell,
   sprout,
   nature,
-
+  coins,
   menu,
   dots,
   instagram,

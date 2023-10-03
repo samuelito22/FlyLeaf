@@ -6,7 +6,7 @@ import {
   StyleSheet,
   Image,
 } from 'react-native';
-import React, {useEffect, useState, useCallback,} from 'react';
+import React, {useEffect, useState, useCallback, useMemo,} from 'react';
 import {
   SafeContainer,
   Button,
@@ -27,35 +27,57 @@ import {useSelector} from 'react-redux';
 import {icons} from '../../assets';
 import {EditProfileActions} from '../../redux';
 
-const EditLanguageScreen = () => {
-  const [filter, setFilter] = useState('');
-  const [loading, setLoading] = useState(true);
-  const languagesList = useSelector((state: TYPES.AppState) => state.usersReducer.languagesList);
-  const [languagesTemp, setLanguagesTemp] = useState<{ _id: string; name: string; }[]>(() => useSelector((state: TYPES.AppState) => state.editUserReducer.userProfile?.languages) || []);
+type Language = {
+  id: number;
+  text: string;
+};
 
+interface LanguageItemProps {
+  language: Language;
+  active: boolean;
+  onPress: () => void;
+}
+
+const LanguageItem: React.FC<LanguageItemProps> = React.memo(({ language, active, onPress }) => (
+  <Button.interestsButton active={active} onPress={onPress} style={styles.interestButton}>
+    {language.text}
+  </Button.interestsButton>
+));
+
+const EditLanguageScreen: React.FC = () => {
+  const [filter, setFilter] = useState<string>('');
+  const languages = useSelector((state: TYPES.AppState) => state.usersReducer.languages) as Language[];
   const dispatch = useDispatch();
 
-  useEffect(() => {
-    setTimeout(() => {
-      setLoading(false);
-    }, 200);
-  }, []);
+  const initialLanguages = useSelector((state: TYPES.AppState) => state.editUserReducer.languagesIds) || [];
+  const [languagesTemp, setLanguagesTemp] = useState<Set<number>>(new Set(initialLanguages));
 
-  const interestButtonHandlePress = useCallback((name: string, id:string) => {
-    if (languagesTemp.find(item => item.name === name)) {
-      setLanguagesTemp(languagesTemp.filter((pref:any) => pref !== name));
-    } else if (languagesTemp.length < 5) {
-      setLanguagesTemp([...languagesTemp, {_id: id,name}]);
-    }
-    dispatch(EditProfileActions.updateUserProfile('languages', {...languagesTemp}));
-  }, [languagesTemp]);
+  const filteredLanguages = useMemo(() => 
+    languages?.filter(language => language.text.toLowerCase().includes(filter.toLowerCase())),
+  [languages, filter]
+  );
+
+  const interestButtonHandlePress = useCallback((id: number) => {
+    setLanguagesTemp(prevSet => {
+      const newSet = new Set(prevSet);
+      if (newSet.has(id)) newSet.delete(id);
+      else if (newSet.size < 5) newSet.add(id);
+      dispatch(EditProfileActions.setLanguagesIds(Array.from(newSet)));
+      return newSet;
+    });
+  }, [dispatch]);
+
+  const renderItem = useCallback(({ item }: { item: Language }) => (
+    <LanguageItem 
+      language={item} 
+      active={languagesTemp.has(item.id)} 
+      onPress={() => interestButtonHandlePress(item.id)} 
+    />
+  ), [languagesTemp, interestButtonHandlePress]);
 
   return (
     <SafeContainer>
       <EditProfileHeader leftIconText="Save" />
-      {loading ? (
-        <LoadingSpinner modalBackground={{backgroundColor: 'white'}} />
-      ) : (
         <View style={styles.container}>
           <Text style={styles.title}>What languages do you know?</Text>
           <Text style={styles.paragraph}>
@@ -76,26 +98,21 @@ const EditLanguageScreen = () => {
             />
           </View>
           <FlatList
-  contentContainerStyle={styles.interestsContainer}
-  data={languagesList?.filter(language =>
-    language.name.toLowerCase().includes(filter.toLowerCase())
-  )}
-  keyExtractor={(item, index) => index.toString()} // assuming no unique IDs for your languages, otherwise use that
-  renderItem={({ item: language }) => (
-    <Button.interestsButton
-      active={!!languagesTemp.find(lang => lang._id === language._id)}
-      onPress={() => interestButtonHandlePress(language.name, language._id)}
-      style={styles.interestButton}>
-      {language.name}
-    </Button.interestsButton>
-  )}
-/>
+    contentContainerStyle={styles.interestsContainer}
+    data={filteredLanguages}  // use unique IDs if available
+    renderItem={renderItem}
+    initialNumToRender={40} // Render 10 items initially
+    windowSize={21} // Render the visible content + 10 screens up and 10 screens down
+    maxToRenderPerBatch={40} 
+    numColumns={3}
+
+    
+  />
           <Text style={styles.extraInformation}>
             Your preferences are key in shaping your matches, and they are
             displayed publicly to enhance community interaction.
           </Text>
         </View>
-      )}
     </SafeContainer>
   );
 };
@@ -132,8 +149,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   interestsContainer: {
-    flexWrap: 'wrap',
-    flexDirection: 'row',
+   flexDirection: 'column',
     flexGrow: 1,
   },
   interestButton: {

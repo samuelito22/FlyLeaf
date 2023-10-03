@@ -1,4 +1,4 @@
-import { Model, ForeignKey, Column, Table, DataType, PrimaryKey, AutoIncrement } from 'sequelize-typescript';
+import { Model, ForeignKey, Column, Table, DataType, PrimaryKey, AutoIncrement, Index } from 'sequelize-typescript';
 import { User } from './user';
 
 @Table
@@ -7,6 +7,7 @@ export class InstagramTokens extends Model<InstagramTokens> {
   @PrimaryKey
   @ForeignKey(() => User)
   @Column(DataType.UUID)
+  @Index
   userId!: string;
 
   @Column(DataType.STRING)
@@ -26,6 +27,7 @@ export class InstagramImages extends Model<InstagramImages> {
 
   @ForeignKey(() => User)
   @Column(DataType.UUID)
+  @Index
   userId!: string;
 
   @Column(DataType.STRING)

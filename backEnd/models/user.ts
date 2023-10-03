@@ -24,6 +24,7 @@ import { InstagramImages, InstagramTokens } from './instagram';
 import { UserFeedback } from './userFeedback';
 import { UUIDV4 } from 'sequelize';
 import { UserSeekingGender } from './userSeekingGender';
+import { UserConnects } from './userConnects';
 
 @Table
 export class User extends Model<User> {
@@ -51,6 +52,12 @@ export class User extends Model<User> {
 
   @Column(DataType.STRING)
   bio?: string;
+
+  @Column(DataType.STRING)
+  jobTitle?: string;
+
+  @Column(DataType.STRING)
+  employer?: string;
 
   @Column(DataType.FLOAT)
   height?: number;
@@ -190,4 +197,7 @@ export class User extends Model<User> {
   // User_Seeking_Gender
   @HasMany(() => UserSeekingGender)
   seeking!: UserSeekingGender[];
+
+  @HasMany(() => UserConnects)
+  connects!: UserConnects[];
 }

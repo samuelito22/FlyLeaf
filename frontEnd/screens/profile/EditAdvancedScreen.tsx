@@ -11,32 +11,48 @@ import {
   COMPONENT_COLORS,
   BORDER_RADIUS,
   themeText,
+  ROUTES,
 } from '../../constants';
 import {EditProfileActions} from '../../redux';
 import {useDispatch} from '../../utils/hooks';
 import {verticalScale} from 'react-native-size-matters';
 import {useSelector} from 'react-redux';
+import { RouteProp } from '@react-navigation/native';
 
-const EditEthnicityScreen = () => {
-  const { questions, answers} =
-    useSelector((state: TYPES.AppState) => state.usersReducer);
-  const ethnicityField = questions?.find(item => item.shortForm === "Ethnicity")
+type RouteParams = RouteProp<
+  TYPES.RootStackParamList,
+  typeof ROUTES.EDIT_ADVANCED_SCREEN
+> & {
+  params: {
+    questionId: number;
+  };
+};
+
+type Props = {
+  route?: Partial<RouteParams>;
+};
+
+const EditAdvancedScreen: React.FC<Props> = ({ route }) => {
+    const questionId = route?.params?.questionId
+
+   const {questions, answers} = useSelector((state: TYPES.AppState) => state.usersReducer);
+  const ethnicityField = questions?.find(item => item.id === questionId)
   const userResponse = useSelector((state: TYPES.AppState) => state.editUserReducer.answers)
-  const [ethnicityId, setEthnicityId] = useState<undefined | number> (userResponse.find(item => item.questionId === ethnicityField?.id)?.answerId)
+  const [advancedId, setAdvancedId] = useState<undefined | number> (userResponse.find(item => item.questionId === ethnicityField?.id)?.answerId)
 
   const dispatch = useDispatch();
 
   const ClickableIndicatorPrimaryButtonHandlePress = (id: number) => {
-    if (ethnicityId == id) {
-      setEthnicityId(undefined);
+    if (advancedId == id) {
+      setAdvancedId(undefined);
     } else {
-      setEthnicityId(id);
+      setAdvancedId(id);
     }
   };
 
   useEffect(() => {
     let updatedAnswers:{questionId:number, answerId: number}[]
-    if(ethnicityId) {
+    if(advancedId) {
       const isQuestionPresent = userResponse.some(item => item.questionId === ethnicityField?.id);
       
       if (isQuestionPresent) {
@@ -45,7 +61,7 @@ const EditEthnicityScreen = () => {
             return {
               ...item,
               questionId: ethnicityField?.id,
-              answerId: ethnicityId,
+              answerId: advancedId,
             };
           }
           return item;
@@ -55,17 +71,16 @@ const EditEthnicityScreen = () => {
           ...userResponse,
           {
             questionId: ethnicityField?.id!,
-            answerId: ethnicityId,
+            answerId: advancedId,
           },
         ];
       }
-    } else {
-      updatedAnswers = userResponse.filter(item => item.questionId !== ethnicityField?.id);
+      dispatch(EditProfileActions.setAnswers(updatedAnswers))
+
     }
     
 
-    dispatch(EditProfileActions.setAnswers(updatedAnswers))
-  }, [ethnicityId]);
+  }, [advancedId]);
 
 
   return (
@@ -74,7 +89,7 @@ const EditEthnicityScreen = () => {
       <View style={styles.container}>
         <Text style={styles.title}>{ethnicityField?.text}</Text>
         <Text style={styles.paragraph}>
-          You can only select one ethnicity you belong to for your profile.
+          You can only select one answer.
         </Text>
         <ScrollView
           keyboardShouldPersistTaps="handled"
@@ -87,7 +102,7 @@ const EditEthnicityScreen = () => {
                 onPress={() =>
                   ClickableIndicatorPrimaryButtonHandlePress(answer.id)
                 }
-                isActive={ethnicityId === answer.id}>
+                isActive={advancedId === answer.id}>
                 {answer.text}
               </Button.ClickableIndicatorPrimaryButton>
             </View>
@@ -102,7 +117,7 @@ const EditEthnicityScreen = () => {
   );
 };
 
-export default EditEthnicityScreen;
+export default EditAdvancedScreen;
 
 const styles = StyleSheet.create({
   container: {

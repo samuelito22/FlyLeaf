@@ -6,7 +6,12 @@ import * as AppStatusActions from './actions/appStatusActions';
 
 import {Store, Persistor} from './store';
 
-// Export the action creators
+export type AppAction = 
+  EditProfileActions.UserProfileUpdatesActionTypes | 
+  RegisterActions.RegisterActionTypes | 
+  UserActions.UserProfileActionTypes | 
+  AppStatusActions.AppStatusActionTypes;
+
 export {
   AppStatusActions,
   RegisterActions,

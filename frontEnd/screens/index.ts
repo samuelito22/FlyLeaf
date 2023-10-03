@@ -36,8 +36,14 @@ import EditCompanyScreen from './profile/EditCompanyScreen';
 import EditJobTitleScreen from './profile/EditJobTitleScreen';
 import EditVaccineScreen from './profile/EditVaccineScreen';
 import EditEthnicityScreen from './profile/EditEthnicityScreen';
+import EditInterestScreen from './profile/EditInterestScreen';
+import EditSeekingScreen from './profile/EditSeekingScreen';
+import EditAdvancedScreen from './profile/EditAdvancedScreen';
 
 export {
+  EditAdvancedScreen,
+  EditSeekingScreen,
+  EditInterestScreen,
   EditEthnicityScreen,
   EditVaccineScreen,
   EditCompanyScreen,

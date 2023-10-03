@@ -1,4 +1,4 @@
-import { Model, Column, Table, Unique, Index, CreatedAt, DataType } from 'sequelize-typescript';
+import { Model, Column, Table, Index, CreatedAt, DataType } from 'sequelize-typescript';
 
 @Table({ tableName: 'PhoneNumberOTP', updatedAt: false })
 export class PhoneNumberOTP extends Model<PhoneNumberOTP> {

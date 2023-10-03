@@ -5,7 +5,8 @@ import {
     DataType,
     PrimaryKey,
     ForeignKey,
-    BelongsTo
+    BelongsTo,
+    Index
   } from 'sequelize-typescript';
 import { User } from './user';
 import { RelationshipGoal } from './relationshipGoal';
@@ -14,6 +15,7 @@ import { RelationshipGoal } from './relationshipGoal';
   export class FilterSettings extends Model<FilterSettings> {
   
     @PrimaryKey
+    @Index
     @ForeignKey(() => User)
     @Column(DataType.UUID)
     userId!: string;
@@ -44,6 +46,6 @@ import { RelationshipGoal } from './relationshipGoal';
     user!: User;
   
     @BelongsTo(() => RelationshipGoal)
-    relationshipGoalDetail!: RelationshipGoal;
+    relationshipGoal!: RelationshipGoal;
   }
   

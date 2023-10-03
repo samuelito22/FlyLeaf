@@ -15,7 +15,7 @@ const EditCompanyScreen = () => {
   // Dispatch function from Redux to update the firstName value
   const dispatch = useDispatch();
   const company = useSelector(
-    (state: TYPES.AppState) => state.editUserReducer.userProfile?.profession?.employer,
+    (state: TYPES.AppState) => state.editUserReducer.employer,
   );
 
   return (
@@ -43,13 +43,9 @@ const EditCompanyScreen = () => {
             placeholder="Tech Innovators, Inc., etc."
             placeholderTextColor={THEME_COLORS.tertiary}
             onChangeText={text =>
-              text != ''
-                ? dispatch(
-                    EditProfileActions.updateUserProfile('profession.employer', text),
-                  )
-                : dispatch(
-                    EditProfileActions.updateUserProfile('profession.employer', undefined),
-                  )
+              dispatch(
+                EditProfileActions.setEmployer(text),
+              )
             }
           />
         </View>

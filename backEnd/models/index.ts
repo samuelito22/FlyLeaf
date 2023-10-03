@@ -26,8 +26,10 @@ import { PrimaryGender, SecondaryGender } from "./gender";
 import { UserReportedIssues } from "./userReportedIssues";
 import { UserFeedback } from "./userFeedback";
 import { RelationshipGoal } from "./relationshipGoal";
+import { UserConnects } from "./userConnects";
 
 const Model = {
+    UserConnects,
     RelationshipGoal,
     UserFeedback,
     UserReportedIssues,

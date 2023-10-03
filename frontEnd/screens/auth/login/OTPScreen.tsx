@@ -9,7 +9,6 @@ import {
   Button,
   KeyboardAvoidingViewWrapper,
   Loading,
-  LoadingSpinner,
   OTPField,
   SafeContainer,
 } from '../../../components';

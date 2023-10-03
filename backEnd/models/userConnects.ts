@@ -1,16 +1,18 @@
 import { Model, ForeignKey, Column, Table, DataType, Index } from 'sequelize-typescript';
 import { User } from './user';
-import { PrimaryGender } from './gender';
 
 @Table
-export class UserSeekingGender extends Model<UserSeekingGender> {
-  
+export class UserConnects extends Model<UserConnects> {
+
   @ForeignKey(() => User)
   @Column(DataType.UUID)
   @Index
   userId!: string;
 
-  @ForeignKey(() => PrimaryGender)
   @Column(DataType.INTEGER)
-  primaryGenderId!: number;
+  remainingCount!: number;
+
+  @Column({type: DataType.ENUM , values: ['Connect Token', 'Super Connect'],
+  allowNull: false})
+  connectType!: 'Connect Token' | 'Super Connect';
 }

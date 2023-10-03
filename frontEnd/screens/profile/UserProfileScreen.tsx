@@ -9,6 +9,7 @@ import {useDispatch} from '../../utils/hooks';
 import {EditProfileActions, UserActions} from '../../redux';
 import {getAge} from '../../utils/getAge';
 import { UserService } from '../../services';
+import { TouchableOpacity } from 'react-native-gesture-handler';
 
 const featuresList = [
   {feature: 'Profile Creation', connects: true, premium: true},
@@ -70,6 +71,16 @@ const FieldOfTable = React.memo(
             ]}
           />
         </View>
+        <View style={styles.plansContainer_restOfColumn}>
+          <Image
+            source={premium ? images.successIllustration : icons.dash}
+            resizeMode="contain"
+            style={[
+              !premium && {tintColor: THEME_COLORS.tertiary},
+              {width: 20, height: 20},
+            ]}
+          />
+        </View>
       </View>
     );
   },
@@ -82,8 +93,8 @@ const UserProfileScreen = () => {
   const [imageKey, setImageKey] = useState(0);
   const currentUser = useSelector(
     (state: TYPES.AppState) => state.usersReducer.byId[currentUserId as string],
-  ) as TYPES.currentUserProfile;
-  const {gendersList, interestsList, questionsList, languagesList} = useSelector(
+  ) as TYPES.CurrentUser;
+  const {genders, interests, questions, languages, relationshipGoals, answers} = useSelector(
     (state: TYPES.AppState) => state.usersReducer,
   );
   const isOnline = useSelector(
@@ -91,7 +102,7 @@ const UserProfileScreen = () => {
   );
 
   const navigation = useNavigation<NavigationProp<TYPES.RootStackParamList>>();
-  const age = getAge(currentUser?.dateOfBirth);
+  const age = getAge(new Date(currentUser?.dateOfBirth));
   const screenWidth = Dimensions.get('window').width;
   const cardWidth = (screenWidth-10) * 0.95;
   const [isLoading, setIsLoading] = useState(false)
@@ -141,7 +152,7 @@ const UserProfileScreen = () => {
     }
   
     // If the required data isn't loaded, attempt to load it
-    if (!questionsList && !languagesList && !interestsList && !gendersList) {
+    if (!questions && !languages && !interests && !genders && !answers && !relationshipGoals) {
       try {
         const result = await UserService.getOverviewEn();
         
@@ -149,13 +160,13 @@ const UserProfileScreen = () => {
           setIsLoading(false);
           return;  // Exit if result type is not success
         }
-  
-        const { questions, interests, languages, genders } = result;
-  
-        dispatch(UserActions.setQuestionsList(questions));
-        dispatch(UserActions.setInterestsList(interests));
-        dispatch(UserActions.setLanguagesList(languages));
-        dispatch(UserActions.setGendersList(genders));
+    
+        dispatch(UserActions.setQuestions(result.questions));
+        dispatch(UserActions.setInterests(result.interests));
+        dispatch(UserActions.setLanguages(result.languages));
+        dispatch(UserActions.setGenders(result.genders));
+        dispatch(UserActions.setRelationshipGoals(result.relationshipGoals));
+        dispatch(UserActions.setAnswers(result.answers));
   
       } catch (error) {
         console.error("Failed to get overview data:", error);
@@ -163,11 +174,11 @@ const UserProfileScreen = () => {
         return;  // Exit on error after logging and setting loading state
       }
     }
-  
+    setIsLoading(false);
+
     // Continue to edit profile screen
     navigation.navigate(ROUTES.EDIT_PROFILE_SCREEN);
     dispatch(EditProfileActions.initUserProfile(currentUser));
-    setIsLoading(false);
     };
 
     
@@ -179,121 +190,111 @@ useEffect(() => {
   
   
 
-  return (
-    <SafeContainer>
-      {isLoading && <Loading.ActiveIndicator/>}
-      <ProfilePrivateHeader />
-      <View style={styles.container}>
-        <ScrollView contentContainerStyle={styles.scrollViewContainer}>
-          <Image
+return (
+  <SafeContainer>
+    {isLoading && <Loading.ThreeDotsLoader modalBackground={{backgroundColor:'white'}} />}
+    <ProfilePrivateHeader />
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollViewContainer}>
+        <Image
           key={imageKey}
-            source={{uri: currentUser.pictures[0].url}}
-            style={styles.profilePicture}
-          />
-          <View style={{flex: 0.6}}>
-            <Text style={[styles.header]}>
-              {currentUser.username}, {age}
-            </Text>
-            <Text style={styles.profileJoinDate}>{joinedDate} | {currentUser.connects} Connects</Text>
-            <Button.DarkButton
-              onPress={onEditPress}
-              height={35}
-              width={200}
-              style={{alignSelf: 'center', borderRadius: 50}}
-              textStyle={{...themeText.bodyMediumSix}}>
-              Edit Profile
-            </Button.DarkButton>
-          </View>
+          source={{ uri: currentUser.pictures[0].url }}
+          style={styles.profilePicture}
+        />
+        <View style={{ flex: 0.6 }}>
+          <Text style={[styles.header]}>
+            {currentUser.firstName}, {age}
+          </Text>
+          <Text style={styles.profileJoinDate}>{joinedDate}</Text>
+          <Button.DarkButton
+            onPress={onEditPress}
+            height={35}
+            width={200}
+            style={{ alignSelf: 'center', borderRadius: 50 }}
+            textStyle={{ ...themeText.bodyMediumSix }}>
+            Edit Profile
+          </Button.DarkButton>
+        </View>
 
-          <View style={styles.plansContainer} >
-            <View style={{borderRadius: 25, overflow: 'hidden', marginVertical: 15}}>
-            <ScrollView
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              style={{flexDirection: 'row'}}>
-                
+        <View style={styles.plansContainer}>
+          <View style={{  marginVertical: 25,paddingVertical: 15, flexDirection: 'row', alignSelf:'center', borderTopWidth: 1, borderBottomWidth: 1, borderColor: PALETTE.GHOSTWHITE }}>
+         
+              <View style={[styles.planCard, {borderColor:'#ffca1c'}]}>
+                <Image source={icons.coins} style={styles.planCard_icon}/>
+                <View style={styles.planCard_textContainer}>
+                  <Text style={styles.planCard_header}>{currentUser.connects.find(item => item.connectType === 'Connect Token')?.remainingCount} Connect Tokens</Text>
+<View style={{flex: 1, justifyContent: 'flex-end'}}>
+          <TouchableOpacity><Text style={styles.planCard_link}>GET MORE</Text></TouchableOpacity>
+        </View>
+                </View>
+              </View>
+              <View style={[styles.planCard,{borderColor:'#50B48A'}]}>
+              <Image source={icons.nature} style={[styles.planCard_icon, {tintColor:THEME_COLORS.primary}]}/>
+                <View style={styles.planCard_textContainer}>
+                  <Text style={styles.planCard_header}>{currentUser.connects.find(item => item.connectType === 'Super Connect')?.remainingCount || 0} Super Connects</Text>
+                  <View style={{flex: 1, justifyContent: 'flex-end'}}>
+          <TouchableOpacity><Text style={styles.planCard_link}>GET MORE</Text></TouchableOpacity>
+        </View>
+                </View>
+              </View>
               <View
-                style={[
-                  styles.planCard,
-                  {width: cardWidth*0.95, backgroundColor: '#50B48A'},
-                ]}>
-                <Text
-                  style={
-                    currentUser?.isPremiumMember
-                      ? styles.activeText
-                      : styles.inactiveText
-                  }>
-                  {currentUser?.isPremiumMember ? 'Active' : 'Inactive'}
-                </Text>
+                style={
+                 [ styles.planCard, {borderColor:THEME_COLORS.primary}]
+                }>
+                    <Image source={images.logo} style={[styles.planCard_icon, {tintColor:THEME_COLORS.primary}]}/>
+
                 <View style={styles.planCard_textContainer}>
                   <Text style={styles.planCard_header}>Premium</Text>
-                  <Text style={styles.planCard_paragraph}>
-                    Unlock exclusive features on Flyleaf to deepen connections and explore more matches without limitations.
-                  </Text>
-                </View>
-                <Button.DarkButton
-                  style={{marginVertical: 10, height: 40, width: 200}}
-                  textStyle={{...themeText.bodyMediumFive}}>
-                  Starting from £4.99
-                </Button.DarkButton>
-              </View>
-              <View
-                style={[
-                  styles.planCard,
-                  {width: cardWidth*0.95, backgroundColor: '#ffca1c'},
-                ]}>
-      
-                <View style={styles.planCard_textContainer}>
-                  <Text style={styles.planCard_header}>Connects</Text>
-                  <Text style={styles.planCard_paragraph}>
-                  Buy Flyleaf connects for better visibility, special messages, and premium features.
-</Text>
-                </View>
-                <Button.DarkButton
-                  style={{marginVertical: 10, height: 40, width: 200}}
-                  textStyle={{...themeText.bodyMediumFive}}>
-                  Starting from £0.99
-                </Button.DarkButton>
-              </View>
-            </ScrollView>
-            </View>
+                  <View style={{flex: 1, justifyContent: 'flex-end'}}>
+          <TouchableOpacity><Text style={styles.planCard_link}>READ MORE</Text></TouchableOpacity>
+        </View>
 
-            <View
-              style={{
-                flexDirection: 'row',
-                minHeight: 50,
-                alignItems: 'center',
-              }}>
-              <View style={styles.plansContainer_firstColumn}>
-                <Text style={styles.plansContainer_title}>Features</Text>
+                </View>
+              
               </View>
-              <View style={styles.plansContainer_restOfColumn}>
-                <Text
-                  style={[styles.plansContainer_title, {textAlign: 'center'}]}>
-                  Connects
-                </Text>
-              </View>
-              <View style={styles.plansContainer_restOfColumn}>
-                <Text
-                  style={[styles.plansContainer_title, {textAlign: 'center'}]}>
-                  Premium
-                </Text>
-              </View>
-            </View>
-            {featuresList.map((item, index) => (
-              <FieldOfTable
-                key={index}
-                feature={item.feature}
-                connects={item.connects}
-                premium={item.premium}
-              />
-            ))}
           </View>
-        </ScrollView>
-      </View>
-    </SafeContainer>
-  );
+
+          <View
+            style={{
+              flexDirection: 'row',
+              minHeight: 50,
+              alignItems: 'center',
+            }}>
+            <View style={styles.plansContainer_firstColumn}>
+              <Text style={styles.plansContainer_title}>Features</Text>
+            </View>
+            <View style={styles.plansContainer_restOfColumn}>
+              <Text style={[styles.plansContainer_title, { textAlign: 'center' }]}>
+                Connect Tokens
+              </Text>
+            </View>
+            <View style={styles.plansContainer_restOfColumn}>
+              <Text style={[styles.plansContainer_title, { textAlign: 'center' }]}>
+                Super Connects
+              </Text>
+            </View>
+            <View style={styles.plansContainer_restOfColumn}>
+              <Text style={[styles.plansContainer_title, { textAlign: 'center' }]}>
+                Premium
+              </Text>
+            </View>
+          </View>
+
+          {featuresList.map((item, index) => (
+            <FieldOfTable
+              key={index}
+              feature={item.feature}
+              connects={item.connects}
+              premium={item.premium}
+            />
+          ))}
+
+        </View>
+      </ScrollView>
+    </View>
+  </SafeContainer>
+);
+
 };
 
 export default UserProfileScreen;
@@ -342,7 +343,7 @@ const styles = StyleSheet.create({
     color: THEME_COLORS.dark,
   },
   plansContainer_restOfColumn: {
-    flex: 0.25,
+    flex: 0.3,
     alignItems: 'center',
   },
   plansContainer_feature: {
@@ -353,22 +354,29 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'space-evenly',
     alignItems: 'center',
-    paddingVertical: 25,
+    paddingVertical: 10,
     paddingHorizontal: 10,
+    marginHorizontal: 5,
+    flex: 0.4,
+    borderWidth: 0,
+    borderRadius: 15,
+    borderColor: 'transparent'
   },
   planCard_icon: {
     width: '100%',
-    height: 50,
+    height: 30,
     margin: 10,
+    resizeMode:'contain'
   },
+  planCard_link: {...themeText.bodyBoldSix, color: 'black', textAlign: 'center'},
   planCard_header: {
-    color: 'white',
-    ...themeText.bodyMediumFour,
+    color: 'black',
+    ...themeText.bodyMediumSeven,
     textAlign: 'center',
     paddingTop: 2,
   },
   planCard_textContainer: {
-    flex: 1,
+    flex: 1
   },
   planCard_paragraph: {
     color: 'white',

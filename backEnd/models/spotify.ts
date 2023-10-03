@@ -1,4 +1,4 @@
-import { Model, ForeignKey, Column, Table, DataType, PrimaryKey, AutoIncrement } from 'sequelize-typescript';
+import { Model, ForeignKey, Column, Table, DataType, PrimaryKey, AutoIncrement, Index } from 'sequelize-typescript';
 import { User } from './user';
 
 @Table
@@ -32,6 +32,7 @@ export class TopArtists extends Model<TopArtists> {
   artistName!: string;
 
   @Column(DataType.STRING)
+  @Index
   artistSpotifyId!: string;
 
   @Column(DataType.STRING)

@@ -6,7 +6,8 @@ import {
     PrimaryKey,
     AutoIncrement,
     ForeignKey,
-    BelongsTo
+    BelongsTo,
+    Index
   } from 'sequelize-typescript';
   
   @Table({ timestamps: false })
@@ -31,6 +32,7 @@ export class SecondaryGender extends Model<SecondaryGender> {
 
   @ForeignKey(() => PrimaryGender)
   @Column(DataType.INTEGER)
+  @Index
   primaryGenderId!: number;
 
   @Column(DataType.STRING)

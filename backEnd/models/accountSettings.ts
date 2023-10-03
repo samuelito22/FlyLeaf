@@ -5,7 +5,8 @@ import {
     DataType,
     PrimaryKey,
     ForeignKey,
-    BelongsTo
+    BelongsTo,
+    Index
   } from 'sequelize-typescript';
 import { User } from './user';
   
@@ -13,6 +14,7 @@ import { User } from './user';
   export class AccountSettings extends Model<AccountSettings> {
   
     @PrimaryKey
+    @Index
     @ForeignKey(() => User)
     @Column(DataType.UUID)
     userId!: string;
@@ -23,6 +25,9 @@ import { User } from './user';
   
     @Column({ type: DataType.BOOLEAN, defaultValue: true })
     discoverable!: boolean;
+
+    @Column({ type: DataType.BOOLEAN, defaultValue: false })
+    distanceInKm!: boolean;
   
     @BelongsTo(() => User)
     user!: User;

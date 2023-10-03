@@ -16,13 +16,13 @@ import awsServices from "../services/aws.services";
 import { User } from "../models/user";
 import Model from "../models";
 
-const publicAttributes = ['id', 'firstName', 'dateOfBirth', 'primaryGender', 'secondaryGender', 'bio', 'height', 'email', 'phoneNumber', 'city', 'verified', 'pictures', 'interests', 'answers', 'topArtists', 'images', 'seeking', 'languages'];
+const publicAttributes = ['id', 'firstName', 'dateOfBirth', 'primaryGenderId', 'secondaryGenderId', 'bio', 'height', 'city', 'verified', 'longitude', 'latitude'];
 
 
 async function getMyProfile(req: express.Request, res: express.Response) {
   try {
 
-    const { grantType, coordinates } = req.body;
+    const { grantType, longitude, latitude} = req.body;
     validateGrantType(grantType, "access_token");
 
     const accessToken = extractTokenFromHeader(req) as string;
@@ -37,7 +37,7 @@ async function getMyProfile(req: express.Request, res: express.Response) {
     const coordinatesValidation = Joi.object({
       longitude: Joi.number().required(),
       latitude: Joi.number().required(),
-    }).validate({ ...coordinates }); // Assuming coordinates are in the request body
+    }).validate({longitude, latitude }); // Assuming coordinates are in the request body
 
     if (coordinatesValidation.error) {
       return sendErrorResponse(
@@ -58,9 +58,53 @@ async function getMyProfile(req: express.Request, res: express.Response) {
 
     await user.save();
 
-    user = await Model.User.findByPk(decode.sub)
+   user = await Model.User.findByPk(decode.sub, {
+  include: [
+    { model: Model.PrimaryGender, as: 'primaryGender' },
+    { model: Model.SecondaryGender, as: 'secondaryGender', include: [{model: Model.PrimaryGender, as: 'primaryGender'}] },
+    { model: Model.NotificationSettings },
+    { model: Model.FilterSettings, include: [
+      {
+        model: Model.RelationshipGoal,
+        as: 'relationshipGoal',  // The alias you may have defined in your FilterSettings model for RelationshipGoal
+      }
+    ] },
+    { model: Model.PrivacySettings },
+    { model: Model.AccountSettings },
+    { model: Model.UserSubscriptionFeatures },
+    { model: Model.UserLanguages, include: [{model: Model.Languages, as: 'language'}] },
+    { model: Model.UserInterests, include: [{model: Model.Interests, as: 'interest'}] },
+    { model: Model.UserAnswers,  include: [
+      {
+        model: Model.Answers,
+        as: 'answer', 
+        include: [
+          {
+            model: Model.Questions,
+            as: 'question',  // The alias you may have defined in your FilterSettings model for RelationshipGoal
+          }
+        ]
+      }
+    ] },
+    { model: Model.UserMatches, as: 'matches' },
+    { model: Model.UserMatches, as: 'matchedBy' },
+    { model: Model.UserPictures },
+    { model: Model.Conversations, as: 'conversationsInitiated' },
+    { model: Model.Conversations, as: 'conversationsReceived' },
+    { model: Model.Payments },
+    { model: Model.NotificationsHistory },
+    { model: Model.UserBlocked, as: 'blockedUsers' },
+    { model: Model.DeviceInfo },
+    { model: Model.UserTopArtists },
+    { model: Model.InstagramImages },
+    { model: Model.UserSubscriptions },
+    { model: Model.UserConnects},
+    { model: Model.UserSeekingGender }
+  ]
+});
 
-    if (user && user.pictures && Array.isArray(user.pictures)) {
+
+    if (user) {
       // Extract the picture names into an array
       const pictureNames = user.pictures.map(
         (pictureObj: any) => pictureObj.name
@@ -77,6 +121,7 @@ async function getMyProfile(req: express.Request, res: express.Response) {
     } else {
       console.warn("user.pictures is not defined or not an array");
     }
+    
 
     return res.status(200).json({
       type: "success",
@@ -84,6 +129,7 @@ async function getMyProfile(req: express.Request, res: express.Response) {
       user,
     });
   } catch (error) {
+    console.log(error)
     const errorMessage = (error as Error).message;
 
     const status = centralizedErrorHandler(errorMessage);
@@ -103,6 +149,36 @@ async function getUserProfile(req: express.Request, res: express.Response) {
 
     let user = await User.findByPk(id, {
       attributes: publicAttributes, 
+      include: [
+        { model: Model.PrivacySettings },
+        { model: Model.UserTopArtists },
+        { model: Model.UserSeekingGender },
+        { model: Model.PrimaryGender, as: 'primaryGender' },
+        { model: Model.SecondaryGender, as: 'secondaryGender', include: [{model: Model.PrimaryGender, as: 'primaryGender'}] },
+        { model: Model.InstagramImages },
+        { model: Model.UserLanguages, include: [{model: Model.Languages, as: 'language'}] },
+        { model: Model.UserInterests, include: [{model: Model.Interests, as: 'interest'}] },
+        { model: Model.UserAnswers,  include: [
+          {
+            model: Model.Answers,
+            as: 'answer', 
+            include: [
+              {
+                model: Model.Questions,
+                as: 'question',  // The alias you may have defined in your FilterSettings model for RelationshipGoal
+              }
+            ]
+          }
+        ] },
+        { model: Model.FilterSettings, include: [
+          {
+            model: Model.RelationshipGoal,
+            as: 'relationshipGoal',  // The alias you may have defined in your FilterSettings model for RelationshipGoal
+          }
+        ] },
+        { model: Model.UserPictures },
+
+      ]
     });
     if (!user) throw new Error(USER_NOT_FOUND_ERR);
 
@@ -132,6 +208,7 @@ async function getUserProfile(req: express.Request, res: express.Response) {
       { user }
     );
   } catch (error) {
+    console.log(error)
     const errorMessage = (error as Error).message;
 
     const status = centralizedErrorHandler(errorMessage);

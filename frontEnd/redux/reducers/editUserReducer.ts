@@ -2,70 +2,131 @@ import {TYPES} from '../../constants';
 import * as editUserActions from '../actions/editProfileActions';
 
 const initialStateEditUser: TYPES.InitialStateEditUserType = {
-  userProfile: null,
-  userResponses: [],
-  newPictures: [],
-  removedPictures: [],
-  gender: undefined
+  bio: "",
+  answers: [],
+  primaryGenderId: 0,
+  interestsIds: [],
+  seekingIds: [],
+  topArtists: [],
+  secondaryGenderId: undefined,
+  instagramImages: [],
+  jobTitle: "",
+  employer: "",
+  height: undefined,
+  languagesIds: [],
+  pictures: [],
+  picturesToAdd: [],
+  picturesToRemove: [],
+  id: ""
 };
-
-interface AnyObject {
-  [key: string]: any;
-}
-
-const updateNestedObject = <T extends AnyObject>(obj: T, path: string[], value: any): T => {
-  if (path.length === 1) {
-    return { ...obj, [path[0]]: value } as T;
-  }
-  const [first, ...rest] = path;
-  
-  let nextObj = obj[first];
-  if (typeof nextObj !== 'object' || nextObj === null) {
-    // If it's not an object or it's null, initialize it as an empty object
-    nextObj = {};
-  }
-
-  return {
-    ...obj,
-    [first]: updateNestedObject(nextObj, rest, value)
-  } as T;
-}
-
-
-
 
 const editUserReducer = (
   state = initialStateEditUser,
   action: editUserActions.UserProfileUpdatesActionTypes,
 ): TYPES.InitialStateEditUserType => {
-  let field: string;
-  let value: any;
 
   switch (action.type) {
     case editUserActions.INIT_USER_PROFILE:
       return {
         ...state,
-        userProfile: action.payload
+        bio: action.payload.bio,
+        answers: action.payload.answers.map(item => ({ questionId: item.answer.questionId, answerId: item.answerId })),
+        primaryGenderId: action.payload.primaryGenderId,
+        interestsIds: action.payload.interests.map(item => item.interestId),
+        seekingIds: action.payload.seeking.map(item => item.primaryGenderId),
+        topArtists: action.payload.topArtists,
+        secondaryGenderId: action.payload.secondaryGenderId,
+        instagramImages: action.payload.instagramImages,
+        jobTitle: action.payload.jobTitle,
+        employer: action.payload.employer,
+        height: action.payload.height,
+        languagesIds: action.payload.languages?.map(item => item.id),
+        pictures: action.payload.pictures,
+        id: action.payload.id
       }
-      case editUserActions.UPDATE_FORMAT:
-          ( {field, value} = action.payload);
-          return {
-            ...state,
-            [field]: value
-          };
-      case editUserActions.UPDATE_USER_PROFILE:
-        ( {field, value} = action.payload);
-        if (!state.userProfile) return state;
-        
-        // Split the field string by '.' to get an array path
-        const fieldPath = field.split('.');
-        
+
+    case editUserActions.SET_BIO:
+      return {
+        ...state,
+        bio: action.payload,
+      };
+
+    case editUserActions.SET_JOB_TITLE:
+      return {
+        ...state,
+        jobTitle: action.payload,
+      };
+
+    case editUserActions.SET_EMPLOYER:
+      return {
+        ...state,
+        employer: action.payload,
+      };
+
+    case editUserActions.SET_PRIMARY_GENDER_ID:
+      return {
+        ...state,
+        primaryGenderId: action.payload,
+      };
+
+    case editUserActions.SET_SECONDARY_GENDER_ID:
+      return {
+        ...state,
+        secondaryGenderId: action.payload,
+      };
+
+    case editUserActions.SET_INTERESTS_IDS:
+      return {
+        ...state,
+        interestsIds: action.payload,
+      };
+
+    case editUserActions.SET_ANSWERS:
+      return {
+        ...state,
+        answers: action.payload,
+      };
+
+    case editUserActions.SET_SEEKING_IDS:
+      return {
+        ...state,
+        seekingIds: action.payload,
+      };
+
+    case editUserActions.SET_TOP_ARTISTS:
+      return {
+        ...state,
+        topArtists: action.payload,
+      };
+
+    case editUserActions.SET_INSTAGRAM_IMAGES:
+      return {
+        ...state,
+        instagramImages: action.payload,
+      };
+
+    case editUserActions.SET_LANGUAGES_IDS:
+      return {
+        ...state,
+        languagesIds: action.payload,
+      };
+
+    case editUserActions.SET_HEIGHT:
+      return {
+        ...state,
+        height: action.payload,
+      };
+      case editUserActions.SET_PICTURES_TO_ADD:
         return {
           ...state,
-          userProfile: updateNestedObject(state.userProfile, fieldPath, value)
+          picturesToAdd: action.payload,
         };
-        
-        
+        case editUserActions.SET_PICTURES_TO_REMOVE:
+        return {
+          ...state,
+          picturesToRemove: action.payload,
+        };
+
     default:
       return state;
   }

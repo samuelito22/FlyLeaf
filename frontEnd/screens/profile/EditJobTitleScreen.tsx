@@ -6,7 +6,6 @@ import {
   EditProfileHeader,
   KeyboardAvoidingViewWrapper,
   SafeContainer,
-  TextField,
 } from '../../components';
 import {useSelector} from 'react-redux';
 import {EditProfileActions} from '../../redux';
@@ -16,7 +15,7 @@ const EditJobTitleScreen = () => {
   // Dispatch function from Redux to update the firstName value
   const dispatch = useDispatch();
   const jobTitle = useSelector(
-    (state: TYPES.AppState) => state.editUserReducer.userProfile?.profession?.jobTitle,
+    (state: TYPES.AppState) => state.editUserReducer.jobTitle,
   )
 
   return (
@@ -44,13 +43,9 @@ const EditJobTitleScreen = () => {
             placeholder="Marketing Manager, etc."
             placeholderTextColor={THEME_COLORS.tertiary}
             onChangeText={text =>
-              text != ''
-                ? dispatch(
-                    EditProfileActions.updateUserProfile('profession.jobTitle', text),
-                  )
-                : dispatch(
-                    EditProfileActions.updateUserProfile('profession.jobTitle', undefined),
-                  )
+              dispatch(
+                EditProfileActions.setJobTitle(text),
+              )
             }
             numberOfLines={1}
           />

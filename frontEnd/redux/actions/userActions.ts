@@ -1,12 +1,12 @@
-export const SET_USER_PROFILE = 'SET_USER_PROFILE' as const;
-export const SET_CURRENT_USER_ID = 'SET_CURRENT_USER_ID' as const;
-export const REMOVE_USER_PROFILE = 'REMOVE_USER_PROFILE' as const;
-export const SET_QUESTIONS = 'SET_QUESTIONS' as const;
-export const SET_INTERESTS = 'SET_INTERESTS' as const;
-export const SET_GENDERS = 'SET_GENDERS' as const;
-export const SET_LANGUAGES = 'SET_LANGUAGES' as const;
-export const SET_ANSWERS = 'SET_ANSWERS' as const
-export const SET_RELATIONSHIP_GOALS = 'SET_RELATIONSHIP_GOALS' as const
+export const SET_USER_PROFILE = 'user/SET_USER_PROFILE' as const;
+export const SET_CURRENT_USER_ID = 'user/SET_CURRENT_USER_ID' as const;
+export const REMOVE_USER_PROFILE = 'user/REMOVE_USER_PROFILE' as const;
+export const SET_QUESTIONS = 'user/SET_QUESTIONS' as const;
+export const SET_INTERESTS = 'user/SET_INTERESTS' as const;
+export const SET_GENDERS = 'user/SET_GENDERS' as const;
+export const SET_LANGUAGES = 'user/SET_LANGUAGES' as const;
+export const SET_ANSWERS = 'user/SET_ANSWERS' as const
+export const SET_RELATIONSHIP_GOALS = 'user/SET_RELATIONSHIP_GOALS' as const
 
 import {TYPES} from '../../constants';
 
@@ -109,7 +109,7 @@ export type UserProfileActionTypes =
 
 // Set user profile action
 export const setUserProfile =
-  (userId: string, userData: TYPES.currentUserProfile) =>
+  (userId: string, userData: TYPES.CurrentUser) =>
   (dispatch: (action: SetUserProfileAction) => void) => {
     dispatch({
       type: SET_USER_PROFILE,

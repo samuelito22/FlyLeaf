@@ -1,4 +1,4 @@
-import { Model, ForeignKey, Column, Table, DataType, PrimaryKey, AutoIncrement } from 'sequelize-typescript';
+import { Model, ForeignKey, Column, Table, DataType, PrimaryKey, AutoIncrement, Index } from 'sequelize-typescript';
 import { User } from './user';
 
 @Table
@@ -15,6 +15,7 @@ export class UserReportedIssues extends Model<UserReportedIssues> {
 
   @ForeignKey(() => User)
   @Column(DataType.UUID)
+  @Index
   reportedUserId!: string;
 
   @Column(DataType.STRING)

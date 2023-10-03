@@ -17,6 +17,7 @@ import {getData} from './utils/storage';
 import {NavigationContainerRef} from '@react-navigation/native';
 import { useErrorAlert } from './utils/hooks';
 import { getLocationOnDemand } from './utils/locationChecker';
+import collectUserProfile from './utils/collectUserProfile';
 
 export const navigationRef =
   React.createRef<NavigationContainerRef<TYPES.RootStackParamList>>();
@@ -47,44 +48,8 @@ const MainContent = () => {
   useEffect(() => {
     let controller = new AbortController();
 
-    const collectUserProfile = async () => {
-        const tokens = await retrieveTokensFromKeychain();
-
-        if (tokens) {
-            const {accessToken, refreshToken} = tokens;
-
-            try {
-                const { longitude, latitude} = (await getLocationOnDemand()).coords
-                const result = await UserService.getMyProfile(
-                    accessToken,
-                    refreshToken,
-                    longitude,
-                    latitude,
-                    controller.signal,
-                )
-
-                if (result.type === 'error') {
-                    dispatch(AppStatusActions.setCurrentScreen(ROUTES.LOGIN_NAVIGATOR));
-                    navigationRef.current?.navigate(ROUTES.LOGIN_NAVIGATOR);
-                    await removeTokensFromKeychain();
-                } else {
-                    dispatch(UserActions.setCurrentUserId(result.user._id));
-                    dispatch(UserActions.setUserProfile(result.user._id, result.user));
-                }
-            } catch (e:any) {
-                if (e.name === 'AbortError') {
-                    console.log('AbortError: Fetch request aborted.');
-                } else {
-                    console.log(e);
-                }
-            }
-        } else {
-            navigationRef.current?.navigate(ROUTES.LOGIN_NAVIGATOR);
-        }
-    };
-
     if (online && !currentUserId && currentScreen == ROUTES.BOTTOM_TAB_NAVIGATOR) {
-        collectUserProfile();
+        collectUserProfile(dispatch, controller);
     }
 
     return () => {
@@ -92,7 +57,7 @@ const MainContent = () => {
             controller.abort();
         }
     };
-}, [online]);
+}, [online, currentUserId, currentScreen]);
 
 
   if (isBlocked) return <BlockedScreen />;

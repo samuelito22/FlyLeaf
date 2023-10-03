@@ -3,5 +3,5 @@ import {ThunkDispatch} from 'redux-thunk';
 import {TYPES} from '../../constants';
 
 export default function useDispatch() {
-  return _useDispatch<ThunkDispatch<TYPES.AppState, null, TYPES.AppAction>>();
+  return _useDispatch<ThunkDispatch<TYPES.AppState, null, any>>();
 }

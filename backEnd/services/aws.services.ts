@@ -85,7 +85,7 @@ const addUserPictureToS3 = async (file: any, userId: string) => {
       const params = {
         Bucket: 'flyleaf-pictures',
         Key: pictureName,
-        Expires: 86400,
+        Expires: 10800,
       };
       
       try {

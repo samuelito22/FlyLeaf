@@ -1,4 +1,4 @@
-import { Model, ForeignKey, Column, Table, DataType, PrimaryKey, AutoIncrement } from 'sequelize-typescript';
+import { Model, ForeignKey, Column, Table, DataType, PrimaryKey, AutoIncrement, Index } from 'sequelize-typescript';
 import { User } from './user';
 import { Conversations } from './conversations';
 
@@ -12,10 +12,12 @@ export class Messages extends Model<Messages> {
 
   @ForeignKey(() => Conversations)
   @Column(DataType.INTEGER)
+  @Index
   conversationId!: number;
 
   @ForeignKey(() => User)
   @Column(DataType.UUID)
+  @Index
   userId!: string;
 
   @Column(DataType.STRING)

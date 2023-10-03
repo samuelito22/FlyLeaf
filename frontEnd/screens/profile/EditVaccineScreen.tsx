@@ -18,77 +18,76 @@ import {verticalScale} from 'react-native-size-matters';
 import {useSelector} from 'react-redux';
 
 const EditVaccineScreen = () => {
-  const { questionsList} =
+  const { questions, answers} =
     useSelector((state: TYPES.AppState) => state.usersReducer);
-    const userResponses =
-    useSelector((state: TYPES.AppState) => state.editUserReducer.userResponses);
-  const vaccineField = questionsList?.find(item => item.shortForm === "Vaccine")
-  const additionalInformation = useSelector((state: TYPES.AppState) => state.editUserReducer.userProfile?.additionalInformation)
-  const [vaccine, setVaccine] = useState<undefined | string> (additionalInformation?.find(item => item.questionShortForm === 'Vaccine')?.answer)
+  const vaccineField = questions?.find(item => item.shortForm === "Vaccine")
+  const userResponse = useSelector((state: TYPES.AppState) => state.editUserReducer.answers)
+  const [vaccineId, setVaccineId] = useState<undefined | number> (userResponse.find(item => item.questionId === vaccineField?.id)?.answerId)
 
   const dispatch = useDispatch();
 
-  const ClickableIndicatorPrimaryButtonHandlePress = (name: string) => {
-    if (vaccine == name) {
-      setVaccine(undefined);
+  const ClickableIndicatorPrimaryButtonHandlePress = (id: number) => {
+    if (vaccineId == id) {
+      setVaccineId(undefined);
     } else {
-      setVaccine(name);
+      setVaccineId(id);
     }
   };
 
   useEffect(() => {
-    const updatedAdditionalInformation = additionalInformation?.map(item => 
-      item.questionShortForm === 'Vaccine'
-        ? { ...item, answer: vaccine }
-        : item
-    ) || [];
-  
-    if (!additionalInformation?.some(item => item.questionShortForm === 'Vaccine') && vaccine) {
-      updatedAdditionalInformation.push({
-        question: vaccineField?.question as string,
-        questionShortForm: 'Vaccine',
-        questionIcon: '',
-        answer: vaccine,
-        questionType: 'Basic' 
-      });
+    let updatedAnswers:{questionId:number, answerId: number}[]
+    if(vaccineId) {
+      const isQuestionPresent = userResponse.some(item => item.questionId === vaccineField?.id);
+      
+      if (isQuestionPresent) {
+        updatedAnswers = userResponse.map(item => {
+          if (item.questionId === vaccineField?.id) {
+            return {
+              ...item,
+              questionId: vaccineField?.id,
+              answerId: vaccineId,
+            };
+          }
+          return item;
+        });
+      } else {
+        updatedAnswers = [
+          ...userResponse,
+          {
+            questionId: vaccineField?.id!,
+            answerId: vaccineId,
+          },
+        ];
+      }
+    } else {
+      updatedAnswers = userResponse.filter(item => item.questionId !== vaccineField?.id);
     }
-  
-    dispatch(EditProfileActions.updateUserProfile('additionalInformation', updatedAdditionalInformation));
-// Refactored code for updating userResponses
-const newResponse = {
-  questionId: vaccineField?._id,
-  answerId: vaccineField?.answers.find(item => item.text === vaccine)?._id
-};
+    
 
-const currentResponses = Array.isArray(userResponses) ? userResponses : [];
+    dispatch(EditProfileActions.setAnswers(updatedAnswers))
+  }, [vaccineId]);
 
-const updatedUserResponses = currentResponses.some(response => response.questionId === newResponse.questionId)
-    ? currentResponses.map(response => response.questionId === newResponse.questionId ? newResponse : response)
-    : [...currentResponses, newResponse];
 
-dispatch(EditProfileActions.updateFormat('userResponses', updatedUserResponses));
-  }, [vaccine]);
   return (
     <SafeContainer>
       <EditProfileHeader leftIconText="Save" />
       <View style={styles.container}>
-        <Text style={styles.title}>{vaccineField?.question}</Text>
-
+        <Text style={styles.title}>{vaccineField?.text}</Text>
         <ScrollView
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           overScrollMode={'never'}
           contentContainerStyle={{flexGrow: 1}}>
-          {vaccineField?.answers.map((answer, index) => (
+          {answers?.filter(item => item.questionId === vaccineField?.id)?.map((answer, index) => (
             <View key={index} style={styles.clickableIndicatorPrimaryButton}>
-            <Button.ClickableIndicatorPrimaryButton
-              onPress={() =>
-                ClickableIndicatorPrimaryButtonHandlePress(answer.text)
-              }
-              isActive={vaccine === answer.text}>
-              {answer.text}
-            </Button.ClickableIndicatorPrimaryButton>
-          </View>
+              <Button.ClickableIndicatorPrimaryButton
+                onPress={() =>
+                  ClickableIndicatorPrimaryButtonHandlePress(answer.id)
+                }
+                isActive={vaccineId === answer.id}>
+                {answer.text}
+              </Button.ClickableIndicatorPrimaryButton>
+            </View>
           ))}
         </ScrollView>
         <Text style={styles.extraInformation}>

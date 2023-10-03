@@ -7,7 +7,8 @@ import {
     AutoIncrement,
     IsIn,
     BelongsTo,
-    ForeignKey
+    ForeignKey,
+    Index
   } from 'sequelize-typescript';
 import { User } from './user';
   
@@ -43,6 +44,7 @@ import { User } from './user';
   
     @ForeignKey(() => Questions)
     @Column(DataType.INTEGER)
+    @Index
     questionId!: number;
   
     @Column(DataType.STRING)

@@ -12,6 +12,9 @@ import {
   EditCompanyScreen,
   EditVaccineScreen,
   EditEthnicityScreen,
+  EditInterestScreen,
+  EditSeekingScreen,
+  EditAdvancedScreen,
 } from '../screens';
 import {cardSlideLeftAnimation} from '../utils/navigatorSlideAnimation';
 
@@ -64,6 +67,18 @@ const ProfileNavigator = () => {
       <Stack.Screen
         name={ROUTES.EDIT_ETHNICITY_SCREEN}
         component={EditEthnicityScreen}
+      />
+      <Stack.Screen
+      name={ROUTES.EDIT_INTERESTS_SCREEN}
+      component={EditInterestScreen}
+      />
+      <Stack.Screen
+      name={ROUTES.EDIT_SEEKING_SCREEN}
+      component={EditSeekingScreen}
+      />
+      <Stack.Screen
+      name={ROUTES.EDIT_ADVANCED_SCREEN}
+      component={EditAdvancedScreen}
       />
     </Stack.Navigator>
   );

@@ -1,10 +1,11 @@
-import { Model, Column, Table, DataType, PrimaryKey, AutoIncrement } from 'sequelize-typescript';
+import { Model, Column, Table, DataType, PrimaryKey, AutoIncrement, Index } from 'sequelize-typescript';
 
 @Table
 export class Ads extends Model<Ads> {
 
   @PrimaryKey
   @AutoIncrement
+  @Index
   @Column(DataType.INTEGER)
   id!: number;
 

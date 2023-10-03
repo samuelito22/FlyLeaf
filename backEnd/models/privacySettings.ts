@@ -5,7 +5,8 @@ import {
     DataType,
     PrimaryKey,
     ForeignKey,
-    BelongsTo
+    BelongsTo,
+    Index
   } from 'sequelize-typescript';
 import { User } from './user';
   
@@ -15,6 +16,7 @@ import { User } from './user';
     @PrimaryKey
     @ForeignKey(() => User)
     @Column(DataType.UUID)
+    @Index
     userId!: string;
   
     @Column({ type: DataType.BOOLEAN, defaultValue: true })

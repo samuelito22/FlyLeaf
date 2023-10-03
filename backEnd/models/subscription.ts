@@ -6,7 +6,8 @@ import {
     PrimaryKey,
     ForeignKey,
     BelongsTo,
-    AutoIncrement
+    AutoIncrement,
+    Index
   } from 'sequelize-typescript';
 import { User } from './user';
 
@@ -89,6 +90,7 @@ export class UserSubscriptions extends Model<UserSubscriptions> {
 
   @ForeignKey(() => User)
   @Column(DataType.UUID)
+  @Index
   userId!: string;
 
   @ForeignKey(() => SubscriptionPackages)

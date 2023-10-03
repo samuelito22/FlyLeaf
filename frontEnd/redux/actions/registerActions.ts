@@ -1,20 +1,20 @@
 // Define the action types
-export const SET_FIRST_NAME = 'SET_FIRST_NAME' as const;
-export const SET_DATE_OF_BIRTH = 'SET_DATE_OF_BIRTH' as const;
-export const SET_PRIMARY_GENDER_ID = 'SET_PRIMARY_GENDER_ID' as const;
-export const SET_SECONDARY_GENDER_ID = 'SET_SECONDARY_GENDER_ID' as const;
-export const SET_EMAIL = 'SET_EMAIL' as const;
-export const SET_PHONE_NUMBER = 'SET_PHONE_NUMBER' as const;
-export const SET_LONGITUDE = 'SET_LONGITUDE' as const;
-export const SET_LATITUDE = 'SET_LATITUDE' as const;
-export const SET_INTERESTS_IDS = 'SET_INTERESTS_IDS' as const;
-export const SET_ANSWERS = 'SET_ANSWERS' as const;
-export const SET_RELATIONSHIP_GOAL_ID = 'SET_RELATIONSHIP_GOAL_ID' as const;
-export const SET_SEEKING_IDS = 'SET_SEEKING_IDS' as const;
-export const RESET_REGISTER = 'RESET_REGISTER' as const;
-export const SET_IS_REGISTER_COMPLETED = 'SET_IS_REGISTER_COMPLETED' as const;
-export const SET_PICTURES = 'SET_PICTURES' as const;
-export const SET_PROGRESS_BAR_VALUE = 'SET_PROGRESS_BAR_VALUE' as const
+export const SET_FIRST_NAME = 'register/SET_FIRST_NAME' as const;
+export const SET_DATE_OF_BIRTH = 'register/SET_DATE_OF_BIRTH' as const;
+export const SET_PRIMARY_GENDER_ID = 'register/SET_PRIMARY_GENDER_ID' as const;
+export const SET_SECONDARY_GENDER_ID = 'register/SET_SECONDARY_GENDER_ID' as const;
+export const SET_EMAIL = 'register/SET_EMAIL' as const;
+export const SET_PHONE_NUMBER = 'register/SET_PHONE_NUMBER' as const;
+export const SET_LONGITUDE = 'register/SET_LONGITUDE' as const;
+export const SET_LATITUDE = 'register/SET_LATITUDE' as const;
+export const SET_INTERESTS_IDS = 'register/SET_INTERESTS_IDS' as const;
+export const SET_ANSWERS = 'register/SET_ANSWERS' as const;
+export const SET_RELATIONSHIP_GOAL_ID = 'register/SET_RELATIONSHIP_GOAL_ID' as const;
+export const SET_SEEKING_IDS = 'register/SET_SEEKING_IDS' as const;
+export const RESET_REGISTER = 'register/RESET_REGISTER' as const;
+export const SET_IS_REGISTER_COMPLETED = 'register/SET_IS_REGISTER_COMPLETED' as const;
+export const SET_PICTURES = 'register/SET_PICTURES' as const;
+export const SET_PROGRESS_BAR_VALUE = 'register/SET_PROGRESS_BAR_VALUE' as const
 
 
 

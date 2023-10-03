@@ -33,4 +33,5 @@ export const style = StyleSheet.create({
     width: 30,
     height: 30,
   },
+  
 });

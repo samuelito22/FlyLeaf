@@ -107,6 +107,12 @@ console.log(parsedBody)
           interestId: interestId
       } as any, {transaction: t});
   }
+  for (let seekingId of value.seekingIds) {
+    await Model.UserSeekingGender.create({
+        userId: newUser.id,
+        primaryGenderId: seekingId
+    } as any, {transaction: t});
+}
   for (let answer of value.answers) {
     const answerDoc = await Model.Answers.findByPk(answer.answerId);
     if (!answerDoc || answerDoc.questionId !== answer.questionId) {
@@ -601,6 +607,7 @@ async function verifyOTP(req: express.Request, res: express.Response) {
     await t.commit();
     return sendSuccessResponse(res, 200, "OTP verified and correct.", { newUser: true });
   } catch (error) {
+    console.log(error)
     await t.rollback();
     const errorMessage = (error as Error).message;
     const status = centralizedErrorHandler(errorMessage);
@@ -663,7 +670,7 @@ async function sendLink(req: express.Request, res: express.Response) {
       service: "gmail",
       auth: {
         user: "flyleaf.dev@gmail.com",
-        pass: "nzriccfimllfmuhx",
+        pass: "sayb epqp cgzn dtme",
       },
       tls: {
         rejectUnauthorized: false,
@@ -687,6 +694,7 @@ async function sendLink(req: express.Request, res: express.Response) {
 
     return sendSuccessResponse(res, 200, "Email link sent successfully.");
   } catch (error) {
+    console.log(error)
     const errorMessage = (error as Error).message;
 
     const status = centralizedErrorHandler(errorMessage);
@@ -744,6 +752,13 @@ async function verifyLink(req: express.Request, res: express.Response) {
       if (userDoc) {
         const authCode = crypto.randomBytes(16).toString("hex");
 
+        await Model.AuthCode.destroy({
+          where: {
+            userId: userDoc.id
+          },
+          transaction: t
+        });
+
         // You can create a new model for storing this one-time use code or use existing models
         const authCodeDoc = new Model.AuthCode({
           code: authCode,
@@ -765,6 +780,8 @@ async function verifyLink(req: express.Request, res: express.Response) {
       throw new Error(INVALID_TOKEN);
     }
   } catch (error) {
+    console.log(error)
+
     await t.rollback()
     const errorMessage = (error as Error).message;
 

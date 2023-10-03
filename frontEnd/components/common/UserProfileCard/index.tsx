@@ -33,12 +33,13 @@ import {
 import {ButtonImage, DarkButton, LightButton} from '../Button';
 import {useSelector} from 'react-redux';
 import { getAge } from '../../../utils/getAge';
+import { cmToFeetInches } from '../../../utils/convertToFeetAndInches';
 
 const UserProfileCard = ({
   userData,
   moveable,
 }: {
-  userData: TYPES.UserProfile;
+  userData: TYPES.ExternalUser;
   moveable: boolean;
 }) => {
   const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window');
@@ -65,7 +66,7 @@ const UserProfileCard = ({
     null;
   const currentUser = useSelector((state: TYPES.AppState) =>
     currentUserId
-      ? (state.usersReducer.byId[currentUserId] as TYPES.currentUserProfile)
+      ? (state.usersReducer.byId[currentUserId])
       : null,
   );
 
@@ -235,10 +236,10 @@ const UserProfileCard = ({
                   </View>
 
                   <View style={styles.bottomContainer}>
-                    {userData.username && userData.dateOfBirth && (
+                    {userData.firstName && userData.dateOfBirth && (
                       <View style={styles.usernameContainer}>
                         <Text style={styles.headerText}>
-                          {userData.username}{' '}
+                          {userData.firstName}{' '}
                           <Text style={styles.headerText_age}>
                             {' '}
                             {getAge(new Date(userData.dateOfBirth))}
@@ -258,44 +259,44 @@ const UserProfileCard = ({
                           {userData.interests?.map((interest, index) => (
                             <View style={styles.interestCard} key={index}>
                               <Text style={styles.interestCard_text}>
-                                {interest.name}
+                                {interest.interest.text}
                               </Text>
                             </View>
                           ))}
                         </View>
                       )}
-                      {userData.location.coordinates && currentUser && (
+                      {(userData.longitude && userData.latitude) && currentUser && (
                         <Text
                           style={styles.distanceText}>
-                          {currentUser.settings.distanceInKm
+                          {currentUser.accountSettings.distanceInKm
                             ? Math.round(
                                 calculateDistanceInKm(
-                                  currentUser.location.coordinates,
-                                  userData.location.coordinates,
+                                  {longitude: currentUser.longitude, latitude: currentUser.latitude},
+                                  {longitude: userData.longitude, latitude: userData.latitude},
                                 ),
                               )
                             : Math.round(
                                 calculateDistanceInMiles(
-                                  currentUser.location.coordinates,
-                                  userData.location.coordinates,
+                                  {longitude: currentUser.longitude, latitude: currentUser.latitude},
+                                  {longitude: userData.longitude, latitude: userData.latitude},
                                 ),
                               )}{' '}
-                          {currentUser.settings.distanceInKm
+                          {currentUser.accountSettings.distanceInKm
                             ? `kilometers`
                             : `miles`}{' '}
                           away
-                          {userData.location.city &&
-                            `, ${userData.location.city}`}
+                          {userData.city &&
+                            `, ${userData.city}`}
                         </Text>
                       )}
                     </View>
                   </View>
                 </View>
 
-                {userData.relationshipGoal && (
+                {userData.filterSettings.relationshipGoal && (
                   <Text
                     style={styles.relationshipText}>
-                    Looking for a {userData.relationshipGoal}
+                    Looking for a {userData.filterSettings.relationshipGoal.text}
                   </Text>
                 )}
                 {userData.bio && (
@@ -304,49 +305,53 @@ const UserProfileCard = ({
                     <Text style={styles.bioText}>{userData?.bio}</Text>
                   </View>
                 )}
-                {userData.additionalInformation && (
+                {(userData.answers && userData.answers.length > 0) && (
                   <View style={[styles.informationSection, {width: cardWidth}]}>
                     <Text style={styles.informationTitle}>
                       Basic information
                     </Text>
                     <View style={[styles.buttonsList]}>
-                    {userData.height &&
-
-                      <View style={styles.additionalInformationCard}>
-                        <Image
-                          source={icons.measuringTape}
-                          style={styles.additionalInformationCard_icon}
-                        />
-                        <Text style={styles.additionalInformationCard_text}>
-                          {userData.height?.feets} foot
-                          {userData.height?.inches != '0' &&
-                            ` ${userData.height?.inches}`}
-                        </Text>
-                      </View>
+                    {
+  userData.height &&
+  <View style={styles.additionalInformationCard}>
+    <Image
+      source={icons.measuringTape}
+      style={styles.additionalInformationCard_icon}
+    />
+    <Text style={styles.additionalInformationCard_text}>
+      {
+        (() => {
+          const { feet, inches } = cmToFeetInches(userData.height);
+          return `${feet} foot${inches !== 0 ? ` ${inches} inches` : ''}`;
+        })()
+      }
+    </Text>
+  </View>
 }
+
                       <View style={styles.additionalInformationCard}>
                         <Image
                           source={icons.gender}
                           style={styles.additionalInformationCard_icon}
                         />
                         <Text style={styles.additionalInformationCard_text}>
-                          {userData.gender.primary}
-                          {userData.gender.secondary &&
-                            ` (${userData.gender.secondary})`}
+                          {userData.primaryGender.text}
+                          {userData.secondaryGender &&
+                            ` (${userData.secondaryGender.text})`}
                         </Text>
                       </View>
-                      {userData.profession?.jobTitle &&
+                      {userData.jobTitle &&
                       <View style={styles.additionalInformationCard}>
                         <Image
                           source={{uri: 'https://flyleaf-icons.s3.eu-west-2.amazonaws.com/questions/job.png'}}
                           style={styles.additionalInformationCard_icon}
                         />
                         <Text style={styles.additionalInformationCard_text}>
-                          {userData.profession?.jobTitle}
+                          {userData.jobTitle}
                         </Text>
                       </View>
 }
-{userData.profession?.employer &&
+{userData.employer &&
 
                       <View style={styles.additionalInformationCard}>
                         <Image
@@ -354,30 +359,30 @@ const UserProfileCard = ({
                           style={styles.additionalInformationCard_icon}
                         />
                         <Text style={styles.additionalInformationCard_text}>
-                        {userData.profession?.employer}
+                        {userData.employer}
 
                         </Text>
                       </View>
 }
-                      {userData.additionalInformation
-                        ?.filter(item => item.questionType === 'Basic')
+                      {userData.answers
+                        ?.filter(item => item.answer.question.type === 'Basic')
                         .map((field, index) => (
                           <View
                             style={styles.additionalInformationCard}
                             key={index}>
                             <Image
-                              source={{uri: field.questionIcon}}
+                              source={{uri: field.answer.question.iconPath}}
                               style={styles.additionalInformationCard_icon}
                             />
                             <Text style={styles.additionalInformationCard_text}>
-                              {field.answer}
+                              {field.answer.text}
                             </Text>
                           </View>
                         ))}
                     </View>
                   </View>
                 )}
-                {userData.languages?.length && (
+                {(userData.languages && userData.languages?.length > 0 ) && (
                   <View style={[styles.informationSection, {width: cardWidth}]}>
                     <Text style={styles.informationTitle}>
                       Languages I know
@@ -386,14 +391,14 @@ const UserProfileCard = ({
                       {userData.languages.map((language, index) => (
                         <View style={styles.languagesCard} key={index}>
                           <Text style={styles.languagesCard_text}>
-                            {language.name}
+                            {language.text}
                           </Text>
                         </View>
                       ))}
                     </View>
                   </View>
                 )}
-                {userData.spotify && (
+                {(userData.topArtists && userData.topArtists.length > 0) && (
                   <View
                     style={styles.spotifyContainer}>
                     <View
@@ -413,7 +418,7 @@ const UserProfileCard = ({
                       horizontal
                       showsHorizontalScrollIndicator={false}
                       contentContainerStyle={styles.spotifyArtistScrollContainer}>
-                      {userData.spotify?.map((artist: any, index: number) => {
+                      {userData.topArtists?.map((artist: any, index: number) => {
                         return (
                           <View
                             key={index}
@@ -441,31 +446,31 @@ const UserProfileCard = ({
                   </View>
                 )}
 
-                {userData.additionalInformation && (
+                {(userData.answers && userData.answers.length > 0) && (
                   <View style={[styles.informationSection, {width: cardWidth}]}>
                     <Text style={styles.informationTitle}>
                       Additional information
                     </Text>
                     <View style={[styles.buttonsList]}>
-                      {userData.additionalInformation
-                        ?.filter(item => item.questionType === 'Advanced')
+                      {userData.answers
+                        ?.filter(item => item.answer.question.type === 'Advanced')
                         .map((field, index) => (
                           <View
                             style={styles.additionalInformationCard}
                             key={index}>
                             <Image
-                              source={{uri: field.questionIcon}}
+                              source={{uri: field.answer.question.iconPath}}
                               style={styles.additionalInformationCard_icon}
                             />
                             <Text style={styles.additionalInformationCard_text}>
-                              {field.answer}
+                              {field.answer.text}
                             </Text>
                           </View>
                         ))}
                     </View>
                   </View>
                 )}
-                {userData.instagram && (
+                {(userData.instagramImages && userData.instagramImages.length > 0) && (
                   <View
                     style={styles.instagramContainer}>
                     <View
@@ -485,7 +490,7 @@ const UserProfileCard = ({
                       horizontal
                       showsHorizontalScrollIndicator={false}
                       contentContainerStyle={styles.instagramImageScrollContainer}>
-                      {userData.instagram.map((image: any, index: number) => {
+                      {userData.instagramImages.map((image: any, index: number) => {
                         return (
                           <View
                             key={index}

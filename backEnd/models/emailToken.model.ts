@@ -8,6 +8,7 @@ export class EmailToken extends Model<EmailToken> {
   email!: string;
 
   @Column(DataType.STRING)
+  @Index
   token!: string;
 
   @CreatedAt

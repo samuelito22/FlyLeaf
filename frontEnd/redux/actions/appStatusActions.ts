@@ -1,7 +1,7 @@
 import {TYPES} from '../../constants';
-export const SET_CURRENT_SCREEN = 'SET_CURRENT_SCREEN' as const;
-export const SET_IS_BLOCKED = 'SET_IS_BLOCKED' as const;
-export const SET_IS_ONLINE = 'SET_IS_ONLINE' as const;
+export const SET_CURRENT_SCREEN = 'appStatus/SET_CURRENT_SCREEN' as const;
+export const SET_IS_BLOCKED = 'appStatus/SET_IS_BLOCKED' as const;
+export const SET_IS_ONLINE = 'appStatus/SET_IS_ONLINE' as const;
 
 
 interface setIsBlockedAction {

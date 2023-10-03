@@ -193,7 +193,7 @@ export interface InitialStateAppStatusType {
 }
 
 export interface InitialStateUsersType {
-  byId: Record<string, currentUserProfile>;
+  byId: Record<string, CurrentUser>;
   currentUserId: string | null;
   questions:
     | {
@@ -243,11 +243,22 @@ export interface InitialStateUsersType {
 
 
 export interface InitialStateEditUserType {
-  userProfile: EditProfile | null
-  userResponses: {questionId: string, answerId: string}[]
-  newPictures: { [key: string]: any }[];
-  removedPictures: string[];
-  gender?: {primary: string, secondary?: string}
+  bio?: string;
+  answers: { questionId: number; answerId: number }[];
+  primaryGenderId: number;
+  interestsIds: number[];
+  seekingIds: number[];
+  topArtists?: UserTopArtists[];
+  secondaryGenderId?: number;
+  instagramImages?: InstagramImages[];
+  jobTitle?: string;
+  employer?: string;
+  height?:number;
+  languagesIds?: number[];
+  pictures: Picture[],
+  picturesToRemove?: ('picture-0' | 'picture-1' | 'picture-2' | 'picture-3' | 'picture-4' | 'picture-5') []; // Assuming they are arrays of strings (URLs or IDs)
+  picturesToAdd?: string[];
+  id: string
 }
 
 
@@ -304,6 +315,9 @@ export type RootStackParamList = {
   EDIT_VACCINE_SCREEN: undefined;
   EDIT_ETHNICITY_SCREEN: undefined;
   PROFILE_NAVIGATOR: undefined;
+  EDIT_INTERESTS_SCREEN: undefined;
+  EDIT_SEEKING_SCREEN: undefined;
+  EDIT_ADVANCED_SCREEN: {questionId: number}
 };
 
 /**
@@ -343,136 +357,6 @@ export type oAuth2WebViewType = {
   onClose: () => void;
 };
 
-type UserGender = {
-  primary: string;
-  secondary?: string;
-}
-
-type UserInterest = {
-  _id: string;
-  name: string;
-  icon: string;
-}
-
-export type UserPicture = {
-  _id: string;
-  name: string;
-  blurLevel: number;
-  url: string;
-}
-
-type UserAdditionalInformation = {
-  question: string;
-  questionShortForm: string;
-  questionIcon: string;
-  answer: string;
-  questionType: 'Advanced' | 'Basic'
-}
-
-export interface SpotifyArtist {
-  id: string;
-  name: string;
-  type: string;
-  images: Array<{
-    height: number;
-    width: number;
-    url: string;
-  }>;
-  genres: string[];
-}
-
-export interface InstagramPost {
-  id: string;
-  url: string;
-}
-
-interface SafetySettings {
-  blockList: string[]; // Assuming it's a list of user ids
-  reportList: string[]; // Assuming it's a list of user ids
-}
-
-interface FilterSettings {
-  ageMax: number;
-  ageMin: number;
-  global: boolean;
-  distanceRadius: number;
-  showProfilesWithPhotos: number;
-  showVerifiedProfilesOnly: boolean;
-}
-
-interface PrivacySettings {
-  showOnlineStatus: boolean;
-  showLastActive: boolean;
-}
-
-interface AccountSettings {
-  deactivateAccountAfterInactivity: number[];
-  discoverable: boolean;
-}
-
-interface NotificationSettings {
-  emailNotifications: boolean;
-  newMessageNotification: boolean;
-  newMatchNotification: boolean;
-  pushNotifications: boolean;
-}
-
-interface UserSettings {
-  distanceInKm: boolean;
-  notification: NotificationSettings;
-  safety: SafetySettings;
-  filter: FilterSettings;
-  privacy: PrivacySettings;
-  account: AccountSettings;
-}
-export type UserProfile = {
-  _id: string;
-  bio?: string;
-  location: {coordinates: {longitude: number, latitude: number}, city?: string};
-  height?: {feets: string, inches: string};
-  username: string;
-  gender: UserGender;
-  interests: UserInterest[];
-  relationshipGoal: string;
-  seeking: string[]; // Array of strings
-  verified: boolean;
-  pictures: UserPicture[];
-  additionalInformation: UserAdditionalInformation[];
-  spotify?: SpotifyArtist[];
-  instagram?: InstagramPost[];
-  languages?: {_id: string, name: string}[]; // Same structure as in UserProfile
-  dateOfBirth: Date;
-  lastActive: Date;
-  createdAt: Date;
-  profession?: {jobTitle?: string, employer?:string}
-
-}
-
-export interface currentUserProfile extends UserProfile {
-  email?: string;
-  phoneNumber?: string;
-  connects: number;
-  isPremiumMember: boolean;
-  settings: UserSettings;
-}
-
-export interface EditProfile {
-  _id: string;
-  bio?: string;
-  location: { city?: string};
-  height?: {feets: string, inches: string};
-  gender: UserGender;
-  interests: UserInterest[];
-  relationshipGoal: string;
-  pictures: UserPicture[];
-  additionalInformation: UserAdditionalInformation[];
-  spotify?: SpotifyArtist[];
-  instagram?: InstagramPost[];
-  languages?: {_id: string, name: string}[]; // Same structure as in UserProfile
-  profession?: {jobTitle?: string, employer?:string}
-  seeking: string[]; // Array of strings
-
-}
 
 
 /**
@@ -493,3 +377,198 @@ export interface GeolocationPosition {
   coords: GeolocationCoordinates;
   timestamp: number;
 }
+
+
+
+/**
+ * User's interface
+ */
+
+interface IdAndText {
+  id: number;
+  text: string;
+}
+
+interface secondaryGender extends IdAndText {
+  primaryGenderId: number;
+  primaryGender: IdAndText
+}
+
+interface NotificationSettings {
+  userId: string;
+  emailNotifications: boolean;
+  newMessageNotification: boolean;
+  newMatchNotification: boolean;
+  pushNotifications: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface FilterSettings {
+  userId: string;
+  relationshipGoalId: number;
+  ageMax: number;
+  ageMin: number;
+  global: boolean;
+  distanceRadius: number;
+  minPhotosRequired: number;
+  showVerifiedProfilesOnly: boolean;
+  createdAt: string;
+  updatedAt: string;
+  relationshipGoal: IdAndText;
+}
+
+interface PrivacySettings {
+  userId: string;
+  showOnlineStatus: boolean;
+  showLastActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface AccountSettings {
+  userId: string;
+  deactivateAccountAfterInactivity: null | string;
+  discoverable: boolean;
+  distanceInKm: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Interest {
+  userId: string;
+  interestId: number;
+  createdAt: string;
+  updatedAt: string;
+  interest: IdAndText & {categoryId: number}
+}
+
+interface UserAnswer {
+  userId: string;
+  answerId: number;
+  createdAt: string; // or Date if you plan to convert it to a Date object
+  updatedAt: string; // or Date if you plan to convert it to a Date object
+  answer: Answer;
+}
+
+interface UserConnects {
+  userId: string;
+  createdAt: string; // or Date if you plan to convert it to a Date object
+  updatedAt: string; // or Date if you plan to convert it to a Date object
+  remainingCount: number
+  connectType: 'Connect Token' | 'Super Connect'
+}
+
+interface Answer {
+  id: number;
+  questionId: number;
+  text: string;
+  question: Question;
+}
+
+interface Question {
+  id: number;
+  shortForm: string;
+  type: string; // You could make this an enum if you have specific types
+  iconPath: string;
+  text: string;
+}
+
+export interface UserTopArtists {
+  userId: string;
+  artistId: number;
+  rank: number;
+}
+
+export interface InstagramImages {
+  id: number;
+  userId: string;
+  imageUrl: string;
+}
+
+export interface Picture {
+  id: number;
+  userId: string;
+  name: string;
+  url: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface SeekingGender {
+  userId: string;
+  primaryGenderId: number;
+}
+
+export interface CurrentUser {
+  id: string;
+  firstName: string;
+  dateOfBirth: string;
+  primaryGenderId: number;
+  secondaryGenderId?: number; // Optional
+  jobTitle?: string;
+  employer?: string;
+  bio?: string; // Optional
+  height?: number; // Optional
+  email?: string; // Optional, if not used as the primary means of identification
+  phoneNumber: string;
+  city?: string; // Optional
+  longitude: number;
+  latitude: number;
+  verified: boolean;
+  createdAt: string;
+  updatedAt: string;
+  primaryGender: IdAndText;
+  secondaryGender?: secondaryGender; // Optional
+  notificationSettings: NotificationSettings;
+  filterSettings: FilterSettings;
+  privacySettings: PrivacySettings;
+  accountSettings: AccountSettings;
+  subscriptionFeatures?: any[]; // Optional
+  languages?: IdAndText[]; // Optional
+  interests: Interest[];
+  answers: UserAnswer[];
+  connects: UserConnects[]
+  matches?: any[]; // Optional
+  matchedBy?: any[]; // Optional
+  pictures: Picture[];
+  conversationsInitiated?: any[]; // Optional
+  conversationsReceived?: any[]; // Optional
+  payments?: any[]; // Optional
+  notificationHistory?: any[]; // Optional
+  blockedUsers?: any[]; // Optional
+  deviceInfo?: null | any; // Optional
+  topArtists?: UserTopArtists[]; // Optional
+  instagramImages?: InstagramImages[]; // Optional
+  subscriptions?: any[]; // Optional
+  seeking: SeekingGender[]; // Optional
+}
+
+
+export interface ExternalUser {
+  id: string;
+  firstName: string;
+  dateOfBirth: string;
+  primaryGenderId: number;
+  secondaryGenderId?:  number;
+  bio:  string;
+  jobTitle?: string;
+  employer?: string;
+  height:  number;
+  city?: string;
+  longitude: number;
+  latitude: number;
+  verified: boolean;
+  primaryGender: IdAndText;
+  secondaryGender?: secondaryGender;
+  filterSettings: FilterSettings;
+  privacySettings: PrivacySettings;
+  languages?: IdAndText[];
+  interests: Interest[];
+  answers: UserAnswer[];
+  pictures: Picture[];
+  topArtists?: UserTopArtists[];
+  instagramImages?: InstagramImages[];
+  seeking: SeekingGender[];
+}
+
