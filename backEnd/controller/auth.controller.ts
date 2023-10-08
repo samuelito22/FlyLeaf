@@ -16,7 +16,7 @@ import {
   USER_CREATED,
   USER_NOT_FOUND_ERR,
 } from "../constants/errors";
-import AuthServices from "../services/auth.services";
+import * as AuthServices from "../services/auth.services";
 import express from "express";
 import {
   validateChangeEmail,
@@ -51,140 +51,93 @@ import { OAuth2Client } from "google-auth-library";
 import awsServices from "../services/aws.services";
 import { sequelize } from "../config/sequelizeConfig";
 import Model from "../models";
-import { RefreshTokens } from "../models/refreshTokens";
-import { Op } from "sequelize";
 
+/**
+ * Register a new user.
+ * This function handles the entire user registration process, including validation,
+ * creating various user settings, and issuing JWT tokens.
+ */
 async function registerUser(req: express.Request, res: express.Response) {
   const t = await sequelize.transaction(); // Start a new transaction
 
   try {
-    const files = req.files;
+    // Validate uploaded pictures
+    const files = AuthServices.validateUploadedPictures(req);
 
-    if (!files || !Array.isArray(files) || files.length < 2) {
-      return sendErrorResponse(
-        res,
-        400,
-        "None or less than two pictures have been uploaded."
-      );
-    }
-
-    let parsedBody = req.body;
-    parsedBody.seekingIds = JSON.parse(parsedBody.seekingIds);
-parsedBody.interestsIds = JSON.parse(parsedBody.interestsIds);
-parsedBody.answers = JSON.parse(parsedBody.answers);
-parsedBody.primaryGenderId = Number(parsedBody.primaryGenderId); 
-parsedBody.secondaryGenderId =  parsedBody.secondaryGenderId && Number(parsedBody.secondaryGenderId); 
-parsedBody.longitude = parseFloat(parsedBody.longitude);  
-parsedBody.latitude = parseFloat(parsedBody.latitude);  
-parsedBody.relationshipGoalId = Number(parsedBody.relationshipGoalId);
-
-console.log(parsedBody)
-
-
+    // Transform and validate request body
+    const parsedBody = AuthServices.transformRequestBody(req.body);
     const value = validateUser(parsedBody);
 
-    const newUser = await Model.User.create({
-      firstName: value.firstName,
-      email: value.email,
-      phoneNumber: value.phoneNumber,
-      primaryGenderId: value.primaryGenderId,
-      secondaryGenderId: value.secondaryGenderId,
-      dateOfBirth: value.dateOfBirth,
-      longitude: value.longitude,
-      latitude: value.latitude,
-      verified: value.email && value.phoneNumber ? true : false
+    // Create a new user
+    const newUser = await AuthServices.createUser(value, t);
 
-    } as any, {transaction: t})
+    // Create initial settings and data for the user
+    await AuthServices.createInitialUserSettings(newUser.id, value, t);
 
-    // Creating inital tables related to the user
-    await Model.AccountSettings.create({userId: newUser.id} as any, {transaction: t})
-    await Model.FilterSettings.create({userId: newUser.id, relationshipGoalId: value.relationshipGoalId} as any, {transaction: t})
-    await Model.NotificationSettings.create({userId: newUser.id } as any, {transaction: t})
-    await Model.PrivacySettings.create({userId: newUser.id} as any, {transaction: t})
-    for (let interestId of value.interestsIds) {
-      await Model.UserInterests.create({
-          userId: newUser.id,
-          interestId: interestId
-      } as any, {transaction: t});
-  }
-  for (let seekingId of value.seekingIds) {
-    await Model.UserSeekingGender.create({
-        userId: newUser.id,
-        primaryGenderId: seekingId
-    } as any, {transaction: t});
-}
-  for (let answer of value.answers) {
-    const answerDoc = await Model.Answers.findByPk(answer.answerId);
-    if (!answerDoc || answerDoc.questionId !== answer.questionId) {
-      throw new Error(INVALID_DATA)
-    }
-      await Model.UserAnswers.create({
-          userId: newUser.id,
-          answerId: answer.answerId
-      } as any, {transaction: t});
-  }
+    // Create JWT tokens
+    const { accessToken, refreshToken } = await AuthServices.createJWTTokens(newUser.id, t);
 
-   // Create jwt tokens
-   const accessToken = createAccessToken(newUser.id);
-   const refreshToken = createRefreshToken(newUser.id);
+    // Add pictures to S3 and user records
+    await AuthServices.handleUserPictures(files, newUser.id, t);
 
-   if (!refreshToken || !accessToken)
-     throw new Error(FAILED_CREATION_ACCESS_AND_REFRESH_TOKEN);
-
-   const currentDate = new Date();
-   const expiresAt = new Date(currentDate);
-   expiresAt.setDate(currentDate.getDate() + 30);
-
-   await RefreshTokens.create({userId: newUser.id, token: refreshToken, expiresAt} as any, {transaction: t})
-
-   await awsServices.addUserPicturesToS3(files, newUser.id.toString())
-   .then(async (result) => {
-     const picturePromises = result.map(async (picName: string, index: number) => {
-       return Model.UserPictures.create(
-         { userId: newUser.id, name: picName, orderIndex: index, isProfilePicture: index === 0 ? true : false } as any,
-         { transaction: t }
-       );
-     });
-     await Promise.all(picturePromises);
-   });
- 
-    
     await t.commit();
 
-    return sendSuccessResponse(res, 202, USER_CREATED, {
-      accessToken,
-      refreshToken,
-    });
-
+    return sendSuccessResponse(res, 202, USER_CREATED, { accessToken, refreshToken });
   } catch (error) {
-    await t.rollback(); // If there's an error, rollback all database operations
-
+    await t.rollback();
     const errorMessage = (error as Error).message;
     const status = centralizedErrorHandler(errorMessage);
-    console.log(errorMessage)
-    return sendErrorResponse(res, status, status != 500 ? errorMessage : SERVER_ERR);
+    console.error(`User registration failed: ${errorMessage}`);
+    return sendErrorResponse(res, status, status !== 500 ? errorMessage : SERVER_ERR);
   }
 }
+
+/**
+ * Logs out a user by deactivating their refresh token.
+ *
+ * This function performs several steps:
+ * 1. Validates the 'grantType' from the request body to ensure it's a "refresh_token".
+ * 2. Extracts the refresh token from the request header.
+ * 3. Validates the extracted token.
+ * 4. Deactivates the token using an Auth service.
+ *
+ * @throws {Error} Throws an error if token validation fails or if the token cannot be deactivated.
+ *
+ * @example
+ * // Expected usage:
+ * logOutUser(req, res);
+ *
+ * Note: This function is part of the authentication flow and is expected to be called
+ * after the user is already authenticated and wishes to log out.
+ */
 
 async function logOutUser(req: express.Request, res: express.Response) {
   try {
+    // Extract and validate grant type from the request body
     const { grantType } = req.body;
     validateGrantType(grantType, "refresh_token");
 
+    // Extract and validate the refresh token from the request header
     const refreshToken = extractTokenFromHeader(req) as string;
-
     const { error, value } = validateToken({ token: refreshToken });
+    
+    // If token is invalid, send an error response
     if (error) {
       return sendErrorResponse(res, 400, error.details[0].message);
     }
 
+    // Deactivate the refresh token
     await AuthServices.deactivateRefreshToken(value.token);
 
+    // Send a success response
     return sendSuccessResponse(res, 200, "Logged out successfully.");
   } catch (error) {
+    // Handle unexpected errors
     const errorMessage = (error as Error).message;
-
     const status = centralizedErrorHandler(errorMessage);
+
+    // Log the error for debugging
+    console.error(`Logout failed: ${errorMessage}`);
 
     return sendErrorResponse(
       res,
@@ -194,6 +147,9 @@ async function logOutUser(req: express.Request, res: express.Response) {
   }
 }
 
+/**
+ * Deletes a user and all associated records.
+ */
 async function deleteUser(req: express.Request, res: express.Response) {
   const t = await sequelize.transaction();
 
@@ -211,46 +167,14 @@ async function deleteUser(req: express.Request, res: express.Response) {
     const decode = decodeAccessToken(value.token);
     if (!decode) throw new Error(EXPIRED_TOKEN);
 
-    const userId = decode.sub
-
-    // Delete associated records for the User
-  await Model.AccountSettings.destroy({ where: { userId }, transaction: t });
-  await Model.PrivacySettings.destroy({ where: { userId }, transaction: t });
-  await Model.FilterSettings.destroy({ where: { userId }, transaction: t });
-  await Model.UserInterests.destroy({ where: { userId }, transaction: t });
-  await Model.NotificationSettings.destroy({ where: { userId }, transaction: t });
-  await Model.UserAnswers.destroy({ where: { userId }, transaction: t });
-  await Model.UserLanguages.destroy({ where: { userId }, transaction: t });
-  await Model.RefreshTokens.destroy({ where: { userId }, transaction: t });
-  await Model.UserPictures.destroy({ where: { userId }, transaction: t });
-  await Model.Conversations.destroy({
-    where: {
-      [Op.or]: [
-        { user1Id: userId },
-        { user2Id: userId }
-      ]
-    },
-    transaction: t
-  });
-    await Model.DeviceInfo.destroy({ where: { userId }, transaction: t });
-  await Model.InstagramImages.destroy({ where: { userId }, transaction: t });
-  await Model.InstagramTokens.destroy({ where: { userId }, transaction: t });
-  await Model.Messages.destroy({ where: { userId }, transaction: t });
-  await Model.NotificationsHistory.destroy({ where: { userId }, transaction: t });
-  await Model.Payments.destroy({ where: { userId }, transaction: t });
-  await Model.SpotifyTokens.destroy({ where: { userId }, transaction: t });
-  await Model.UserTopArtists.destroy({ where: { userId }, transaction: t });
-  await Model.UserSubscriptions.destroy({ where: { userId }, transaction: t });
-  await Model.UserBlocked.destroy({ where: { userId }, transaction: t });
-  await Model.UserMatches.destroy({ where: { userId }, transaction: t });
-  await Model.UserSeekingGender.destroy({ where: { userId }, transaction: t });
-
-  // Finally, delete the user
-  await Model.User.destroy({ where: { id: userId }, transaction: t });
-
-    await t.commit();
+    const userId = decode.sub;
+    await AuthServices.deleteUserAssociations(userId, t);
+    await AuthServices.deleteUserRecord(userId, t);
 
     await awsServices.deleteUserFolderFromS3(decode.sub.toString());
+
+
+    await t.commit();
 
     return sendSuccessResponse(
       res,
@@ -265,6 +189,7 @@ async function deleteUser(req: express.Request, res: express.Response) {
     return sendErrorResponse(res, status, status != 500 ? errorMessage : SERVER_ERR);
   }
 }
+
 
 async function refreshToken(req: express.Request, res: express.Response) {
   try {

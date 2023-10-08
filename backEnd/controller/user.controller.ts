@@ -86,15 +86,7 @@ async function getMyProfile(req: express.Request, res: express.Response) {
         ]
       }
     ] },
-    { model: Model.UserMatches, as: 'matches' },
-    { model: Model.UserMatches, as: 'matchedBy' },
     { model: Model.UserPictures },
-    { model: Model.Conversations, as: 'conversationsInitiated' },
-    { model: Model.Conversations, as: 'conversationsReceived' },
-    { model: Model.Payments },
-    { model: Model.NotificationsHistory },
-    { model: Model.UserBlocked, as: 'blockedUsers' },
-    { model: Model.DeviceInfo },
     { model: Model.UserTopArtists },
     { model: Model.InstagramImages },
     { model: Model.UserSubscriptions },

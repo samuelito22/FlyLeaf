@@ -1,5 +1,5 @@
 import {StyleSheet, Text, View, Image} from 'react-native';
-import {useState, useCallback} from 'react';
+import {useState, useCallback, useEffect} from 'react';
 import {
   Button,
   KeyboardAvoidingViewWrapper,
@@ -56,6 +56,17 @@ const WelcomeScreen = ({
       setIsLoading(false);
     }
   }, [dispatch]);
+
+  useEffect(
+    () =>
+      dispatch(
+        RegisterActions.setIsRegisterCompleted({
+          status: false,
+          currentScreen: ROUTES.REGISTER_WELCOME_SCREEN,
+        }),
+      ),
+    [],
+  );
 
   return (
     <KeyboardAvoidingViewWrapper>
