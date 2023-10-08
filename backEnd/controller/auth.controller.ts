@@ -1,13 +1,10 @@
 import {
   BAD_REQUEST,
+  EMAIL_ALREADY_IN_USE,
   EMAIL_NOT_EXIST,
   EXPIRED_OR_INCORRECT_OTP,
   EXPIRED_TOKEN,
-  FAILED_CREATION_ACCESS_AND_REFRESH_TOKEN,
-  FAILED_SEND_OTP,
-  INVALID_DATA,
   INVALID_TOKEN,
-  OTP_ALREADY_USED,
   PHONE_NUMBER_NOT_EXIST,
   REVOKED_TOKEN,
   SERVER_ERR,
@@ -40,7 +37,6 @@ import {
   sendErrorResponse,
   sendSuccessResponse,
 } from "../utils/response.utils";
-import AWS from "aws-sdk";
 import Joi from "joi";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
@@ -75,20 +71,30 @@ async function registerUser(req: express.Request, res: express.Response) {
     await AuthServices.createInitialUserSettings(newUser.id, value, t);
 
     // Create JWT tokens
-    const { accessToken, refreshToken } = await AuthServices.createJWTTokens(newUser.id, t);
+    const { accessToken, refreshToken } = await AuthServices.createJWTTokens(
+      newUser.id,
+      t
+    );
 
     // Add pictures to S3 and user records
     await AuthServices.handleUserPictures(files, newUser.id, t);
 
     await t.commit();
 
-    return sendSuccessResponse(res, 202, USER_CREATED, { accessToken, refreshToken });
+    return sendSuccessResponse(res, 202, USER_CREATED, {
+      accessToken,
+      refreshToken,
+    });
   } catch (error) {
     await t.rollback();
     const errorMessage = (error as Error).message;
     const status = centralizedErrorHandler(errorMessage);
     console.error(`User registration failed: ${errorMessage}`);
-    return sendErrorResponse(res, status, status !== 500 ? errorMessage : SERVER_ERR);
+    return sendErrorResponse(
+      res,
+      status,
+      status !== 500 ? errorMessage : SERVER_ERR
+    );
   }
 }
 
@@ -120,7 +126,7 @@ async function logOutUser(req: express.Request, res: express.Response) {
     // Extract and validate the refresh token from the request header
     const refreshToken = extractTokenFromHeader(req) as string;
     const { error, value } = validateToken({ token: refreshToken });
-    
+
     // If token is invalid, send an error response
     if (error) {
       return sendErrorResponse(res, 400, error.details[0].message);
@@ -137,7 +143,7 @@ async function logOutUser(req: express.Request, res: express.Response) {
     const status = centralizedErrorHandler(errorMessage);
 
     // Log the error for debugging
-    console.error(`Logout failed: ${errorMessage}`);
+    console.error("Logout failed:", error);
 
     return sendErrorResponse(
       res,
@@ -173,7 +179,6 @@ async function deleteUser(req: express.Request, res: express.Response) {
 
     await awsServices.deleteUserFolderFromS3(decode.sub.toString());
 
-
     await t.commit();
 
     return sendSuccessResponse(
@@ -183,18 +188,30 @@ async function deleteUser(req: express.Request, res: express.Response) {
     );
   } catch (error) {
     await t.rollback(); // If there's an error, rollback all database operations
-
+    console.error("Error while deleting user:", error);
     const errorMessage = (error as Error).message;
     const status = centralizedErrorHandler(errorMessage);
-    return sendErrorResponse(res, status, status != 500 ? errorMessage : SERVER_ERR);
+    return sendErrorResponse(
+      res,
+      status,
+      status != 500 ? errorMessage : SERVER_ERR
+    );
   }
 }
 
-
+/**
+ * Refreshes access and refresh tokens.
+ *
+ * @param req - Express request object.
+ * @param res - Express response object.
+ *
+ * @throws Will throw an error if the refresh token is invalid, revoked, or expired.
+ * @returns A JSON response containing the new tokens if successful.
+ */
 async function refreshToken(req: express.Request, res: express.Response) {
   try {
     const { grantType } = req.body;
-    validateGrantType(grantType, 'refresh_token');
+    validateGrantType(grantType, "refresh_token");
 
     const refreshToken = extractTokenFromHeader(req) as string;
 
@@ -203,7 +220,9 @@ async function refreshToken(req: express.Request, res: express.Response) {
       return sendErrorResponse(res, 400, error.details[0].message);
     }
 
-    const tokenDoc = await Model.RefreshTokens.findOne({ where: { token: value.token } });
+    const tokenDoc = await Model.RefreshTokens.findOne({
+      where: { token: value.token },
+    });
     if (!tokenDoc) throw new Error(TOKEN_NOT_FOUND);
 
     if (tokenDoc.revoked) throw new Error(REVOKED_TOKEN);
@@ -216,38 +235,43 @@ async function refreshToken(req: express.Request, res: express.Response) {
     const decoded = decodeRefreshToken(value.token);
 
     if (decoded) {
-      const accessToken = createAccessToken(decoded.sub.toString());
-      const refreshToken = createRefreshToken(decoded.sub.toString());
+      const { refreshToken, accessToken } = await AuthServices.refreshUserToken(
+        decoded.sub,
+        tokenDoc
+      );
 
-      if (!accessToken || !refreshToken) {
-        throw new Error(FAILED_CREATION_ACCESS_AND_REFRESH_TOKEN);
-      }
-
-      const expiresAt = new Date();
-      expiresAt.setDate(currentDate.getDate() + 30);
-
-      tokenDoc.replacedByToken = tokenDoc.token;
-      tokenDoc.token = refreshToken;
-      tokenDoc.expiresAt = expiresAt;
-
-      await tokenDoc.save().catch((e) => {
-        throw new Error(e.message);
-      });
-
-      return sendSuccessResponse(res, 200, 'Tokens were refreshed successfully.', { refreshToken, accessToken });
+      return sendSuccessResponse(
+        res,
+        200,
+        "Tokens were refreshed successfully.",
+        { refreshToken, accessToken }
+      );
     } else {
       throw new Error(INVALID_TOKEN);
     }
   } catch (error) {
-    console.error("Error while refreshing token:", error)
+    console.error("Error while refreshing token:", error);
     const errorMessage = (error as Error).message;
 
     const status = centralizedErrorHandler(errorMessage); // Assume you have this function
 
-    return sendErrorResponse(res, status, status != 500 ? errorMessage : SERVER_ERR);
+    return sendErrorResponse(
+      res,
+      status,
+      status != 500 ? errorMessage : SERVER_ERR
+    );
   }
 }
 
+/**
+ * Checks if an email already exists in the database.
+ *
+ * @async
+ * @param {express.Request} req - The incoming HTTP request.
+ * @param {express.Response} res - The outgoing HTTP response.
+ * @throws Will throw an error if email validation fails or if other exceptions occur.
+ * @returns - HTTP response with status code and message.
+ */
 async function emailExist(req: express.Request, res: express.Response) {
   try {
     const { error, value } = validateEmail(req.body);
@@ -273,6 +297,15 @@ async function emailExist(req: express.Request, res: express.Response) {
   }
 }
 
+/**
+ * Checks if a phone number already exists in the database.
+ *
+ * @async
+ * @param {express.Request} req - The incoming HTTP request containing the phone number to validate.
+ * @param {express.Response} res - The outgoing HTTP response to be sent.
+ * @throws Will throw an error if phone number validation fails or other exceptions occur.
+ * @returns - HTTP response with status code and either a success or error message.
+ */
 async function phoneNumberExist(req: express.Request, res: express.Response) {
   try {
     const { error, value } = validatePhoneNumber(req.body);
@@ -281,7 +314,7 @@ async function phoneNumberExist(req: express.Request, res: express.Response) {
       return sendErrorResponse(res, 400, error.details[0].message);
     }
 
-    const response = await AuthServices.phoneNumberExistService(value);
+    const response = await AuthServices.findUserByPhoneNumber(value.phoneNumber);
 
     if (response) return sendSuccessResponse(res, 200, USER_ALREADY_EXIST);
     else throw new Error(PHONE_NUMBER_NOT_EXIST);
@@ -298,6 +331,15 @@ async function phoneNumberExist(req: express.Request, res: express.Response) {
   }
 }
 
+/**
+ * Checks if a user ID already exists in the database.
+ *
+ * @async
+ * @param {express.Request} req - The incoming HTTP request containing the user ID to validate.
+ * @param {express.Response} res - The outgoing HTTP response to be sent.
+ * @throws Will throw an error if ID validation fails or other exceptions occur.
+ * @returns - HTTP response with status code and either a success or error message.
+ */
 async function idExist(req: express.Request, res: express.Response) {
   try {
     const { error, value } = validateId(req.body);
@@ -323,32 +365,32 @@ async function idExist(req: express.Request, res: express.Response) {
   }
 }
 
+/**
+ * Changes a user's phone number.
+ * 
+ * @async
+ * @function changePhoneNumber
+ * @param {express.Request} req - Express request object containing the access token and phone numbers.
+ * @param {express.Response} res - Express response object used to send the response back to the client.
+ * @throws Will throw an error if any validation fails or if the operation couldn't be completed.
+ * @returns  Returns a response with a status code indicating the result of the operation.
+ */
 async function changePhoneNumber(req: express.Request, res: express.Response) {
   try {
     const { grantType, oldPhoneNumber, newPhoneNumber } = req.body;
-    validateGrantType(grantType, 'access_token');
+    validateGrantType(grantType, "access_token");
 
     const accessToken = extractTokenFromHeader(req) as string;
-    const { error } = validateChangePhoneNumber({
-      accessToken,
-      oldPhoneNumber,
-      newPhoneNumber,
-    });
-
-    if (error) {
-      return sendErrorResponse(res, 400, error.details[0].message);
-    }
+    const { error } = validateChangePhoneNumber({ accessToken, oldPhoneNumber, newPhoneNumber });
+    if (error) return sendErrorResponse(res, 400, error.details[0].message);
 
     const decode = decodeAccessToken(accessToken);
     if (!decode) throw new Error(EXPIRED_TOKEN);
 
-    const userWithPhoneNumber = await Model.User.findOne({ where: { phoneNumber: newPhoneNumber } });
-    if (userWithPhoneNumber) throw new Error(USER_ALREADY_EXIST);
-
     const user = await Model.User.findByPk(decode.sub);
-    if (!user || user.phoneNumber !== oldPhoneNumber) {
-      throw new Error(user ? BAD_REQUEST : USER_NOT_FOUND_ERR);
-    }
+    if (!user || user.phoneNumber !== oldPhoneNumber) throw new Error(user ? BAD_REQUEST : USER_NOT_FOUND_ERR);
+    
+    if (user.phoneNumber === newPhoneNumber) throw new Error("New phone number is the same as the old one.");
 
     await user.update({ phoneNumber: newPhoneNumber });
 
@@ -360,6 +402,19 @@ async function changePhoneNumber(req: express.Request, res: express.Response) {
   }
 }
 
+/**
+ * Updates a user's email in the database.
+ *
+ * @async
+ * @function
+ * @param {express.Request} req - The request object containing the `grantType`, `oldEmail`, and `newEmail` in the body.
+ * @param {express.Response} res - The response object used to send back HTTP status and messages.
+ * @returns  Sends a 200 status code along with a success message if the email is successfully updated; otherwise, sends an error status code and error message.
+ * 
+ * @throws Will throw an error if any validation fails, such as token expiration, email validity, etc.
+ * @throws Will throw an error if the new email is the same as the old email.
+ * @throws Will throw an error if the new email is already in use.
+ */
 async function changeEmail(req: express.Request, res: express.Response) {
   try {
     const { grantType, oldEmail, newEmail } = req.body;
@@ -379,14 +434,19 @@ async function changeEmail(req: express.Request, res: express.Response) {
     const decode = decodeAccessToken(accessToken);
     if (!decode) throw new Error(EXPIRED_TOKEN);
 
-    // Check for user and email validity together
-    const user = await Model.User.findOne({ where: { id: decode.sub, email: value.oldEmail } });
-    if (!user) throw new Error(USER_NOT_FOUND_ERR);
+    const existingUserWithNewEmail = await Model.User.findOne({
+      where: { email: value.newEmail },
+    });
+    if (existingUserWithNewEmail) throw new Error(EMAIL_ALREADY_IN_USE);
 
-    // Check if new email is the same as old email
+    const user = await Model.User.findOne({
+      where: { id: decode.sub, email: value.oldEmail },
+    });
+    if (!user) throw new Error(USER_NOT_FOUND_ERR);
+    
+
     if (value.newEmail === value.oldEmail) throw new Error(BAD_REQUEST);
 
-    // Update the email directly
     await user.update({ email: value.newEmail });
 
     return sendSuccessResponse(res, 200, "User's email has been updated.");
@@ -401,7 +461,22 @@ async function changeEmail(req: express.Request, res: express.Response) {
   }
 }
 
-
+/**
+ * Remove a user's email from the database.
+ * 
+ * This function handles the logic for removing a user's email from the database.
+ * It first validates the access token and then proceeds to remove the email.
+ * 
+ * @async
+ * @function
+ * @param {express.Request} req - Express request object containing user details.
+ * @param {express.Response} res - Express response object for sending back responses.
+ * 
+ * @throws {Error} Throws an error if the access token is invalid or expired.
+ * @throws {Error} Throws an error if the user is not found.
+ * @throws {Error} Throws other errors based on the centralized error handler.
+ * 
+ */
 async function removeEmail(req: express.Request, res: express.Response) {
   try {
     const { grantType } = req.body;
@@ -417,14 +492,13 @@ async function removeEmail(req: express.Request, res: express.Response) {
     const decode = decodeAccessToken(value.token);
     if (!decode) throw new Error(EXPIRED_TOKEN);
 
-    // Find the user by ID
     const user = await Model.User.findByPk(decode.sub);
     if (!user) throw new Error(USER_NOT_FOUND_ERR);
 
-    // Remove the email directly if it exists
     if (user.email) {
       await user.update({ email: undefined });
     }
+    
 
     return sendSuccessResponse(res, 200, "User's email has been removed.");
   } catch (error) {
@@ -438,6 +512,20 @@ async function removeEmail(req: express.Request, res: express.Response) {
   }
 }
 
+/**
+ * Asynchronously sends a One-Time Password (OTP) to the user's phone number.
+ *
+ * @async
+ * @function
+ * @param {express.Request} req - Express request object, expects `phoneNumber` in the body.
+ * @param {express.Response} res - Express response object.
+ * @returns Returns a Promise resolving to an Express response.
+ * 
+ * @throws {Error} Throws an error if the phone number is invalid.
+ * @throws {Error} Throws an error if sending OTP fails.
+ * @throws {Error} Throws an error if unable to save OTP to the database.
+ * @throws {Error} Throws an error if any other unhandled error occurs, handled by `centralizedErrorHandler`.
+ */
 async function sendOTP(req: express.Request, res: express.Response) {
   try {
     const { phoneNumber } = req.body;
@@ -447,37 +535,28 @@ async function sendOTP(req: express.Request, res: express.Response) {
       return sendErrorResponse(res, 400, error.details[0].message);
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = AuthServices.generateOTP();
 
     const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 15); // OTP will expire in 15 minutes
-    await Model.PhoneNumberOTP.destroy({where: {phoneNumber}})
+    expiresAt.setMinutes(expiresAt.getMinutes() + 15);
 
-    // Create a new OTP document
+    await Model.PhoneNumberOTP.destroy({ where: { phoneNumber } });
+    
     const otpDocument = new Model.PhoneNumberOTP({
       phoneNumber,
       otp,
-     } as any);
+      expiresAt 
+    } as any);
+    
+    await AuthServices.sendSMS(otp, phoneNumber);
+    
+    await otpDocument.save();
 
-    const sns = new AWS.SNS();
+    return sendSuccessResponse(res, 200, "OTP sent successfully");
 
-    const params = {
-      Message: `Your FlyLeaf OTP code is ${otp}`,
-      PhoneNumber: phoneNumber,
-    };
-
-    sns.publish(params, async (err: any, data: any) => {
-      if (err) {
-        throw new Error(FAILED_SEND_OTP);
-      }
-      await otpDocument.save();
-      return sendSuccessResponse(res, 200, "OTP sent successfully");
-    });
   } catch (error) {
     const errorMessage = (error as Error).message;
-
     const status = centralizedErrorHandler(errorMessage);
-
     return sendErrorResponse(
       res,
       status,
@@ -486,59 +565,57 @@ async function sendOTP(req: express.Request, res: express.Response) {
   }
 }
 
+/**
+ * Verifies the OTP provided in the request body and either logs in the user or prepares for user registration.
+ *
+ * @async
+ * @function
+ * @param {express.Request} req - The Express request object.
+ * @param {express.Response} res - The Express response object.
+ * @returns - A Promise that resolves when the OTP verification is complete and the response is sent.
+ * 
+ * @throws {Error} Throws an error if any of the following conditions are met:
+ * - Validation fails for phone number or OTP.
+ * - OTP is incorrect or expired.
+ * - Transaction rollback is required due to an error.
+ */
 async function verifyOTP(req: express.Request, res: express.Response) {
-  const t = await sequelize.transaction(); // Start Sequelize transaction
+  const t = await sequelize.transaction(); 
+
   try {
     const { phoneNumber, otp } = req.body;
-    const { error, value } = Joi.object({
+    const { error } = Joi.object({
       phoneNumber: Joi.string().required(),
       otp: Joi.string().required(),
     }).validate({ phoneNumber, otp });
-
     if (error) {
-      return sendErrorResponse(res, 400, error.details[0].message);
+      throw new Error(error.details[0].message);
     }
 
-    const otpDocument = await Model.PhoneNumberOTP.findOne({
-      where: { phoneNumber },
-      transaction: t,
-    });
+    await AuthServices.verifyOTPDocument(phoneNumber, otp, t);
+    await Model.PhoneNumberOTP.destroy({ where: { phoneNumber }, transaction: t });
 
-    if (!otpDocument) {
-      throw new Error(SERVER_ERR);
-    }
-
-    if (otpDocument.otp !== otp) {
-      throw new Error(EXPIRED_OR_INCORRECT_OTP);
-    }
-
-    await Model.PhoneNumberOTP.destroy({ where: { id: otpDocument.id }, transaction: t });
-
-    const userDoc = await Model.User.findOne({ where: { phoneNumber }, transaction: t });
-
+    const userDoc = await AuthServices.findUserByPhoneNumber(phoneNumber, t);
     if (userDoc) {
-      const accessToken = createAccessToken(userDoc.id) as string
-      const refreshToken = createRefreshToken(userDoc.id) as string
+      const accessToken = createAccessToken(userDoc.id) as string;
+      const refreshToken = createRefreshToken(userDoc.id) as string;
       await AuthServices.updateUserRefreshTokenInDB(userDoc.id, refreshToken, t);
-
       await t.commit();
-      return sendSuccessResponse(res, 200, "OTP verified and correct.", {
-        newUser: false,
-        accessToken,
-        refreshToken,
-      });
+      return sendSuccessResponse(res, 200, "OTP verified and correct.", { newUser: false, accessToken, refreshToken });
     }
-
+    
     await t.commit();
     return sendSuccessResponse(res, 200, "OTP verified and correct.", { newUser: true });
+
   } catch (error) {
-    console.log(error)
+    console.log(error);
     await t.rollback();
     const errorMessage = (error as Error).message;
     const status = centralizedErrorHandler(errorMessage);
     return sendErrorResponse(res, status, status !== 500 ? errorMessage : SERVER_ERR);
   }
 }
+
 
 async function sendLink(req: express.Request, res: express.Response) {
   try {
@@ -557,16 +634,14 @@ async function sendLink(req: express.Request, res: express.Response) {
       );
     }
 
-    const userDoc = await Model.User.findOne({ where:{email} })
+    const userDoc = await Model.User.findOne({ where: { email } });
 
     if (grantType === "login" && !userDoc) {
       throw new Error(USER_NOT_FOUND_ERR);
-
     }
 
     if (grantType === "register" && userDoc) {
       throw new Error(USER_ALREADY_EXIST);
-
     }
 
     if (!NODEMAILER_SECRET) {
@@ -582,7 +657,7 @@ async function sendLink(req: express.Request, res: express.Response) {
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + 15);
 
-    await Model.EmailToken.destroy({ where:{email} })
+    await Model.EmailToken.destroy({ where: { email } });
 
     const EmailTokenDoc = new Model.EmailToken({
       token,
@@ -619,7 +694,7 @@ async function sendLink(req: express.Request, res: express.Response) {
 
     return sendSuccessResponse(res, 200, "Email link sent successfully.");
   } catch (error) {
-    console.log(error)
+    console.log(error);
     const errorMessage = (error as Error).message;
 
     const status = centralizedErrorHandler(errorMessage);
@@ -648,7 +723,7 @@ async function verifyLink(req: express.Request, res: express.Response) {
 
     const result = await Model.EmailToken.destroy({
       where: { token },
-      transaction: t
+      transaction: t,
     });
 
     if (!result) {
@@ -669,19 +744,20 @@ async function verifyLink(req: express.Request, res: express.Response) {
       }
     }
 
-     const userDoc = await Model.User.findOne({ where:{email: decoded.email}, transaction:t })
+    const userDoc = await Model.User.findOne({
+      where: { email: decoded.email },
+      transaction: t,
+    });
 
     if (decoded.purpose === "login") {
-     
-
       if (userDoc) {
         const authCode = crypto.randomBytes(16).toString("hex");
 
         await Model.AuthCode.destroy({
           where: {
-            userId: userDoc.id
+            userId: userDoc.id,
           },
-          transaction: t
+          transaction: t,
         });
 
         // You can create a new model for storing this one-time use code or use existing models
@@ -690,29 +766,34 @@ async function verifyLink(req: express.Request, res: express.Response) {
           userId: userDoc.id,
         } as any);
 
-        await authCodeDoc.save({transaction: t});
-        await t.commit()
-        return res.status(200).redirect(`flyleaf://login/verify?emailVerified=true&authCode=${authCode}`);
-      }
-
-      else{
+        await authCodeDoc.save({ transaction: t });
+        await t.commit();
+        return res
+          .status(200)
+          .redirect(
+            `flyleaf://login/verify?emailVerified=true&authCode=${authCode}`
+          );
+      } else {
         return res.status(200).redirect(`flyleaf://`);
       }
     } else if (decoded.purpose === "register") {
-      if(!userDoc) return res.status(200).redirect(`flyleaf://register/verify?emailVerified=true`);
+      if (!userDoc)
+        return res
+          .status(200)
+          .redirect(`flyleaf://register/verify?emailVerified=true`);
       else return res.status(200).redirect(`flyleaf://`);
     } else {
       throw new Error(INVALID_TOKEN);
     }
   } catch (error) {
-    console.log(error)
+    console.log(error);
 
-    await t.rollback()
+    await t.rollback();
     const errorMessage = (error as Error).message;
 
     const status = centralizedErrorHandler(errorMessage);
 
-    return sendErrorResponse(res, status, errorMessage)
+    return sendErrorResponse(res, status, errorMessage);
   }
 }
 
@@ -731,7 +812,10 @@ async function validateAuthCodeAndFetchTokens(
     }
 
     // Search for the authCode in the database
-    const authCodeDoc = await Model.AuthCode.findOne({ where:{code: authCode}, transaction:t })
+    const authCodeDoc = await Model.AuthCode.findOne({
+      where: { code: authCode },
+      transaction: t,
+    });
 
     if (!authCodeDoc) {
       return sendErrorResponse(res, 400, "Invalid or expired authCode");
@@ -743,26 +827,22 @@ async function validateAuthCodeAndFetchTokens(
     const refreshToken = createRefreshToken(userId.toString()) as string;
 
     // Create or update refreshToken in database
-    await AuthServices.updateUserRefreshTokenInDB(
-      userId,
-      refreshToken,
-      t
-    );
+    await AuthServices.updateUserRefreshTokenInDB(userId, refreshToken, t);
 
     // Remove the used authCode
     await Model.AuthCode.destroy({
       where: { id: authCodeDoc.id },
-      transaction:t
+      transaction: t,
     });
 
-    await t.commit()
+    await t.commit();
 
     return sendSuccessResponse(res, 200, "Tokens fetched successfully", {
       accessToken,
       refreshToken,
     });
   } catch (error) {
-    await t.rollback()
+    await t.rollback();
     const errorMessage = (error as Error).message;
 
     const status = centralizedErrorHandler(errorMessage);
@@ -774,6 +854,10 @@ async function validateAuthCodeAndFetchTokens(
     );
   }
 }
+
+/**
+ * THE ONES BELOW HAVE NOT BEEN CHECKED AND TESTED
+ */
 
 // Google Sign-In
 async function googleSignIn(req: express.Request, res: express.Response) {
@@ -804,7 +888,7 @@ async function googleSignIn(req: express.Request, res: express.Response) {
     const { email } = payload;
 
     // Find or create a user based on their email
-    const user = await Model.User.findOne({ where: {email} });
+    const user = await Model.User.findOne({ where: { email } });
     if (user) {
       const accessToken = createAccessToken(user.id.toString()) as string;
       const refreshToken = createRefreshToken(user.id.toString()) as string;
@@ -815,10 +899,13 @@ async function googleSignIn(req: express.Request, res: express.Response) {
         user,
         accessToken,
         refreshToken,
-        newUser: false
+        newUser: false,
       });
     } else {
-      return sendSuccessResponse(res, 202, "Logged in with Google", { email, newUser: true });
+      return sendSuccessResponse(res, 202, "Logged in with Google", {
+        email,
+        newUser: true,
+      });
     }
   } catch (error) {
     const errorMessage = (error as Error).message;
@@ -851,7 +938,7 @@ async function facebookSignIn(req: express.Request, res: express.Response) {
     const { email } = fbResponse.data;
 
     // Find or create a user based on their email
-    const user = await Model.User.findOne({ where:{email} });
+    const user = await Model.User.findOne({ where: { email } });
     if (user) {
       const accessToken = createAccessToken(user.id.toString()) as string;
       const refreshToken = createRefreshToken(user.id.toString()) as string;
@@ -862,12 +949,12 @@ async function facebookSignIn(req: express.Request, res: express.Response) {
         user,
         accessToken,
         refreshToken,
-        newUser: false
+        newUser: false,
       });
     } else {
       return sendSuccessResponse(res, 200, "Logged in with Facebook", {
         email,
-        newUser: true
+        newUser: true,
       });
     }
   } catch (error) {

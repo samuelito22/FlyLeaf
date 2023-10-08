@@ -1,13 +1,17 @@
-import { Op } from 'sequelize';
+import { Op } from "sequelize";
 import {
+  EXPIRED_OR_INCORRECT_OTP,
   FAILED_CREATION_ACCESS_AND_REFRESH_TOKEN,
+  FAILED_SEND_OTP,
   INVALID_DATA,
   REVOKED_TOKEN,
   TOKEN_NOT_FOUND,
-} from '../constants/errors';
-import Model from '../models';
-import { createAccessToken, createRefreshToken } from '../utils/token.utils';
-import awsServices from './aws.services';
+} from "../constants/errors";
+import Model from "../models";
+import { createAccessToken, createRefreshToken } from "../utils/token.utils";
+import awsServices from "./aws.services";
+import { RefreshTokens } from "../models/refreshTokens";
+import AWS from "aws-sdk";
 
 /**
  * Updates or creates a new refresh token for the given user in the database.
@@ -16,8 +20,15 @@ import awsServices from './aws.services';
  * @param refreshToken - The new refresh token.
  * @param transaction - Optional transaction object for database operations.
  */
-export async function updateUserRefreshTokenInDB(userId: string, refreshToken: string, transaction?: any) {
-  let tokenDoc = await Model.RefreshTokens.findOne({ where: { userId }, transaction });
+export async function updateUserRefreshTokenInDB(
+  userId: string,
+  refreshToken: string,
+  transaction?: any
+) {
+  let tokenDoc = await Model.RefreshTokens.findOne({
+    where: { userId },
+    transaction,
+  });
 
   if (tokenDoc) {
     await Model.RefreshTokens.update(
@@ -48,7 +59,9 @@ export async function updateUserRefreshTokenInDB(userId: string, refreshToken: s
  * @throws Will throw an error if the token is not found or already revoked.
  */
 export async function deactivateRefreshToken(refreshToken: string) {
-  const tokenDoc = await Model.RefreshTokens.findOne({ where: { token: refreshToken } });
+  const tokenDoc = await Model.RefreshTokens.findOne({
+    where: { token: refreshToken },
+  });
 
   if (!tokenDoc) {
     throw new Error(TOKEN_NOT_FOUND);
@@ -60,7 +73,7 @@ export async function deactivateRefreshToken(refreshToken: string) {
 
   await tokenDoc.update({ revoked: new Date() });
 
-  return { status: 'success', message: REVOKED_TOKEN };
+  return { status: "success", message: REVOKED_TOKEN };
 }
 
 /**
@@ -72,17 +85,6 @@ export async function deactivateRefreshToken(refreshToken: string) {
 export async function emailExistService(data: { email: string }) {
   const emailExist = await Model.User.findOne({ where: { email: data.email } });
   return emailExist;
-}
-
-/**
- * Checks if a phone number already exists in the database.
- *
- * @param data - Object containing the phone number to check.
- * @returns A promise resolving with the user data if phone number exists, otherwise null.
- */
-export async function phoneNumberExistService(data: { phoneNumber: string }) {
-  const phoneNumberExist = await Model.User.findOne({ where: { phoneNumber: data.phoneNumber } });
-  return phoneNumberExist;
 }
 
 /**
@@ -104,7 +106,7 @@ export async function uidExistService(data: { id: string }) {
  * @throws {Error} - Throws an error if validation fails
  * @return {Array} - Array of validated files
  */
-export function validateUploadedPictures(req: Express.Request): Array<any> { 
+export function validateUploadedPictures(req: Express.Request): Array<any> {
   const files = req.files;
 
   if (!files || !Array.isArray(files) || files.length < 2) {
@@ -123,14 +125,18 @@ export function validateUploadedPictures(req: Express.Request): Array<any> {
  */
 export function transformRequestBody(body: any): any {
   const transformedBody = body;
-    transformedBody.seekingIds = JSON.parse(transformedBody.seekingIds);
+  transformedBody.seekingIds = JSON.parse(transformedBody.seekingIds);
   transformedBody.interestsIds = JSON.parse(transformedBody.interestsIds);
   transformedBody.answers = JSON.parse(transformedBody.answers);
-  transformedBody.primaryGenderId = Number(transformedBody.primaryGenderId); 
-  transformedBody.secondaryGenderId =  transformedBody.secondaryGenderId && Number(transformedBody.secondaryGenderId); 
-  transformedBody.longitude = parseFloat(transformedBody.longitude);  
-  transformedBody.latitude = parseFloat(transformedBody.latitude);  
-  transformedBody.relationshipGoalId = Number(transformedBody.relationshipGoalId);
+  transformedBody.primaryGenderId = Number(transformedBody.primaryGenderId);
+  transformedBody.secondaryGenderId =
+    transformedBody.secondaryGenderId &&
+    Number(transformedBody.secondaryGenderId);
+  transformedBody.longitude = parseFloat(transformedBody.longitude);
+  transformedBody.latitude = parseFloat(transformedBody.latitude);
+  transformedBody.relationshipGoalId = Number(
+    transformedBody.relationshipGoalId
+  );
 
   return transformedBody;
 }
@@ -143,50 +149,67 @@ export function transformRequestBody(body: any): any {
  * @return {Promise<Object>} - Promise resolving to the new user
  */
 export async function createUser(value: any, t: any): Promise<any> {
-  const newUser = await Model.User.create({
-    firstName: value.firstName,
-    email: value.email,
-    phoneNumber: value.phoneNumber,
-    primaryGenderId: value.primaryGenderId,
-    secondaryGenderId: value.secondaryGenderId,
-    dateOfBirth: value.dateOfBirth,
-    longitude: value.longitude,
-    latitude: value.latitude,
-    verified: value.email && value.phoneNumber ? true : false
+  const newUser = await Model.User.create(
+    {
+      firstName: value.firstName,
+      email: value.email,
+      phoneNumber: value.phoneNumber,
+      primaryGenderId: value.primaryGenderId,
+      secondaryGenderId: value.secondaryGenderId,
+      dateOfBirth: value.dateOfBirth,
+      longitude: value.longitude,
+      latitude: value.latitude,
+      verified: value.email && value.phoneNumber ? true : false,
+    } as any,
+    { transaction: t }
+  );
+  // Create UserInterests in parallel
+  const userInterestsPromises = value.interestsIds.map((interestId: number) => {
+    return Model.UserInterests.create(
+      {
+        userId: newUser.id,
+        interestId: interestId,
+      } as any,
+      { transaction: t }
+    );
+  });
 
-  } as any, {transaction: t})
-// Create UserInterests in parallel
-const userInterestsPromises = value.interestsIds.map((interestId:number) => {
-  return Model.UserInterests.create({
-    userId: newUser.id,
-    interestId: interestId
-  } as any, {transaction: t});
-});
+  // Create UserSeekingGender in parallel
+  const userSeekingGenderPromises = value.seekingIds.map(
+    (seekingId: number) => {
+      return Model.UserSeekingGender.create(
+        {
+          userId: newUser.id,
+          primaryGenderId: seekingId,
+        } as any,
+        { transaction: t }
+      );
+    }
+  );
 
-// Create UserSeekingGender in parallel
-const userSeekingGenderPromises = value.seekingIds.map((seekingId:number) => {
-  return Model.UserSeekingGender.create({
-    userId: newUser.id,
-    primaryGenderId: seekingId
-  } as any, {transaction: t});
-});
+  // Validate answers and create UserAnswers in parallel
+  const userAnswersPromises = value.answers.map(
+    async (answer: { questionId: number; answerId: number }) => {
+      const answerDoc = await Model.Answers.findByPk(answer.answerId);
+      if (!answerDoc || answerDoc.questionId !== answer.questionId) {
+        throw new Error(INVALID_DATA);
+      }
 
-// Validate answers and create UserAnswers in parallel
-const userAnswersPromises = value.answers.map(async (answer:{questionId:number, answerId:number}) => {
-  const answerDoc = await Model.Answers.findByPk(answer.answerId);
-  if (!answerDoc || answerDoc.questionId !== answer.questionId) {
-    throw new Error(INVALID_DATA);
-  }
+      return Model.UserAnswers.create(
+        {
+          userId: newUser.id,
+          answerId: answer.answerId,
+        } as any,
+        { transaction: t }
+      );
+    }
+  );
 
-  return Model.UserAnswers.create({
-    userId: newUser.id,
-    answerId: answer.answerId
-  } as any, {transaction: t});
-});
-
-// Wait for all promises to resolve
-await Promise.all([...userInterestsPromises, ...userSeekingGenderPromises, ...userAnswersPromises]);
-
+  await Promise.all([
+    ...userInterestsPromises,
+    ...userSeekingGenderPromises,
+    ...userAnswersPromises,
+  ]);
 
   return newUser;
 }
@@ -198,14 +221,23 @@ await Promise.all([...userInterestsPromises, ...userSeekingGenderPromises, ...us
  * @param value - Object containing validated user data
  * @param t - Database transaction
  */
-export async function createInitialUserSettings(userId: string, value: any, t: any) {
+export async function createInitialUserSettings(
+  userId: string,
+  value: any,
+  t: any
+) {
   const promises = [
-    await Model.AccountSettings.create({userId} as any, {transaction: t}),
-    await Model.FilterSettings.create({userId, relationshipGoalId: value.relationshipGoalId} as any, {transaction: t}),
-    await Model.NotificationSettings.create({userId } as any, {transaction: t}),
-    await Model.PrivacySettings.create({userId} as any, {transaction: t}),
+    await Model.AccountSettings.create({ userId } as any, { transaction: t }),
+    await Model.FilterSettings.create(
+      { userId, relationshipGoalId: value.relationshipGoalId } as any,
+      { transaction: t }
+    ),
+    await Model.NotificationSettings.create({ userId } as any, {
+      transaction: t,
+    }),
+    await Model.PrivacySettings.create({ userId } as any, { transaction: t }),
   ];
-  
+
   await Promise.all(promises);
 }
 
@@ -213,9 +245,9 @@ export async function createInitialUserSettings(userId: string, value: any, t: a
  * Creates JWT access and refresh tokens.
  *
  * @param userId - ID of the user
- * @return {Object} - Object containing access and refresh tokens
+ * @return - Object containing access and refresh tokens
  */
-export async function createJWTTokens(userId: string, t:any){
+export async function createJWTTokens(userId: string, t: any) {
   // Create jwt tokens
   const accessToken = createAccessToken(userId);
   const refreshToken = createRefreshToken(userId);
@@ -227,9 +259,44 @@ export async function createJWTTokens(userId: string, t:any){
   const expiresAt = new Date(currentDate);
   expiresAt.setDate(currentDate.getDate() + 30);
 
-  await Model.RefreshTokens.create({userId: userId, token: refreshToken, expiresAt} as any, {transaction: t})
+  await Model.RefreshTokens.create(
+    { userId: userId, token: refreshToken, expiresAt } as any,
+    { transaction: t }
+  );
 
   return { accessToken, refreshToken };
+}
+
+/**
+ * Refreshes a user's access and refresh tokens.
+ * 
+ * @param userId The ID of the user for whom tokens will be refreshed.
+ * @param existingTokenDoc The existing token document. Should ideally be typed.
+ * @throws Will throw an error if access or refresh token creation fails.
+ * @returns A promise resolving to an object containing the new refresh and access tokens.
+ */
+export async function refreshUserToken(userId: string, existingTokenDoc: RefreshTokens) {
+  const accessToken = createAccessToken(userId);
+  const refreshToken = createRefreshToken(userId);
+
+  if (!accessToken || !refreshToken) {
+    throw new Error(FAILED_CREATION_ACCESS_AND_REFRESH_TOKEN);
+  }
+
+  const expiresAt = new Date();
+  const currentDate = new Date();
+
+  expiresAt.setDate(currentDate.getDate() + 30);
+
+  existingTokenDoc.replacedByToken = existingTokenDoc.token;
+  existingTokenDoc.token = refreshToken;
+  existingTokenDoc.expiresAt = expiresAt;
+
+  await existingTokenDoc.save().catch((e) => {
+    throw new Error(e.message);
+  });
+
+  return { refreshToken, accessToken };
 }
 
 /**
@@ -239,15 +306,25 @@ export async function createJWTTokens(userId: string, t:any){
  * @param userId - ID of the user
  * @param t - Database transaction
  */
-export async function handleUserPictures(files: Array<any>, userId: string, t: any) {
-  await awsServices.addUserPicturesToS3(files, userId)
-  .then(async (result) => {
-    const picturePromises = result.map(async (picName: string, index: number) => {
-      return Model.UserPictures.create(
-        { userId: userId, name: picName, orderIndex: index, isProfilePicture: index === 0 ? true : false } as any,
-        { transaction: t }
-      );
-    });
+export async function handleUserPictures(
+  files: Array<any>,
+  userId: string,
+  t: any
+) {
+  await awsServices.addUserPicturesToS3(files, userId).then(async (result) => {
+    const picturePromises = result.map(
+      async (picName: string, index: number) => {
+        return Model.UserPictures.create(
+          {
+            userId: userId,
+            name: picName,
+            orderIndex: index,
+            isProfilePicture: index === 0 ? true : false,
+          } as any,
+          { transaction: t }
+        );
+      }
+    );
     await Promise.all(picturePromises);
   });
 }
@@ -273,35 +350,111 @@ export async function deleteUserRecord(userId: string, t: any) {
 export async function deleteUserAssociations(userId: string, t: any) {
   const deleteTasks = [
     Model.AccountSettings.destroy({ where: { userId }, transaction: t }),
-      Model.PrivacySettings.destroy({ where: { userId }, transaction: t }),
-   Model.FilterSettings.destroy({ where: { userId }, transaction: t }),
-      Model.UserInterests.destroy({ where: { userId }, transaction: t }),
-      Model.NotificationSettings.destroy({ where: { userId }, transaction: t }),
+    Model.PrivacySettings.destroy({ where: { userId }, transaction: t }),
+    Model.FilterSettings.destroy({ where: { userId }, transaction: t }),
+    Model.UserInterests.destroy({ where: { userId }, transaction: t }),
+    Model.NotificationSettings.destroy({ where: { userId }, transaction: t }),
     Model.UserAnswers.destroy({ where: { userId }, transaction: t }),
-      Model.UserLanguages.destroy({ where: { userId }, transaction: t }),
-      Model.RefreshTokens.destroy({ where: { userId }, transaction: t }),
-      Model.UserPictures.destroy({ where: { userId }, transaction: t }),
-      Model.Conversations.destroy({
-       where: {
-         [Op.or]: [
-           { user1Id: userId },
-           { user2Id: userId }
-         ]
-       },
-       transaction: t
-     }),
-      Model.DeviceInfo.destroy({ where: { userId }, transaction: t }),
-      Model.InstagramImages.destroy({ where: { userId }, transaction: t }),
-      Model.InstagramTokens.destroy({ where: { userId }, transaction: t }),
+    Model.UserLanguages.destroy({ where: { userId }, transaction: t }),
+    Model.RefreshTokens.destroy({ where: { userId }, transaction: t }),
+    Model.UserPictures.destroy({ where: { userId }, transaction: t }),
+    Model.Conversations.destroy({
+      where: {
+        [Op.or]: [{ user1Id: userId }, { user2Id: userId }],
+      },
+      transaction: t,
+    }),
+    Model.DeviceInfo.destroy({ where: { userId }, transaction: t }),
+    Model.InstagramImages.destroy({ where: { userId }, transaction: t }),
+    Model.InstagramTokens.destroy({ where: { userId }, transaction: t }),
     Model.Messages.destroy({ where: { userId }, transaction: t }),
-      Model.NotificationsHistory.destroy({ where: { userId }, transaction: t }),
-      Model.Payments.destroy({ where: { userId }, transaction: t }),
+    Model.NotificationsHistory.destroy({ where: { userId }, transaction: t }),
+    Model.Payments.destroy({ where: { userId }, transaction: t }),
     Model.SpotifyTokens.destroy({ where: { userId }, transaction: t }),
-      Model.UserTopArtists.destroy({ where: { userId }, transaction: t }),
-      Model.UserSubscriptions.destroy({ where: { userId }, transaction: t }),
+    Model.UserTopArtists.destroy({ where: { userId }, transaction: t }),
+    Model.UserSubscriptions.destroy({ where: { userId }, transaction: t }),
     Model.UserBlocked.destroy({ where: { userId }, transaction: t }),
-      Model.UserMatches.destroy({ where: { userId }, transaction: t }),
+    Model.UserMatches.destroy({ where: { userId }, transaction: t }),
     Model.UserSeekingGender.destroy({ where: { userId }, transaction: t }),
-   ];
+  ];
   return Promise.all(deleteTasks);
+}
+
+/**
+ * Generates a 6-digit One Time Password (OTP).
+ *
+ * @returns A 6-digit numeric string.
+ * 
+ * @example
+ * const otp = generateOTP();
+ */
+export const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+/**
+ * Sends an SMS with the OTP to a given phone number using AWS SNS.
+ *
+ * @async
+ * @param {string} otp - The One Time Password to send.
+ * @param {string} phoneNumber - The target phone number.
+ * @returns A Promise that resolves if the SMS is sent successfully, otherwise rejects with an error.
+ * 
+ * @throws {Error} Throws an error if the SMS could not be sent.
+ * 
+ * @example
+ * sendSMS("123456", "+1234567890")
+ *   .then(data => console.log("SMS sent successfully"))
+ *   .catch(error => console.error("Failed to send SMS", error));
+ */
+export async function sendSMS(otp: string, phoneNumber: string) {
+  const sns = new AWS.SNS();
+  const params = {
+    Message: `Your FlyLeaf OTP code is ${otp}`,
+    PhoneNumber: phoneNumber,
+  };
+  
+  return new Promise((resolve, reject) => {
+    sns.publish(params, (err, data) => {
+      if (err) {
+        reject(new Error(FAILED_SEND_OTP));
+      } else {
+        resolve(data);
+      }
+    });
+  });
+};
+
+/**
+ * Verifies if the given OTP matches the one stored for the specified phone number.
+ * 
+ * @async
+ * @function
+ * @param {string} phoneNumber - The phone number to verify.
+ * @param {string} otp - The OTP to verify.
+ * @param {any} transaction - The Sequelize transaction object.
+ * @throws {Error} If OTP is incorrect or expired.
+ */
+export async function verifyOTPDocument(phoneNumber: string, otp: string, transaction: any) {
+  const otpDocument = await Model.PhoneNumberOTP.findOne({
+    where: { phoneNumber },
+    transaction,
+  });
+  if (!otpDocument || otpDocument.otp !== otp) {
+    throw new Error(EXPIRED_OR_INCORRECT_OTP);
+  }
+}
+
+/**
+ * Finds a user document by phone number.
+ * 
+ * @async
+ * @function
+ * @param {string} phoneNumber - The phone number to search for.
+ * @param {any} [transaction] - An optional transaction object for Sequelize.
+ * @returns A promise that resolves to the User document or null.
+ */
+export async function findUserByPhoneNumber(phoneNumber: string, transaction?: any) {
+  return await Model.User.findOne({
+    where: { phoneNumber },
+    transaction,
+  });
 }

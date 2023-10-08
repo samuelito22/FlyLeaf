@@ -17,6 +17,7 @@ export const USER_CREATED = "User created"
 export const EMAIL_AVAILABLE = "Email is available";
 export const EMAIL_NOT_EXIST = "Email does not exist";
 export const EMAIL_NOT_FOUND_ERR = "Email not found";
+export const EMAIL_ALREADY_IN_USE = "Email already in use"
 
 // Phone Number Errors
 export const PHONE_NUMBER_NOT_EXIST = "Phone number does not exist";
